@@ -95,6 +95,10 @@ class MayaAPI(object):
         return NodeIterator()
 
     @staticmethod
+    def node_iterator():
+        return om.MItDependencyNodes()
+
+    @staticmethod
     def dependency_node(node):
         return om.MFnDependencyNode(node)
 
@@ -106,8 +110,8 @@ class MayaAPI(object):
     def delete_ui(*args, **kwargs):
         try:
             cmds.deleteUI(*args, **kwargs)
-        except:
-            pass
+        except Exception as exp:
+            print("Couldn't delete:", str(exp))
 
     @staticmethod
     def parent(parent='..'):
@@ -159,14 +163,14 @@ class MayaAPI(object):
     def col_layout(*args, **kwargs):
         try:
             return cmds.rowColumnLayout(*args, **kwargs)
-        except:
+        except Exception as exp:
             return None
 
     @staticmethod
     def frame_layout(*args, **kwargs):
         try:
             return cmds.frameLayout(*args, **kwargs)
-        except:
+        except Exception as e:
             return None
 
     @staticmethod
@@ -241,7 +245,7 @@ class NodeIterator(object):
     def __init__(self):
 
         try:
-            self._iter = MayaAPI.dependency_nodes()
+            self._iter = MayaAPI.node_iterator()
         except:
             self._iter = iter([])
 
@@ -250,13 +254,20 @@ class NodeIterator(object):
     def get_references(self):
         dep_node = MayaAPI.dependency_node(self._current)
         assets = MayaReferences()
+
+        self._iter.next()
         return assets.get_paths(dep_node)
 
     def is_done(self):
-        try:
-            self._current  = self._iter.thisNode()
-            self._iter.isDone()
-        except:
+        try:       
+            is_complete = self._iter.isDone()
+
+            if not is_complete:
+                self._current  = self._iter.thisNode()
+            
+            return is_complete
+
+        except Exception as exp:
             True
 
 class MayaReferences(object):
@@ -272,7 +283,7 @@ class MayaReferences(object):
             _path = []
             _node = ""
             _role = []
-            self._table.getEntryByIndex(i, paths, node, role)
+            self._table.getEntryByIndex(i, _path, _node, _role)
             if _path:
                 paths.append(_path[0])
 
