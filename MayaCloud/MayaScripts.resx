@@ -1,0 +1,278 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="client" xml:space="preserve">
+    <value>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;ADLMCUSTOMENV VERSION="1.0.0.0"&gt;
+    &lt;PLATFORM OS="Windows"&gt;
+        &lt;KEY ID="ADLM_COMMON_BIN_LOCATION"&gt;
+            &lt;!--Path to the AdLM shared executables--&gt;
+            &lt;STRING&gt;{0}\Common Files\Autodesk Shared\Adlm\R9&lt;/STRING&gt;
+        &lt;/KEY&gt;
+        &lt;KEY ID="ADLM_COMMON_LIB_LOCATION"&gt;
+            &lt;!--Path to the AdLM shared libraries--&gt;
+            &lt;STRING&gt;{0}\Common Files\Autodesk Shared\Adlm\R9&lt;/STRING&gt;
+        &lt;/KEY&gt;
+        &lt;KEY ID="ADLM_COMMON_LOCALIZED_DATA_LOCATION"&gt;
+            &lt;!--Path to the AdLM shared localized resource files (do not include the language folder)--&gt;
+            &lt;STRING&gt;{0}\Common Files\Autodesk Shared\Adlm\R9&lt;/STRING&gt;
+        &lt;/KEY&gt;
+        &lt;KEY ID="ADLM_ERROR_TABLE_LOCATION"&gt;
+            &lt;!--Path to AdlmErrorCodes.xml--&gt;
+            &lt;STRING&gt;{0}\Adlm\R9&lt;/STRING&gt;
+        &lt;/KEY&gt;
+        &lt;KEY ID="ADLM_PIT_FILE_LOCATION"&gt;
+            &lt;!--Path to the ProductInformation.pit file--&gt;
+            &lt;STRING&gt;{0}\Adlm&lt;/STRING&gt;
+        &lt;/KEY&gt;
+        &lt;KEY ID="ADLM_CASCADE_FILE_LOCATION"&gt;
+            &lt;!--Path where the CascadeInfo.cas file will be created (this should always be on the client machine)--&gt;
+            &lt;STRING&gt;{0}\Adlm&lt;/STRING&gt;
+        &lt;/KEY&gt;
+        &lt;KEY ID="ADLM_LICENSE_FILE_LOCATION"&gt;
+            &lt;!--Path to a directory containing one or more .lic files (API override)--&gt;
+            &lt;STRING&gt;{0}\Adlm&lt;/STRING&gt;
+        &lt;/KEY&gt;
+        &lt;KEY ID="ADLM_APPLICATION_ADLM_RESOURCE_LOCATION"&gt;
+            &lt;!--Path to the AdlmIntRes.xml file (API override)--&gt;
+            &lt;STRING&gt;&lt;/STRING&gt;
+        &lt;/KEY&gt;
+        &lt;KEY ID="ADLM_APPLICATION_ERROR_LOG_FILE"&gt;
+            &lt;!--Path and filename of the application AdLM log file (API override)--&gt;
+            &lt;STRING&gt;&lt;/STRING&gt;
+        &lt;/KEY&gt;
+    &lt;/PLATFORM&gt;
+&lt;/ADLMCUSTOMENV&gt;</value>
+  </data>
+  <data name="dirMap" xml:space="preserve">
+    <value>global proc dirMap() 
+{{ 
+dirmap -en true; 
+{0}
+}}</value>
+  </data>
+  <data name="env" xml:space="preserve">
+    <value>MAYA_MODULE_PATH ={0}/Maya2015/modules;{1}/2015-x64/modules;{1};{0}/Common Files/Autodesk Shared/Modules/maya/2015
+FBX_LOCATION = {0}/Maya2015/plug-ing/fbx/
+MENTALRAY_LOCATION = {0}/mentalrayForMaya2015/
+MAYA_SCRIPT_BASE = {0}/Maya2015
+TEMP = {2}
+MAYA_LOCATION = {0}\Maya2015
+TMPDIR = {2}
+MENTALRAY_BIN_LOCATION = {0}/mentalrayForMaya2015/bin
+MAYA_PLUG_IN_PATH = {1};{0}/Maya2015/bin/plug-ins;{0}/Maya2015/plug-ins/bifrost/plug-ins;{0}/Maya2015/plug-ins/fbx/plug-ins;{0}/mentalrayForMaya2015/plug-ins;{0}/solidangle/mtoadeploy/2015/plug-ins;{0}/Maya2015/plug-ins/substance/plug-ins;{0}/Maya2015/plug-ins/xgen/plug-ins;
+PYTHONHOME = {0}/Maya2015/Python
+XGEN_LOCATION = {0}/Maya2015/plug-ins/xgen/
+XGEN_ROOT = {1}/xgen
+SUBSTANCES_LOCATION = {0}/Maya2015/plug-ins/substance/substances
+BIFROST_LOCATION = {0}/Maya2015/plug-ins/bifrost/
+TMP = {2}
+PYTHONPATH = {0}/Maya2015/plug-ins/bifrost/scripts/presets;{0}/Maya2015/plug-ins/bifrost/scripts;{0}/Maya2015/plug-ins/fbx/scripts;{0}/mentalrayForMaya2015/scripts/AETemplates;{0}/mentalrayForMaya2015/scripts/mentalray;{0}/mentalrayForMaya2015/scripts/unsupported;{0}/mentalrayForMaya2015/scripts;{0}/solidangle/mtoadeploy/2015/scripts;{0}/Maya2015/plug-ins/substance/scripts;{0}/Maya2015/plug-ins/xgen/scripts/cafm;{0}/Maya2015/plug-ins/xgen/scripts/xgenm;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/xmaya;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/brushes;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/dialogs;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/fxmodules;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/tabs;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/util;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/widgets;{0}/Maya2015/plug-ins/xgen/scripts
+ILMDIR = {0}/Common Files/Autodesk Shared/Materials
+ARNOLD_PLUGIN_PATH = {0}/solidangle/mtoadeploy/2015/shaders
+MENTALRAY_SHADERS_LOCATION = {0}/mentalrayForMaya2015/shaders
+MAYA_RENDER_DESC_PATH = {0}/mentalrayForMaya2015/rendererDesc
+MENTAL_RAY_INCLUDE_LOCATION = {0}/mentalrayForMaya2015/shaders/include
+MTOA_PATH = {0}/solidangle/mtoadeploy/2015/
+MTOA_EXTENSIONS_PATH = {0}/solidangle/mtoadeploy/2015/extensions
+MAYA_SCRIPT_PATH = {1};{0}/Maya2015/scripts;{0}/Maya2015/scripts/startup;{0}/Maya2015/scripts/others;{0}/Maya2015/scripts/AETemplates;{0}/Maya2015/scripts/unsupported;{0}/Maya2015/scripts/paintEffects;{0}/Maya2015/scripts/fluidEffects;{0}/Maya2015/scripts/hair;{0}/Maya2015/scripts/cloth;{0}/Maya2015/scripts/live;{0}/Maya2015/scripts/fur;{0}/Maya2015/scripts/muscle;{0}/Maya2015/scripts/turtle;{0}/Maya2015/scripts/FBX;{0}/Maya2015/scripts/mayaHIK;{0}/Maya2015/plug-ins/bifrost/scripts/presets;{0}/Maya2015/plug-ins/bifrost/scripts;{0}/Maya2015/plug-ins/fbx/scripts;{0}/mentalrayForMaya2015/scripts/AETemplates;{0}/mentalrayForMaya2015/scripts/mentalray;{0}/mentalrayForMaya2015/scripts/unsupported;{0}/mentalrayForMaya2015/scripts;{0}/solidangle/mtoadeploy/2015/scripts
+IMF_PLUG_IN_PATH = {0}/mentalrayForMaya2015/bin/image
+MAYA_PLUGIN_RESOURCE_PATH = {1};{0}/Maya2015/plug-ins/bifrost/resources;{0}/Maya2015/plug-ins/fbx/resources;{0}/mentalrayForMaya2015/resources;{0}/solidangle/mtoadeploy/2015/resources;{0}/Maya2015/plug-ins/substance/resources;{0}/Maya2015/plug-ins/xgen/resources
+MAYA_PRESET_PATH = {0}/Maya2015/plug-ins/bifrost/presets;{0}/Maya2015/plug-ins/fbx/presets;{0}/mentalrayForMaya2015/presets/attrPresets;{0}/mentalrayForMaya2015/presets/attrPresets/maya_bifrost_liquid;{0}/mentalrayForMaya2015/presets/attrPresets/mia_material;{0}/mentalrayForMaya2015/presets/attrPresets/mia_material_x;{0}/mentalrayForMaya2015/presets/attrPresets/mia_material_x_passes;{0}/mentalrayForMaya2015/presets;{0}/solidangle/mtoadeploy/2015/presets;{0}/Maya2015/plug-ins/substance/presets;{0}/Maya2015/plug-ins/xgen/presets
+XBMLANGPATH = {0}/Maya2015/icons;{0}/Maya2015/app-defaults;{0}/Maya2015/icons/paintEffects;{0}/Maya2015/icons/fluidEffects;{0}/Maya2015/icons/hair;{0}/Maya2015/icons/cloth;{0}/Maya2015/icons/live;{0}/Maya2015/icons/fur;{0}/Maya2015/icons/muscle;{0}/Maya2015/icons/turtle;{0}/Maya2015/icons/FBX;{0}/Maya2015/icons/mayaHIK;{0}/Maya2015/plug-ins/bifrost/icons;{0}/Maya2015/plug-ins/fbx/icons;{0}/mentalrayForMaya2015/icons;{0}/solidangle/mtoadeploy/2015/icons;{0}/Maya2015/plug-ins/substance/icons;{0}/Maya2015/plug-ins/xgen/icons</value>
+  </data>
+  <data name="lic" xml:space="preserve">
+    <value>AUTODESK_ADLM_THINCLIENT_ENV={0}\Adlm\AdlmThinClientCustomEnv.xml
+MAYA_LICENSE=unlimited
+MAYA_LICENSE_METHOD=network</value>
+  </data>
+  <data name="workspace" xml:space="preserve">
+    <value>//Maya 2015 Project Definition
+
+
+
+workspace -fr "fluidCache" ".";
+
+workspace -fr "images" ".";
+
+workspace -fr "offlineEdit" ".";
+
+workspace -fr "furShadowMap" ".";
+
+workspace -fr "iprImages" ".";
+
+workspace -fr "renderData" ".";
+
+workspace -fr "scripts" ".";
+
+workspace -fr "fileCache" ".";
+
+workspace -fr "eps" ".";
+
+workspace -fr "shaders" ".";
+
+workspace -fr "3dPaintTextures" ".";
+
+workspace -fr "translatorData" ".";
+
+workspace -fr "mel" ".";
+
+workspace -fr "furFiles" ".";
+
+workspace -fr "OBJ" ".";
+
+workspace -fr "particles" ".";
+
+workspace -fr "scene" ".";
+
+workspace -fr "furEqualMap" ".";
+
+workspace -fr "sourceImages" ".";
+
+workspace -fr "furImages" ".";
+
+workspace -fr "clips" ".";
+
+workspace -fr "depth" ".";
+
+workspace -fr "movie" ".";
+
+workspace -fr "audio" ".";
+
+workspace -fr "bifrostCache" ".";
+
+workspace -fr "autoSave" ".";
+
+workspace -fr "mayaAscii" ".";
+
+workspace -fr "move" ".";
+
+workspace -fr "sound" ".";
+
+workspace -fr "diskCache" ".";
+
+workspace -fr "illustrator" ".";
+
+workspace -fr "mayaBinary" ".";
+
+workspace -fr "templates" ".";
+
+workspace -fr "furAttrMap" ".";</value>
+  </data>
+</root>

@@ -1,0 +1,33 @@
+python("from shared import BatchAppsSettings");
+
+$batchapps_path = `getenv "BATCHAPPS_ICONS"`;
+
+global proc run_guiStarter()
+{
+    python("BatchAppsSettings.starter()");
+}
+
+global proc openMissionControl()
+{
+    python("import webbrowser\nwebbrowser.open(\"https://manage.batchapps.windows.net\", 2, True)");
+}
+
+
+string $uiButton = `shelfButton
+    -parent "BatchApps"
+    -enable 1
+    -annotation "Job Submission"
+    -label "Job Submission"
+    -image1 ($batchapps_path + "/submit.png")
+    -style "iconOnly"
+    -command "run_guiStarter()"`;
+
+string $mcButton = `shelfButton
+    -parent "BatchApps"
+    -enable 1
+    -annotation "Management Portal"
+    -label "Management Portal"
+    -image1 ($batchapps_path + "/portal.png")
+    -style "iconOnly"
+    -command "openMissionControl()"`;
+;
