@@ -39,11 +39,11 @@ class AssetsUI:
         self.label = " Assets "
         self.ready = False
         
-        with utils.Layout(width=360) as layout:
+        with utils.RowLayout(width=360) as layout:
             self.page = layout
 
             with utils.ScrollLayout(v_scrollbar=3, h_scrollbar=0, height=495, width=355):
-                with utils.Layout(row_spacing=20, width=330) as sublayout:
+                with utils.RowLayout(row_spacing=20, width=330) as sublayout:
                     self.asset_display = sublayout
 
             with utils.ColumnLayout(1, col_width=(1,355)):
@@ -70,7 +70,7 @@ class AssetsUI:
                          parent=self.asset_display):
 
             with utils.ScrollLayout(v_scrollbar=3, h_scrollbar=0):
-                with utils.Layout() as layout:
+                with utils.RowLayout() as layout:
 
                     for f in self.base.get_assets(label):
                         enabled = os.path.normcase(f.path) == os.path.normcase(self.base.scene)
@@ -79,15 +79,14 @@ class AssetsUI:
                     return layout
 
     def clear_ui(self):
-        children = maya.col_layout(self.asset_display,
+        children = maya.row_layout(self.asset_display,
                                    query=True,
                                    childArray=True)
-
         if not children:
             return
 
-        for display in children:
-            maya.delete_ui(display, control=True)
+        for child in children:
+            maya.delete_ui(child, control=True)
 
     def add_asset(self, *args):
         cap = "Select additional rendering assets"

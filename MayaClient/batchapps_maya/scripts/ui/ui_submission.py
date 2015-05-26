@@ -39,7 +39,7 @@ class SubmissionUI(object):
         self.base = base
         self.label = " Submit "
 
-        with utils.Layout(width=360) as layout:
+        with utils.RowLayout(width=360) as layout:
             self.page = layout 
 
             with utils.ScrollLayout(height=497, parent=self.page) as col:

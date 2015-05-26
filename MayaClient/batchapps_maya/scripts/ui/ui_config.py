@@ -29,6 +29,7 @@
 from api import MayaAPI as maya
 
 import utils
+from maya import cmds
 
 
 class ConfigUI(object):
@@ -39,7 +40,7 @@ class ConfigUI(object):
         self.label = " Config "
         self.ready = False
 
-        with utils.Layout(width=360) as layout:
+        with utils.RowLayout(width=360) as layout:
             self.page = layout
 
             with utils.ScrollLayout(height=520, parent=self.page) as col:
@@ -47,7 +48,7 @@ class ConfigUI(object):
                                          align="center", font="boldLabelFont")
             
                 with utils.ColumnLayout(2, col_width=((1, 50),(2, 280)), row_spacing=(1,5),
-                                  row_offset=((1, "top", 15),(2, "bottom", 15))) as cols:
+                                    row_offset=((1, "top", 15),(2, "bottom", 15))) as cols:
 
                     maya.text(label="Status: ", align="left")
                     self.auth_status = maya.text(label="", align="left")
@@ -57,12 +58,13 @@ class ConfigUI(object):
                                                     enable=True,
                                                     changeCommand=self.changes_detected)
                     maya.text(label="Logging:    ", align="left")
-                    self._logging = maya.menu(changeCommand=self.set_logging)
-                    maya.menu_option(label="Debug")
-                    maya.menu_option(label="Info")
-                    maya.menu_option(label="Warning")
-                    maya.menu_option(label="Error")
-                    maya.parent()
+                    with utils.Dropdown(self.set_logging) as log_settings:
+                        self._logging = log_settings
+                        self._logging.add_item("Debug")
+                        self._logging.add_item("Info")
+                        self._logging.add_item("Warning")
+                        self._logging.add_item("Error")
+
                     maya.text(label="")
 
                 box_label = "Attended Configuration Settings"
@@ -192,11 +194,11 @@ class ConfigUI(object):
 
     @property
     def logging(self):
-        return int(maya.menu(self._logging, query=True, select=True)) * 10
+        return self._logging.selected() * 10
 
     @logging.setter
     def logging(self, value):
-        maya.menu(self._logging, edit=True, select=int(value)/10)
+        self._logging.select(int(value)/10)
 
     def is_logged_in(self):
         maya.text(self.heading, edit=True, label="Authentication Configuration")

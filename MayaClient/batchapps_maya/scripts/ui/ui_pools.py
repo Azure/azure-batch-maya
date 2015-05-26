@@ -42,12 +42,12 @@ class PoolsUI(object):
 
         self.pools_displayed = []
 
-        with utils.Layout(width=360) as layout:
+        with utils.RowLayout(width=360) as layout:
             self.page = layout
 
             with utils.ScrollLayout(v_scrollbar=3, h_scrollbar=0, width=355, height=520) as scroll:
         
-                with utils.Layout(row_spacing=20) as sublayout:
+                with utils.RowLayout(row_spacing=20) as sublayout:
 
                     if not self.pools_displayed:
                         self.empty_pools = maya.text(

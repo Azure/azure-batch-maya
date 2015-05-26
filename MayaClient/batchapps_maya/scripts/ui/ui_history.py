@@ -42,7 +42,7 @@ class HistoryUI(object):
 
         self.jobs_displayed = []
 
-        with utils.Layout(width=360) as layout:
+        with utils.RowLayout(width=360) as layout:
             self.page = layout
 
             with utils.ColumnLayout(1, col_width=(1,360)) as col:  
@@ -233,7 +233,7 @@ class BatchAppsJobInfo:
         self._job = self.display_info("Job ID:   ")
         self._pool = self.display_info("Pool:   ")
 
-        with utils.Layout(row_spacing=5, col_attach=("both",20), parent=self.layout) as buttons:
+        with utils.RowLayout(row_spacing=5, col_attach=("both",20), parent=self.layout) as buttons:
             self.button_layout = buttons
             self.content.append(self.button_layout)
 

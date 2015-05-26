@@ -30,24 +30,31 @@ from api import MayaAPI as maya
 
 class Layout(object):
 
-    def __init__(self, **kwargs):
-        self.form = maya.row_layout
+    def __init__(self, form, **kwargs):
 
-        self.layout = self.form()
+        self.form = form
+
+        settings = {}
+        
         if kwargs.get("width"):
-            self.width = kwargs.get("width")
+            settings["width"] = kwargs["width"]
 
         if kwargs.get("height"):
-            self.height = kwargs["height"]
+            settings["height"] = kwargs["height"]
 
         if kwargs.get("parent"):
-            self.parent = kwargs.get("parent")
+            settings["parent"] = kwargs["parent"]
 
         if kwargs.get("row_spacing"):
-            self.row_space = kwargs.get("row_spacing")
+            settings["rowSpacing"] = kwargs["row_spacing"]
 
         if kwargs.get("col_attach"):
-            self.column_attach = kwargs.get("col_attach")
+            settings["columnAttach"] = kwargs["col_attach"]
+
+        if kwargs.get("layout"):
+            settings.update(kwargs["layout"])
+
+        self.layout = self.form(**settings)
 
 
     def __enter__(self):
@@ -57,138 +64,73 @@ class Layout(object):
         #TODO: Exception handling should go in here
         maya.parent()
 
-    @property
-    def parent(self):
-        return self.form(self.layout, query=True, parent=True)
 
-    @parent.setter
-    def parent(self, value):
-        self.form(self.layout, edit=True, parent=value)
+class RowLayout(Layout):
 
-    @property
-    def width(self):
-        return self.form(self.layout, query=True, width=True)
+    def __init__(self, **kwargs):
+        super(RowLayout, self).__init__(maya.row_layout, **kwargs)
 
-    @width.setter
-    def width(self, value):
-        self.form(self.layout, edit=True, width=value)
-
-    @property
-    def height(self):
-        return self.form(self.layout, query=True, width=True)
-
-    @height.setter
-    def height(self, value):
-        self.form(self.layout, edit=True, height=value)
-
-    @property
-    def row_space(self):
-        return self.form(self.layout, query=True, rowSpacing=True)
-
-    @width.setter
-    def row_space(self, value):
-        self.form(self.layout, edit=True, rowSpacing=value)
-
-    @property
-    def column_attach(self):
-        return self.form(self.layout, query=True, columnAttach=True)
-
-    @width.setter
-    def column_attach(self, value):
-        self.form(self.layout, edit=True, columnAttach=value)
 
 class FrameLayout(Layout):
 
     def __init__(self, **kwargs):
-        self.form = maya.frame_layout
 
-        super(FrameLayout, self).__init__(**kwargs)
+        settings = {}
 
         if kwargs.get("label"):
-            self.label = kwargs.get("label")
+            settings["label"] = kwargs["label"]
 
         if kwargs.get("collapsable"):
-            self.collapsable = kwargs.get("collapsable")
+            settings["collapsable"] = kwargs["collapsable"]
 
-    @property
-    def label(self):
-        return self.form(self.layout, query=True, label=True)
+        super(FrameLayout, self).__init__(maya.frame_layout, layout=settings, **kwargs)
 
-    @label.setter
-    def label(self, value):
-        self.form(self.layout, edit=True, label=value)
-
-    @property
-    def collapsable(self):
-        return self.form(self.layout, query=True, collapsable=True)
-
-    @collapsable.setter
-    def collapsable(self, value):
-        self.form(self.layout, edit=True, collapsable=value)
 
 class ColumnLayout(Layout):
 
     def __init__(self, columns, **kwargs):
-        self.form = maya.col_layout
 
-        self.layout = self.form(numberOfColumns=columns)
+        settings = {"numberOfColumns": columns}
 
         if kwargs.get("col_width"):
-            self.col_width = kwargs["col_width"]
+            settings["columnWidth"] = kwargs["col_width"]
 
         if kwargs.get("row_offset"):
-            self.row_offset = kwargs["row_offset"]
-
-        if kwargs.get("row_spacing"):
-            self.row_space = kwargs.get("row_spacing")
+            settings["rowOffset"] = kwargs["row_offset"]
 
         if kwargs.get("row_height"):
-            self.row_height = kwargs["row_height"]
+            settings["rowHeight"] = kwargs["row_height"]
 
-    @property
-    def col_width(self):
-        return self.form(self.layout, query=True, columnWidth=True)
+        super(ColumnLayout, self).__init__(maya.col_layout, layout=settings, **kwargs)
 
-    @col_width.setter
-    def col_width(self, value):
-        self.form(self.layout, edit=True, columnWidth=value)
-
-    @property
-    def row_offset(self):
-        return self.form(self.layout, query=True, rowOffset=True)
-
-    @row_offset.setter
-    def row_offset(self, value):
-        self.form(self.layout, edit=True, rowOffset=value)
-
-    @property
-    def row_height(self):
-        return self.form(self.layout, query=True, rowHeight=True)
-
-    @row_height.setter
-    def row_height(self, value):
-        self.form(self.layout, edit=True, rowHeight=value)
 
 class ScrollLayout(Layout):
 
     def __init__(self, **kwargs):
-        self.form = maya.scroll_layout
 
-        self.layout = self.form(horizontalScrollBarThickness=0)
-        
-        if kwargs.get("width"):
-            self.width = kwargs["width"]
+        settings = {"horizontalScrollBarThickness": 0,
+                    "verticalScrollBarThickness": 3}
 
-        if kwargs.get("height"):
-            self.height = kwargs["height"]
+        super(ScrollLayout, self).__init__(maya.scroll_layout, layout=settings, **kwargs)
 
-        if kwargs.get("v_scrollbar"):
-            self.vertical_scrollbar = kwargs["v_scrollbar"]
 
-    @property
-    def vertical_scrollbar(self):
-        return self.form(self.layout, query=True, verticalScrollBarThickness=True)
+class Dropdown(object):
 
-    @vertical_scrollbar.setter
-    def vertical_scrollbar(self, value):
-        self.form(self.layout, edit=True, verticalScrollBarThickness=value)
+    def __init__(self, command):
+
+        self.menu = maya.menu(changeCommand=command)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        maya.parent()
+
+    def add_item(self, item):
+        maya.menu_option(label=item, parent=self.menu)
+
+    def selected(self):
+        return int(maya.menu(self.menu, query=True, select=True))
+
+    def select(self, value):
+        maya.menu(self.menu, edit=True, select=int(value))
