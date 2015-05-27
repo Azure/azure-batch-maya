@@ -356,30 +356,59 @@ class TestBatchAppsHistory(unittest.TestCase):
         BatchAppsHistory.cancel_job(self.mock_self)
         self.assertEqual(job.cancel.call_count, 0)
 
+    @mock.patch("history.os")
+    @mock.patch("history.tempfile")
+    @mock.patch("history.shutil")
     @mock.patch("history.maya")
-    def test_download_output(self, mock_maya):
+    def test_download_output(self, mock_maya, mock_util, mock_temp, mock_os):
 
-        selected_dir = os.path.dirname(__file__)
+        data_dir = os.path.join(os.path.dirname(__file__), "data")
+        mock_temp.mkdtemp.return_value = data_dir
+        mock_os.path.exists.return_value = False
+
+        selected_file = os.path.join(os.path.dirname(__file__), "my_output.zip")
         job = mock.create_autospec(SubmittedJob)
 
         def call(func, dir, overwrite):
             self.assertTrue(hasattr(func, '__call__'))
-            self.assertEqual(dir, selected_dir)
+            self.assertEqual(dir, data_dir)
             self.assertTrue(overwrite)
-            return func(dir, overwrite)
+            func(dir, overwrite)
+            return os.path.join(data_dir, "output.zip")
 
         self.mock_self.jobs = [job]
         self.mock_self._call = call
         self.mock_self.selected_job = mock.create_autospec(BatchAppsJobInfo)
         self.mock_self.selected_job.index = 0
 
-        BatchAppsHistory.download_output(self.mock_self, selected_dir)
-        job.get_output.assert_called_with(selected_dir, True)
+        BatchAppsHistory.download_output(self.mock_self, selected_file)
+        job.get_output.assert_called_with(data_dir, True)
 
         job.get_output.side_effect = FileDownloadException("Failed!")
-        BatchAppsHistory.download_output(self.mock_self, selected_dir)
+        BatchAppsHistory.download_output(self.mock_self, selected_file)
         self.mock_self.selected_job.change_download_label.assert_called_with(
             "Download Output")
+
+        job.get_output.call_count = 0
+        job.get_output.side_effect = None
+        mock_os.path.exists.return_value = True
+
+        BatchAppsHistory.download_output(self.mock_self, selected_file)
+        mock_os.remove.assert_called_with(selected_file)
+        mock_util.move_assert_called_with(os.path.join(data_dir, "output.zip"), selected_file)
+        mock_util.rmtree.assert_called_with(data_dir)
+
+        mock_os.remove.side_effect = EnvironmentError("Couldn't delete...")
+        BatchAppsHistory.download_output(self.mock_self, selected_file)
+        self.mock_self.selected_job.change_download_label.assert_called_with(
+            "Download Output")
+        self.assertEqual(job.get_output.call_count, 1)
+
+        mock_util.rmtree.side_effect = Exception("Couldn't move to new location")
+        BatchAppsHistory.download_output(self.mock_self, selected_file)
+        self.mock_self.selected_job.change_download_label.assert_called_with(
+            "Download Output")
+        mock_util.rmtree.assert_called_with(data_dir)
 
     def test_image_height(self):
 
@@ -462,7 +491,7 @@ class TestHistoryCombined(unittest.TestCase):
         self.assertIsNone(history.selected_job)
 
         mock_maya = args[1]
-        mock_maya.file_select.return_value = os.path.join(os.path.dirname(__file__), "data")
+        mock_maya.file_select.return_value = os.path.join(os.path.dirname(__file__), "data", "my_output.zip")
         history.ui.jobs_displayed[0].download_output()
         self.assertEqual(job1.get_output.call_count, 0)
 

@@ -33,6 +33,7 @@ import glob
 import struct
 import random
 import string
+import shutil
 
 from api import MayaAPI as maya
 from ui_history import HistoryUI
@@ -240,6 +241,7 @@ class BatchAppsHistory(object):
     def cancel_job(self):
         try:
             job = self.jobs[self.selected_job.index]
+
         except (IndexError, AttributeError) as exp:
             self._log.warning("Selected job index does not match jobs list.")
             return
@@ -248,25 +250,48 @@ class BatchAppsHistory(object):
         if not resp:
             self._log.info("Job was not able to be cancelled.")
 
-    def download_output(self, dir):   
+    def download_output(self, save_file):
+
         try:
-            self.selected_job.change_download_label("Downloading...")
-            maya.refresh()
+            if os.path.exists(save_file):
+                try:
+                    os.remove(save_file)
 
-            job = self.jobs[self.selected_job.index]
-            self._call(job.get_output, dir, overwrite=True)
+                except Exception as e:
+                    self._log.error("Unable to overwrite output: {0}".format(e))
+                    return
 
-        except (IndexError, AttributeError):
-            self._log.warning("Selected job index does not match jobs list.")
-            if not self.selected_job:
-                self.ui.refresh()
+            save_dir = tempfile.mkdtemp()
+            try:
+                self.selected_job.change_download_label("Downloading...")
+                maya.refresh()
+
+                job = self.jobs[self.selected_job.index]
+                saved_output = self._call(job.get_output, save_dir, overwrite=True)
+
+            except (IndexError, AttributeError):
+                self._log.error("Selected job index does not match jobs list.")
+                if not self.selected_job:
+                    self.ui.refresh()
+                    return
+
+            except FileDownloadException as exp:
+                self._log.error("Error downloading output: {0}".format(exp))
                 return
 
-        except FileDownloadException as exp:
-            self._log.warning("Error downloading output: {0}".format(exp))
-        
-        self.selected_job.change_download_label("Download Output")
-        maya.refresh()
+            try:
+                shutil.move(saved_output, save_file)
+
+            except Exception as e:
+                self._log.error("Unable to write file to path {0}, {1}".format(save_file, e))
+
+            finally:
+                shutil.rmtree(save_dir)
+
+        finally:
+            if self.selected_job:
+                self.selected_job.change_download_label("Download Output")
+            maya.refresh()
 
     def get_image_height(self, image):
         y = 120

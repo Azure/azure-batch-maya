@@ -298,14 +298,15 @@ class BatchAppsJobInfo:
         maya.button(self.download_button, edit=True, label="{0}".format(label))
 
     def download_output(self, *args):
-        save_dir = maya.file_select(fileMode=3,
-                                    okCaption="Save to Location",
-                                    caption="Choose a Directory")
-        if save_dir is None:
+        save_file = maya.file_select(fileFilter="Zip Archive (*.zip)",
+                                    fileMode=0,
+                                    okCaption="Save to file",
+                                    caption="Choose an output")
+        if save_file is None:
             return
 
-        save_dir = os.path.normpath(save_dir[0])
-        self.base.download_output(save_dir)
+        save_file = os.path.normpath(save_file[0])
+        self.base.download_output(save_file)
 
     def cancel_job(self, *args):
         self.base.cancel_job()
