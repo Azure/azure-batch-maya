@@ -29,7 +29,6 @@
 from api import MayaAPI as maya
 
 import utils
-from maya import cmds
 
 
 class ConfigUI(object):

@@ -26,10 +26,14 @@
 #
 #--------------------------------------------------------------------------
 
-from maya import cmds, mel, utils
-import maya.OpenMaya as om
-import maya.OpenMayaMPx as omp
+try:
+    from maya import cmds, mel, utils
+    import maya.OpenMaya as om
+    import maya.OpenMayaMPx as omp
 
+except ImportError:
+    print("No maya module found.")
+    
 import logging
 
 class MayaAPI(object):
@@ -288,7 +292,4 @@ class MayaReferences(object):
                 paths.append(_path[0])
 
         return paths
-
-        
-
 
