@@ -64,8 +64,30 @@ class BatchAppsMayaJob(BatchAppsRenderJob):
     def get_jobdata(self):
         if self.scene_name == "":
             raise ValueError("Current Maya scene has not been saved to disk.")
-        else:
+        
+        pending_changes = cmds.file(query=True, modified=True)
+        if not pending_changes:
             return [self.scene_name]
+
+        options = ["Save and Continue",
+                   "Don't Save and Continue",
+                   "Cancel"]
+
+        answer = cmds.confirmDialog(title='Unsaved Changes',
+                                    message='There are unsaved changes. Proceed?',
+                                    button=options,
+                                    defaultButton=options[0],
+                                    cancelButton=options[2],
+                                    dismissString=options[2])
+
+        if answer == options[2]:
+            raise Exception("Submission Aborted")
+
+        if answer == options[0]:
+            cmds.SaveScene()
+        return [self.scene_name]
+
+
 
     def get_params(self):
         params = {}
