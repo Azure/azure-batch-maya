@@ -96,8 +96,8 @@ class BatchAppsConfig(object):
                                 name=self._ini_file,
                                 datadir=data_dir[1])
             
-            cfg.add_jobtype("Arnold")
-            cfg.current_jobtype("Arnold")
+            cfg.add_jobtype("Maya")
+            cfg.current_jobtype("Maya")
             
         except (InvalidConfigException, IndexError) as exp:
             raise Exception("Error occurred during configuration {0}".format(exp))
