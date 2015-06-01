@@ -161,10 +161,10 @@
 &lt;/ADLMCUSTOMENV&gt;</value>
   </data>
   <data name="dirMap" xml:space="preserve">
-    <value>global proc dirMap() 
+    <value>global proc renderPrep() 
 {{ 
-dirmap -en true; 
-{0}
+{0} 
+{1}
 }}</value>
   </data>
   <data name="env" xml:space="preserve">
@@ -176,26 +176,34 @@ TEMP = {2}
 MAYA_LOCATION = {0}\Maya2015
 TMPDIR = {2}
 MENTALRAY_BIN_LOCATION = {0}/mentalrayForMaya2015/bin
-MAYA_PLUG_IN_PATH = {1};{0}/Maya2015/bin/plug-ins;{0}/Maya2015/plug-ins/bifrost/plug-ins;{0}/Maya2015/plug-ins/fbx/plug-ins;{0}/mentalrayForMaya2015/plug-ins;{0}/solidangle/mtoadeploy/2015/plug-ins;{0}/Maya2015/plug-ins/substance/plug-ins;{0}/Maya2015/plug-ins/xgen/plug-ins;
+MAYA_PLUG_IN_PATH = {1};{0}/Maya2015/bin/plug-ins;{0}/Maya2015/plug-ins/bifrost/plug-ins;{0}/Maya2015/plug-ins/fbx/plug-ins;{0}/mentalrayForMaya2015/plug-ins;{0}/solidangle/mtoadeploy/2015/plug-ins;{0}/Maya2015/plug-ins/substance/plug-ins;{0}/Maya2015/plug-ins/xgen/plug-ins;{0}/PeregrineLabs/Yeti/plug-ins;
 PYTHONHOME = {0}/Maya2015/Python
 XGEN_LOCATION = {0}/Maya2015/plug-ins/xgen/
 XGEN_ROOT = {1}/xgen
 SUBSTANCES_LOCATION = {0}/Maya2015/plug-ins/substance/substances
 BIFROST_LOCATION = {0}/Maya2015/plug-ins/bifrost/
 TMP = {2}
-PYTHONPATH = {0}/Maya2015/plug-ins/bifrost/scripts/presets;{0}/Maya2015/plug-ins/bifrost/scripts;{0}/Maya2015/plug-ins/fbx/scripts;{0}/mentalrayForMaya2015/scripts/AETemplates;{0}/mentalrayForMaya2015/scripts/mentalray;{0}/mentalrayForMaya2015/scripts/unsupported;{0}/mentalrayForMaya2015/scripts;{0}/solidangle/mtoadeploy/2015/scripts;{0}/Maya2015/plug-ins/substance/scripts;{0}/Maya2015/plug-ins/xgen/scripts/cafm;{0}/Maya2015/plug-ins/xgen/scripts/xgenm;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/xmaya;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/brushes;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/dialogs;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/fxmodules;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/tabs;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/util;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/widgets;{0}/Maya2015/plug-ins/xgen/scripts
+PYTHONPATH = {0}/Maya2015/plug-ins/bifrost/scripts/presets;{0}/Maya2015/plug-ins/bifrost/scripts;{0}/Maya2015/plug-ins/fbx/scripts;{0}/mentalrayForMaya2015/scripts/AETemplates;{0}/mentalrayForMaya2015/scripts/mentalray;{0}/mentalrayForMaya2015/scripts/unsupported;{0}/mentalrayForMaya2015/scripts;{0}/solidangle/mtoadeploy/2015/scripts;{0}/Maya2015/plug-ins/substance/scripts;{0}/Maya2015/plug-ins/xgen/scripts/cafm;{0}/Maya2015/plug-ins/xgen/scripts/xgenm;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/xmaya;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/brushes;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/dialogs;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/fxmodules;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/tabs;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/util;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/widgets;{0}/Maya2015/plug-ins/xgen/scripts;{0}/PeregrineLabs/Yeti/scripts;
 ILMDIR = {0}/Common Files/Autodesk Shared/Materials
-ARNOLD_PLUGIN_PATH = {0}/solidangle/mtoadeploy/2015/shaders
+ARNOLD_PLUGIN_PATH = {0}/solidangle/mtoadeploy/2015/shaders;{0}/solidangle/mtoadeploy/2015/procedurals;
 MENTALRAY_SHADERS_LOCATION = {0}/mentalrayForMaya2015/shaders
 MAYA_RENDER_DESC_PATH = {0}/mentalrayForMaya2015/rendererDesc
 MENTAL_RAY_INCLUDE_LOCATION = {0}/mentalrayForMaya2015/shaders/include
 MTOA_PATH = {0}/solidangle/mtoadeploy/2015/
-MTOA_EXTENSIONS_PATH = {0}/solidangle/mtoadeploy/2015/extensions
-MAYA_SCRIPT_PATH = {1};{0}/Maya2015/scripts;{0}/Maya2015/scripts/startup;{0}/Maya2015/scripts/others;{0}/Maya2015/scripts/AETemplates;{0}/Maya2015/scripts/unsupported;{0}/Maya2015/scripts/paintEffects;{0}/Maya2015/scripts/fluidEffects;{0}/Maya2015/scripts/hair;{0}/Maya2015/scripts/cloth;{0}/Maya2015/scripts/live;{0}/Maya2015/scripts/fur;{0}/Maya2015/scripts/muscle;{0}/Maya2015/scripts/turtle;{0}/Maya2015/scripts/FBX;{0}/Maya2015/scripts/mayaHIK;{0}/Maya2015/plug-ins/bifrost/scripts/presets;{0}/Maya2015/plug-ins/bifrost/scripts;{0}/Maya2015/plug-ins/fbx/scripts;{0}/mentalrayForMaya2015/scripts/AETemplates;{0}/mentalrayForMaya2015/scripts/mentalray;{0}/mentalrayForMaya2015/scripts/unsupported;{0}/mentalrayForMaya2015/scripts;{0}/solidangle/mtoadeploy/2015/scripts
+MTOA_EXTENSIONS_PATH = {0}/solidangle/mtoadeploy/2015/extensions;{0}/PeregrineLabs/Yeti/plug-ins;
+MTOA_PROCEDURAL_PATH = {0}/PeregrineLabs/Yeti/bin;
+MAYA_SCRIPT_PATH = {1};{0}/Maya2015/scripts;{0}/Maya2015/scripts/startup;{0}/Maya2015/scripts/others;{0}/Maya2015/scripts/AETemplates;{0}/Maya2015/scripts/unsupported;{0}/Maya2015/scripts/paintEffects;{0}/Maya2015/scripts/fluidEffects;{0}/Maya2015/scripts/hair;{0}/Maya2015/scripts/cloth;{0}/Maya2015/scripts/live;{0}/Maya2015/scripts/fur;{0}/Maya2015/scripts/muscle;{0}/Maya2015/scripts/turtle;{0}/Maya2015/scripts/FBX;{0}/Maya2015/scripts/mayaHIK;{0}/Maya2015/plug-ins/bifrost/scripts/presets;{0}/Maya2015/plug-ins/bifrost/scripts;{0}/Maya2015/plug-ins/fbx/scripts;{0}/mentalrayForMaya2015/scripts/AETemplates;{0}/mentalrayForMaya2015/scripts/mentalray;{0}/mentalrayForMaya2015/scripts/unsupported;{0}/mentalrayForMaya2015/scripts;{0}/solidangle/mtoadeploy/2015/scripts;{0}/PeregrineLabs/Yeti/scripts;
 IMF_PLUG_IN_PATH = {0}/mentalrayForMaya2015/bin/image
 MAYA_PLUGIN_RESOURCE_PATH = {1};{0}/Maya2015/plug-ins/bifrost/resources;{0}/Maya2015/plug-ins/fbx/resources;{0}/mentalrayForMaya2015/resources;{0}/solidangle/mtoadeploy/2015/resources;{0}/Maya2015/plug-ins/substance/resources;{0}/Maya2015/plug-ins/xgen/resources
 MAYA_PRESET_PATH = {0}/Maya2015/plug-ins/bifrost/presets;{0}/Maya2015/plug-ins/fbx/presets;{0}/mentalrayForMaya2015/presets/attrPresets;{0}/mentalrayForMaya2015/presets/attrPresets/maya_bifrost_liquid;{0}/mentalrayForMaya2015/presets/attrPresets/mia_material;{0}/mentalrayForMaya2015/presets/attrPresets/mia_material_x;{0}/mentalrayForMaya2015/presets/attrPresets/mia_material_x_passes;{0}/mentalrayForMaya2015/presets;{0}/solidangle/mtoadeploy/2015/presets;{0}/Maya2015/plug-ins/substance/presets;{0}/Maya2015/plug-ins/xgen/presets
-XBMLANGPATH = {0}/Maya2015/icons;{0}/Maya2015/app-defaults;{0}/Maya2015/icons/paintEffects;{0}/Maya2015/icons/fluidEffects;{0}/Maya2015/icons/hair;{0}/Maya2015/icons/cloth;{0}/Maya2015/icons/live;{0}/Maya2015/icons/fur;{0}/Maya2015/icons/muscle;{0}/Maya2015/icons/turtle;{0}/Maya2015/icons/FBX;{0}/Maya2015/icons/mayaHIK;{0}/Maya2015/plug-ins/bifrost/icons;{0}/Maya2015/plug-ins/fbx/icons;{0}/mentalrayForMaya2015/icons;{0}/solidangle/mtoadeploy/2015/icons;{0}/Maya2015/plug-ins/substance/icons;{0}/Maya2015/plug-ins/xgen/icons</value>
+XBMLANGPATH = {0}/Maya2015/icons;{0}/Maya2015/app-defaults;{0}/Maya2015/icons/paintEffects;{0}/Maya2015/icons/fluidEffects;{0}/Maya2015/icons/hair;{0}/Maya2015/icons/cloth;{0}/Maya2015/icons/live;{0}/Maya2015/icons/fur;{0}/Maya2015/icons/muscle;{0}/Maya2015/icons/turtle;{0}/Maya2015/icons/FBX;{0}/Maya2015/icons/mayaHIK;{0}/Maya2015/plug-ins/bifrost/icons;{0}/Maya2015/plug-ins/fbx/icons;{0}/mentalrayForMaya2015/icons;{0}/solidangle/mtoadeploy/2015/icons;{0}/Maya2015/plug-ins/substance/icons;{0}/Maya2015/plug-ins/xgen/icons;{0}/PeregrineLabs/Yeti/icons
+DYLD_LIBRARY_PATH = {0}/PeregrineLabs/Yeti/bin;
+LD_LIBRARY_PATH = {0}/PeregrineLabs/Yeti/bin;
+YETI_HOME = {0}/PeregrineLabs/Yeti;
+YETI_DOCS = {0}/PeregrineLabs/Yeti/docs;
+YETI_INTERACTIVE_LICENSE = 0
+PEREGRINE_LOG_FILE = {1}
+YETI_TMP = {2}</value>
   </data>
   <data name="lic" xml:space="preserve">
     <value>AUTODESK_ADLM_THINCLIENT_ENV={0}\Adlm\AdlmThinClientCustomEnv.xml

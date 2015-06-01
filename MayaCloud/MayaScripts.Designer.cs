@@ -81,10 +81,10 @@ namespace Maya.Cloud {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to global proc dirMap() 
+        ///   Looks up a localized string similar to global proc renderPrep() 
         ///{{ 
-        ///dirmap -en true; 
-        ///{0}
+        ///{0} 
+        ///{1}
         ///}}.
         /// </summary>
         internal static string dirMap {
