@@ -26,6 +26,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="batchapps_maya\modules\arnold_renderer.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="batchapps_maya\modules\default.py">
       <SubType>Code</SubType>
     </Compile>
