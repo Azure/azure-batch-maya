@@ -57,7 +57,7 @@ class BatchAppsSettings(object):
 
         self._log = logging.getLogger('BatchAppsMaya')
 
-        self.supported_versions = [2015]
+        self.supported_versions = [2015, 2016, 2017]
         self.version = self.check_maya_version()
         
         try:

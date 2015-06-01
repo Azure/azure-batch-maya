@@ -42,7 +42,7 @@
 #
 # To run the script, run the following command as an administrator:
 #
-#   >> mayapy.exe dependency_check.py
+#   >> mayapy.exe dependencies.py
 #
 #--------------------------------------------------------------------------
 
