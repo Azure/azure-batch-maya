@@ -95,6 +95,10 @@ def download_lib(lib_name, lib_version, lib_module, lib_ext):
 
     try:
 
+        if os.path.isdir(lib_inst):
+            print("  - Removing old version at {0}".format(lib_inst))
+            shutil.rmtree(lib_inst)
+
         print("  - Creating temp dir at: {0}".format(TEMP_DIR))
         if not os.path.exists(TEMP_DIR):    
             os.mkdir(TEMP_DIR)
@@ -132,8 +136,12 @@ if __name__ == '__main__':
 
     for lib in LIBS:
         try:
-            importlib.import_module(lib['mod'])
+            mod = importlib.import_module(lib['mod'])
             print("Found {0}".format(lib['lib']))
+            if hasattr(mod, '__version__'):
+                if mod.__version__ != lib['ver']:
+                    print("Installed version out-of-date, upgrading.")
+                    raise(ImportError())
 
         except ImportError:
             print("Missing {0}".format(lib['lib']))
