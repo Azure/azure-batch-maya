@@ -42,7 +42,29 @@ namespace Maya.Cloud
 {
     public abstract class MayaParameters
     {
-        public static readonly IList<String> SupportedFormats = new List<String> { ".png", ".bmp", ".jpg", ".tga", ".exr" };
+        public static readonly IList<String> ThumbFormats = new List<String> { ".png", ".bmp", ".jpg", ".tga", ".exr" };
+
+        public static readonly String Application = "Maya2015";
+
+        public static readonly String ExeDirectory = @"Maya2015\bin";
+
+        public static readonly String Executable = "render.exe";
+
+        public static readonly String Command = @"-renderer {0} -log ""{1}"" -proj ""{2}"" -preRender ""renderPrep"" -rd ""{3}"" -s {4} -e {4} ""{5}""";
+
+        public static readonly String EnvDirectory = "2015-x64";
+
+        public static readonly IDictionary<String, String> EnvVariables = new Dictionary<String, String> { { "YETI_HOME", @"{0}\PeregrineLabs\Yeti\bin" },
+                                                                                                           { "YETI_INTERACTIVE_LICENSE", "0" },
+                                                                                                           { "MAYA_APP_DIR", @"{2}" } };
+
+        public static readonly IList<String> PathVariables = new List<String> { @"{0}\{1}\bin",
+                                                                                @"{0}\{1}\plug-ins\substance\bin",
+                                                                                @"{0}\{1}\plug-ins\xgen\bin",
+                                                                                @"{0}\{1}\plug-ins\bifrost\bin",
+                                                                                @"{0}\mentalrayForMaya2015\bin",
+                                                                                @"{0}\solidangle\mtoadeploy\2015\bin",
+                                                                                @"{0}\PeregrineLabs\Yeti\bin"};
 
         public abstract bool Valid { get; }
 

@@ -48,7 +48,7 @@ namespace Maya.Cloud
         /// </summary>
         private string RenderPath
         {
-            get { return @"Maya2015\bin\render.exe"; }
+            get { return Path.Combine(MayaParameters.ExeDirectory, MayaParameters.Executable); }
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Maya.Cloud
         /// </summary>
         private string RenderArgs
         {
-            get { return @"-renderer {0} -log ""{1}"" -proj ""{2}"" -preRender ""renderPrep"" -rd ""{3}"" -s {4} -e {4} ""{5}"""; }
+            get { return MayaParameters.Command; }
         }
 
         /// <summary>
@@ -68,11 +68,6 @@ namespace Maya.Cloud
         protected override TaskProcessResult RunExternalTaskProcess(ITask task, TaskExecutionSettings settings)
         {
             var taskParameters = MayaParameters.FromTask(task);
-            var projDir = ConfigureMayaEnv(task, LocalStoragePath, ExecutablesPath);
-            CreateMappingScript(taskParameters, LocalStoragePath);
-
-            var initialFiles = CollectFiles(LocalStoragePath);
-
             if (!taskParameters.Valid)
             {
                 Log.Error(taskParameters.ErrorText);
@@ -83,17 +78,21 @@ namespace Maya.Cloud
                 };
             }
 
+
+            var projDir = ConfigureMayaEnv(task);
+
+            CreateEnvVariables();
+            CreatePreRenderScript(taskParameters);
+
+            var initialFiles = CollectFiles(LocalStoragePath);
             var inputFile = Path.Combine(LocalStoragePath, taskParameters.JobFile);
             var logFile = string.Format("{0}.log", task.TaskId);
 
-            Environment.SetEnvironmentVariable("YETI_HOME", ExecutablePath("PeregrineLabs\\Yeti\\bin"));
-            Environment.SetEnvironmentVariable("YETI_INTERACTIVE_LICENSE", "0");
 
             var externalProcessPath = ExecutablePath(RenderPath);
             var externalProcessArgs = string.Format(CultureInfo.InvariantCulture, RenderArgs, taskParameters.Renderer,
                 logFile, LocalStoragePath, LocalStoragePath, task.TaskIndex, inputFile);
 
-            Log.Info("Set up PATH Environment: {0}", Environment.GetEnvironmentVariable("PATH"));
             Log.Info("Calling '{0}' with Args '{1}' for Task '{2}' / Job '{3}' .", RenderPath, externalProcessArgs, task.TaskId, task.JobId);
             var processResult = ExecuteProcess(externalProcessPath, externalProcessArgs);
 
@@ -171,28 +170,10 @@ namespace Maya.Cloud
             return result;
         }
 
-        private string ConfigureMayaEnv(ITask task, string cwd, string exe)
+        private string ConfigureMayaEnv(ITask task)
         {
-            Environment.SetEnvironmentVariable("MAYA_APP_DIR", cwd);
-            
-            var sysPath = Environment.GetEnvironmentVariable("PATH");
 
-            List<string> appendPaths = new List<string> {
-                "{0}\\Maya2015\\bin",
-                "{0}\\Maya2015\\plug-ins\\substance\\bin",
-                "{0}\\Maya2015\\plug-ins\\xgen\\bin",
-                "{0}\\Maya2015\\plug-ins\\bifrost\\bin",
-                "{0}\\mentalrayForMaya2015\\bin",
-                "{0}\\solidangle\\mtoadeploy\\2015\\bin",
-                "{0}\\PeregrineLabs\\Yeti\\bin"
-            };
-
-            var pathVar = String.Join(";", appendPaths.ToArray());
-            pathVar = String.Format(pathVar, exe);
-
-            Environment.SetEnvironmentVariable("PATH", string.Format(@"{0};{1}", sysPath, pathVar));
-
-            var project = Path.Combine(cwd, "workspace.mel");
+            var project = Path.Combine(LocalStoragePath, "workspace.mel");
             if (!File.Exists(project))
             {
                 using (StreamWriter workspace = new StreamWriter(project))
@@ -201,27 +182,27 @@ namespace Maya.Cloud
                 }
             }
 
-            var license = Path.Combine(exe, "Maya2015", "bin", "License.env");
+            var license = Path.Combine(ExecutablePath(MayaParameters.ExeDirectory), "License.env");
             if (!File.Exists(license))
             {
-                var formattedLic = string.Format(MayaScripts.lic, exe);
+                var formattedLic = string.Format(MayaScripts.lic, ExecutablesPath);
                 using (var licFile = new StreamWriter(license))
                 {
                     licFile.Write(formattedLic);
                 }
             }
 
-            var client = Path.Combine(exe, "Adlm", "AdlmThinClientCustomEnv.xml");
+            var client = Path.Combine(ExecutablePath("Adlm"), "AdlmThinClientCustomEnv.xml");
             if (!File.Exists(client))
             {
-                var formattedClient = string.Format(MayaScripts.client, exe);
+                var formattedClient = string.Format(MayaScripts.client, ExecutablesPath);
                 using (var clientFile = new StreamWriter(client))
                 {
                     clientFile.Write(formattedClient);
                 }
             }
 
-            var envDir = Path.Combine(cwd, "2015-x64"); //TODO: Fix this to make the version depend on vhd version
+            var envDir = Path.Combine(LocalStoragePath, MayaParameters.EnvDirectory);
             if (!Directory.Exists(envDir))
             {
                 Directory.CreateDirectory(envDir);
@@ -236,18 +217,17 @@ namespace Maya.Cloud
             var envPath = Path.Combine(envDir, "Maya.env");
             if (!File.Exists(envPath))
             {
-                var formattedEnv = string.Format(MayaScripts.env, exe, cwd, Path.GetTempPath());
+                var formattedEnv = string.Format(MayaScripts.env, ExecutablesPath, LocalStoragePath, Path.GetTempPath());
                 using (var envFile = new StreamWriter(envPath))
                 {
                     envFile.Write(formattedEnv);
                 }
             }
 
-            var yetiMod = Path.Combine(cwd, "pgYetiMaya.mod");
+            var yetiMod = Path.Combine(LocalStoragePath, "pgYetiMaya.mod");
             if (!File.Exists(yetiMod))
             {
                 var formattedMod = string.Format("+ pgYetiMaya 1.3.19 {0}", ExecutablePath("PeregrineLabs\\Yeti"));
-                Log.Info("Added mod file {0} with path {1}", yetiMod, formattedMod);
                 using (var modFile = new StreamWriter(yetiMod))
                 {
                     modFile.Write(formattedMod);
@@ -257,16 +237,35 @@ namespace Maya.Cloud
             return project;
         }
 
-        private void CreateMappingScript(MayaParameters parameters, string localPath)
+        private void CreateEnvVariables()
         {
-            var scriptPath = Path.Combine(localPath, "2015-x64", "scripts", "renderPrep.mel");
+            foreach (var EnvVar in MayaParameters.EnvVariables)
+            {
+                var CurrentVar = Environment.GetEnvironmentVariable(EnvVar.Key);
+                if (CurrentVar == null)
+                {
+                    var NewVar = String.Format(EnvVar.Value, ExecutablesPath, MayaParameters.Application, LocalStoragePath);
+                    Environment.SetEnvironmentVariable(EnvVar.Key, NewVar);
+                }
+            }
+
+            var SysPath = Environment.GetEnvironmentVariable("PATH");
+
+            var PathVar = String.Join(";", MayaParameters.PathVariables.ToArray());
+            PathVar = String.Format(PathVar, ExecutablesPath, MayaParameters.Application, LocalStoragePath);
+
+            Environment.SetEnvironmentVariable("PATH", string.Format(@"{0};{1}", SysPath, PathVar)); 
+        }
+
+        private void CreatePreRenderScript(MayaParameters parameters)
+        {
+            var scriptPath = Path.Combine(LocalStoragePath, MayaParameters.EnvDirectory, "scripts", "renderPrep.mel");
             var remappedPaths = parameters.Settings.PathMaps;
             var pathsScript = "";
 
             if (File.Exists(scriptPath))
                 return;
 
-            Log.Info("Formatting script {0}", MayaScripts.dirMap);
             string formattedScript;
 
             if (remappedPaths.Count > 0)
@@ -274,7 +273,7 @@ namespace Maya.Cloud
                 foreach (var p in remappedPaths)
                 {
                     Log.Info("Remapping path {0}", p);
-                    pathsScript += string.Format("dirmap -m \"{0}\" \"{1}\";\n", p, localPath.Replace('\\', '/'));
+                    pathsScript += string.Format("dirmap -m \"{0}\" \"{1}\";\n", p, LocalStoragePath.Replace('\\', '/'));
                 }
                 formattedScript = string.Format(MayaScripts.dirMap, "dirmap -en true;", pathsScript);
             }
@@ -342,7 +341,7 @@ namespace Maya.Cloud
                 return string.Empty;
             }
 
-            var filtered = inputs.Where(x => MayaParameters.SupportedFormats.Contains(Path.GetExtension(x)));
+            var filtered = inputs.Where(x => MayaParameters.ThumbFormats.Contains(Path.GetExtension(x)));
             if (filtered.Count() < 1)
             {
                 Log.Info("No thumbnail compatible images found.");

@@ -85,9 +85,9 @@ class BatchAppsSettings(object):
         checked_version = self.check_version(current_version)
 
         if checked_version != current_version:
-            message = """You are using a version of Maya ({0}) that BatchApps does not support.
-                         Your job will render with the closest available version ({1}), however
-                         we cannot guarantee its success.""".format(current_version, checked_version)
+            message = "You are using a version of Maya ({0}) that BatchApps does not support.\n"\
+                      "Your job will render with the closest available version ({1}), however\n"\
+                      "we cannot guarantee its success.".format(current_version, checked_version)
 
             maya.warning(message)
         return checked_version
