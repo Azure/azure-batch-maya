@@ -59,6 +59,9 @@ def main():
                 if os.path.splitext(file)[1] in ['.png', '.mel', '.py']:
                     maya_zip.write(os.path.relpath(os.path.join(root, file)))
 
+        depends = os.path.join(os.path.dirname(__file__), "dependencies.py")
+        maya_zip.write(depends, "dependencies.py")
+
     print("Package complete!")
 
 if __name__ == '__main__':
