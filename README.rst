@@ -131,7 +131,7 @@ packages will need to be installed.
 There are several approaches one could take:
 
 - Run the included dependencies.py script with mayapy.exe. This is an experimental script to conveniently
-  download and unpack the required modules into MAya's Python environment. To execute, run the following
+  download and unpack the required modules into Maya's Python environment. To execute, run the following
   command from a terminal/command line with administrator privileges::
 
 	>> mayapy.exe dependencies.py
