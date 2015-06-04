@@ -53,6 +53,9 @@ namespace Maya.Cloud.Settings
         [DataMember]
         public String UserDirectory { get; set; }
 
+        [DataMember]
+        public String Adlm { get; set; }
+
 
     }
 }

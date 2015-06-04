@@ -189,7 +189,7 @@ namespace Maya.Cloud
             var client = Path.Combine(ExecutablePath("Adlm"), "AdlmThinClientCustomEnv.xml");
             if (!File.Exists(client))
             {
-                var formattedClient = string.Format(MayaScripts.client, ExecutablesPath);
+                var formattedClient = string.Format(MayaScripts.client, ExecutablesPath, app.Adlm);
                 using (var clientFile = new StreamWriter(client))
                 {
                     clientFile.Write(formattedClient);

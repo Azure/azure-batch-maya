@@ -66,13 +66,13 @@ namespace Maya.Cloud {
         ///    &lt;PLATFORM OS=&quot;Windows&quot;&gt;
         ///        &lt;KEY ID=&quot;ADLM_COMMON_BIN_LOCATION&quot;&gt;
         ///            &lt;!--Path to the AdLM shared executables--&gt;
-        ///            &lt;STRING&gt;{0}\Common Files\Autodesk Shared\Adlm\R&lt;/STRING&gt;
+        ///            &lt;STRING&gt;{0}\Common Files\Autodesk Shared\Adlm\{1}&lt;/STRING&gt;
         ///        &lt;/KEY&gt;
         ///        &lt;KEY ID=&quot;ADLM_COMMON_LIB_LOCATION&quot;&gt;
         ///            &lt;!--Path to the AdLM shared libraries--&gt;
-        ///            &lt;STRING&gt;{0}\Common Files\Autodesk Shared\Adlm\R&lt;/STRING&gt;
+        ///            &lt;STRING&gt;{0}\Common Files\Autodesk Shared\Adlm\{1}&lt;/STRING&gt;
         ///        &lt;/KEY&gt;
-        ///        &lt;KEY ID=&quot;ADLM_COMMON_LOCALIZ [rest of string was truncated]&quot;;.
+        ///        &lt;KEY ID=&quot;ADLM_COMMON_LOC [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string client {
             get {
