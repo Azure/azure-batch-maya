@@ -123,6 +123,10 @@ class BatchAppsSubmission:
         self.configure_renderer()
         self.renderer.display(layout)
         self.ui.submit_enabled(self.renderer.render_enabled())
+
+    def available_pools(self):
+        pools = self.pool_manager.list_pools(lazy=True)
+        return pools
         
     def submit(self):
         self.renderer.disable(False)

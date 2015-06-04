@@ -117,7 +117,7 @@ class SubmissionUI(object):
     def get_pool(self):
         pool_type = maya.radio_group(self.select_pool_type, query=True, select=True)
         if pool_type == 2:
-            details = str(maya.text_field(self.control, query=True, text=True))
+            details = str(maya.menu(self.control, query=True, value=True))
         else:
             details = int(maya.int_slider(self.control, query=True, value=True))
         return {pool_type: details}
@@ -150,8 +150,14 @@ class SubmissionUI(object):
             align="right",
             parent=self.pool_settings)
 
-        self.control = maya.text_field(
-            parent=self.pool_settings,
-            annotation="Use an existing persistent pool ID",
-            editable=True)
+        pool_options = self.base.available_pools()
+        self.control = maya.menu(parent=self.pool_settings, annotation="Use an existing persistent pool ID")
+        for pool_id in pool_options:
+            maya.menu_option(pool_id)
+        maya.parent()
+
+        #with utils.Dropdown(None, parent=self.pool_settings, annotation="Use an existing persistent pool ID") as pools:
+        #    self.control = pools
+        #    for pool_id in pool_options:
+        #        self.control.add_item(pool_id)
 

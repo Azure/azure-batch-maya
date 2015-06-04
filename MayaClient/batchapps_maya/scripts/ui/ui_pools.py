@@ -101,6 +101,7 @@ class PoolsUI(object):
                 
 
     def create_pool_entry(self, name, index):
+
         frame = maya.frame_layout(label=name,
                                     collapsable=True,
                                     collapse=True,
@@ -191,7 +192,7 @@ class BatchAppsPoolInfo:
                 fieldMinValue=1,
                 fieldMaxValue=100,
                 field=True,
-                width=200,
+                width=230,
                 parent=self.listbox,
                 annotation="Number of instances to work in pool.")
             self.content.extend([self.resize_button, self.resize_int])
@@ -229,8 +230,7 @@ class BatchAppsPoolInfo:
                            command=command)
 
     def delete_pool(self, *args):
-        self.base.delete_pool()
-        #self.base.refresh()
+        self.base.delete_pool()    
 
     def resize_pool(self, *args):
         self.change_resize_label("Resizing...", enable=False)

@@ -52,17 +52,21 @@ class BatchAppsPools(object):
         self.pools = []
         self.selected_pool = None
 
-    #def start(self):
-    #    self._log.debug("Starting BatchAppsPools...")
-    #    self.ui.refresh()
-
     def configure(self, session):
         self._session = session
         self.manager = PoolManager(self._session.credentials, self._session.config)
 
-    def get_pools(self):
+    def list_pools(self, lazy=False):
+        #if lazy and self.pools:
+        #    return [pool.id for pool in self.pools if not pool.auto]
+
         self.pools = self._call(self.manager.get_pools)
         self.count = len(self.manager)
+        return [pool.id for pool in self.pools if not pool.auto]
+
+    def get_pools(self):
+        #if self.ui.ready or not self.pools:
+        self.list_pools()
 
         display_pools = []
         for index, pool in enumerate(self.pools):

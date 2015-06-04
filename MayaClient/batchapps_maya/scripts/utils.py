@@ -116,9 +116,9 @@ class ScrollLayout(Layout):
 
 class Dropdown(object):
 
-    def __init__(self, command):
+    def __init__(self, command, **kwargs):
 
-        self.menu = maya.menu(changeCommand=command)
+        self.menu = maya.menu(changeCommand=command, **kwargs)
 
     def __enter__(self):
         return self
@@ -131,6 +131,9 @@ class Dropdown(object):
 
     def selected(self):
         return int(maya.menu(self.menu, query=True, select=True))
+
+    def value(self):
+        return str(maya.menu(self.menu, query=True, value=True))
 
     def select(self, value):
         maya.menu(self.menu, edit=True, select=int(value))
