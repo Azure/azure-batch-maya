@@ -117,6 +117,16 @@ class TestBatchAppsSubmission(unittest.TestCase):
         self.mock_self.renderer.delete.assert_called_with()
         self.mock_self.renderer.display.assert_called_with("layout")
 
+    def test_available_pools(self):
+
+        def list_pools(**kwargs):
+            self.assertTrue(kwargs.get("lazy"))
+            return ["pool1", "pool2"]
+
+        self.mock_self.pool_manager = mock.Mock(list_pools=list_pools)
+        pools = BatchAppsSubmission.available_pools(self.mock_self)
+        self.assertEqual(pools, ["pool1", "pool2"])
+
     @mock.patch("submission.maya")
     def test_submit(self, mock_maya):
         
