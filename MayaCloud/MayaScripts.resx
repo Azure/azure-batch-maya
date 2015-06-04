@@ -123,19 +123,19 @@
     &lt;PLATFORM OS="Windows"&gt;
         &lt;KEY ID="ADLM_COMMON_BIN_LOCATION"&gt;
             &lt;!--Path to the AdLM shared executables--&gt;
-            &lt;STRING&gt;{0}\Common Files\Autodesk Shared\Adlm\R9&lt;/STRING&gt;
+            &lt;STRING&gt;{0}\Common Files\Autodesk Shared\Adlm\R&lt;/STRING&gt;
         &lt;/KEY&gt;
         &lt;KEY ID="ADLM_COMMON_LIB_LOCATION"&gt;
             &lt;!--Path to the AdLM shared libraries--&gt;
-            &lt;STRING&gt;{0}\Common Files\Autodesk Shared\Adlm\R9&lt;/STRING&gt;
+            &lt;STRING&gt;{0}\Common Files\Autodesk Shared\Adlm\R&lt;/STRING&gt;
         &lt;/KEY&gt;
         &lt;KEY ID="ADLM_COMMON_LOCALIZED_DATA_LOCATION"&gt;
             &lt;!--Path to the AdLM shared localized resource files (do not include the language folder)--&gt;
-            &lt;STRING&gt;{0}\Common Files\Autodesk Shared\Adlm\R9&lt;/STRING&gt;
+            &lt;STRING&gt;{0}\Common Files\Autodesk Shared\Adlm\R&lt;/STRING&gt;
         &lt;/KEY&gt;
         &lt;KEY ID="ADLM_ERROR_TABLE_LOCATION"&gt;
             &lt;!--Path to AdlmErrorCodes.xml--&gt;
-            &lt;STRING&gt;{0}\Adlm\R9&lt;/STRING&gt;
+            &lt;STRING&gt;{0}\Adlm\R&lt;/STRING&gt;
         &lt;/KEY&gt;
         &lt;KEY ID="ADLM_PIT_FILE_LOCATION"&gt;
             &lt;!--Path to the ProductInformation.pit file--&gt;
@@ -168,35 +168,35 @@
 }}</value>
   </data>
   <data name="env" xml:space="preserve">
-    <value>MAYA_MODULE_PATH ={0}/Maya2015/modules;{1}/2015-x64/modules;{1};{0}/Common Files/Autodesk Shared/Modules/maya/2015
-FBX_LOCATION = {0}/Maya2015/plug-ing/fbx/
-MENTALRAY_LOCATION = {0}/mentalrayForMaya2015/
-MAYA_SCRIPT_BASE = {0}/Maya2015
+    <value>MAYA_MODULE_PATH ={0}/{3}/modules;{1}/{4}/modules;{1};{0}/Common Files/Autodesk Shared/Modules/maya/{5}
+FBX_LOCATION = {0}/{3}/plug-ing/fbx/
+MENTALRAY_LOCATION = {0}/mentalrayForMaya{5}/
+MAYA_SCRIPT_BASE = {0}/{3}
 TEMP = {2}
-MAYA_LOCATION = {0}\Maya2015
+MAYA_LOCATION = {0}\{3}
 TMPDIR = {2}
-MENTALRAY_BIN_LOCATION = {0}/mentalrayForMaya2015/bin
-MAYA_PLUG_IN_PATH = {1};{0}/Maya2015/bin/plug-ins;{0}/Maya2015/plug-ins/bifrost/plug-ins;{0}/Maya2015/plug-ins/fbx/plug-ins;{0}/mentalrayForMaya2015/plug-ins;{0}/solidangle/mtoadeploy/2015/plug-ins;{0}/Maya2015/plug-ins/substance/plug-ins;{0}/Maya2015/plug-ins/xgen/plug-ins;{0}/PeregrineLabs/Yeti/plug-ins;
-PYTHONHOME = {0}/Maya2015/Python
-XGEN_LOCATION = {0}/Maya2015/plug-ins/xgen/
+MENTALRAY_BIN_LOCATION = {0}/mentalrayForMaya{5}/bin
+MAYA_PLUG_IN_PATH = {1};{0}/{3}/bin/plug-ins;{0}/{3}/plug-ins/bifrost/plug-ins;{0}/{3}/plug-ins/fbx/plug-ins;{0}/mentalrayForMaya{5}/plug-ins;{0}/solidangle/mtoadeploy/{5}/plug-ins;{0}/{3}/plug-ins/substance/plug-ins;{0}/{3}/plug-ins/xgen/plug-ins;{0}/PeregrineLabs/Yeti/plug-ins;
+PYTHONHOME = {0}/{3}/Python
+XGEN_LOCATION = {0}/{3}/plug-ins/xgen/
 XGEN_ROOT = {1}/xgen
-SUBSTANCES_LOCATION = {0}/Maya2015/plug-ins/substance/substances
-BIFROST_LOCATION = {0}/Maya2015/plug-ins/bifrost/
+SUBSTANCES_LOCATION = {0}/{3}/plug-ins/substance/substances
+BIFROST_LOCATION = {0}/{3}/plug-ins/bifrost/
 TMP = {2}
-PYTHONPATH = {0}/Maya2015/plug-ins/bifrost/scripts/presets;{0}/Maya2015/plug-ins/bifrost/scripts;{0}/Maya2015/plug-ins/fbx/scripts;{0}/mentalrayForMaya2015/scripts/AETemplates;{0}/mentalrayForMaya2015/scripts/mentalray;{0}/mentalrayForMaya2015/scripts/unsupported;{0}/mentalrayForMaya2015/scripts;{0}/solidangle/mtoadeploy/2015/scripts;{0}/Maya2015/plug-ins/substance/scripts;{0}/Maya2015/plug-ins/xgen/scripts/cafm;{0}/Maya2015/plug-ins/xgen/scripts/xgenm;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/xmaya;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/brushes;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/dialogs;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/fxmodules;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/tabs;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/util;{0}/Maya2015/plug-ins/xgen/scripts/xgenm/ui/widgets;{0}/Maya2015/plug-ins/xgen/scripts;{0}/PeregrineLabs/Yeti/scripts;
+PYTHONPATH = {0}/{3}/plug-ins/bifrost/scripts/presets;{0}/{3}/plug-ins/bifrost/scripts;{0}/{3}/plug-ins/fbx/scripts;{0}/mentalrayForMaya{5}/scripts/AETemplates;{0}/mentalrayForMaya{5}/scripts/mentalray;{0}/mentalrayForMaya{5}/scripts/unsupported;{0}/mentalrayForMaya{5}/scripts;{0}/solidangle/mtoadeploy/{5}/scripts;{0}/{3}/plug-ins/substance/scripts;{0}/{3}/plug-ins/xgen/scripts/cafm;{0}/{3}/plug-ins/xgen/scripts/xgenm;{0}/{3}/plug-ins/xgen/scripts/xgenm/ui;{0}/{3}/plug-ins/xgen/scripts/xgenm/xmaya;{0}/{3}/plug-ins/xgen/scripts/xgenm/ui/brushes;{0}/{3}/plug-ins/xgen/scripts/xgenm/ui/dialogs;{0}/{3}/plug-ins/xgen/scripts/xgenm/ui/fxmodules;{0}/{3}/plug-ins/xgen/scripts/xgenm/ui/tabs;{0}/{3}/plug-ins/xgen/scripts/xgenm/ui/util;{0}/{3}/plug-ins/xgen/scripts/xgenm/ui/widgets;{0}/{3}/plug-ins/xgen/scripts;{0}/PeregrineLabs/Yeti/scripts;
 ILMDIR = {0}/Common Files/Autodesk Shared/Materials
-ARNOLD_PLUGIN_PATH = {0}/solidangle/mtoadeploy/2015/shaders;{0}/solidangle/mtoadeploy/2015/procedurals;
-MENTALRAY_SHADERS_LOCATION = {0}/mentalrayForMaya2015/shaders
-MAYA_RENDER_DESC_PATH = {0}/mentalrayForMaya2015/rendererDesc
-MENTAL_RAY_INCLUDE_LOCATION = {0}/mentalrayForMaya2015/shaders/include
-MTOA_PATH = {0}/solidangle/mtoadeploy/2015/
-MTOA_EXTENSIONS_PATH = {0}/solidangle/mtoadeploy/2015/extensions;{0}/PeregrineLabs/Yeti/plug-ins;
+ARNOLD_PLUGIN_PATH = {0}/solidangle/mtoadeploy/{5}/shaders;{0}/solidangle/mtoadeploy/{5}/procedurals;
+MENTALRAY_SHADERS_LOCATION = {0}/mentalrayForMaya{5}/shaders
+MAYA_RENDER_DESC_PATH = {0}/mentalrayForMaya{5}/rendererDesc
+MENTAL_RAY_INCLUDE_LOCATION = {0}/mentalrayForMaya{5}/shaders/include
+MTOA_PATH = {0}/solidangle/mtoadeploy/{5}/
+MTOA_EXTENSIONS_PATH = {0}/solidangle/mtoadeploy/{5}/extensions;{0}/PeregrineLabs/Yeti/plug-ins;
 MTOA_PROCEDURAL_PATH = {0}/PeregrineLabs/Yeti/bin;
-MAYA_SCRIPT_PATH = {1};{0}/Maya2015/scripts;{0}/Maya2015/scripts/startup;{0}/Maya2015/scripts/others;{0}/Maya2015/scripts/AETemplates;{0}/Maya2015/scripts/unsupported;{0}/Maya2015/scripts/paintEffects;{0}/Maya2015/scripts/fluidEffects;{0}/Maya2015/scripts/hair;{0}/Maya2015/scripts/cloth;{0}/Maya2015/scripts/live;{0}/Maya2015/scripts/fur;{0}/Maya2015/scripts/muscle;{0}/Maya2015/scripts/turtle;{0}/Maya2015/scripts/FBX;{0}/Maya2015/scripts/mayaHIK;{0}/Maya2015/plug-ins/bifrost/scripts/presets;{0}/Maya2015/plug-ins/bifrost/scripts;{0}/Maya2015/plug-ins/fbx/scripts;{0}/mentalrayForMaya2015/scripts/AETemplates;{0}/mentalrayForMaya2015/scripts/mentalray;{0}/mentalrayForMaya2015/scripts/unsupported;{0}/mentalrayForMaya2015/scripts;{0}/solidangle/mtoadeploy/2015/scripts;{0}/PeregrineLabs/Yeti/scripts;
-IMF_PLUG_IN_PATH = {0}/mentalrayForMaya2015/bin/image
-MAYA_PLUGIN_RESOURCE_PATH = {1};{0}/Maya2015/plug-ins/bifrost/resources;{0}/Maya2015/plug-ins/fbx/resources;{0}/mentalrayForMaya2015/resources;{0}/solidangle/mtoadeploy/2015/resources;{0}/Maya2015/plug-ins/substance/resources;{0}/Maya2015/plug-ins/xgen/resources
-MAYA_PRESET_PATH = {0}/Maya2015/plug-ins/bifrost/presets;{0}/Maya2015/plug-ins/fbx/presets;{0}/mentalrayForMaya2015/presets/attrPresets;{0}/mentalrayForMaya2015/presets/attrPresets/maya_bifrost_liquid;{0}/mentalrayForMaya2015/presets/attrPresets/mia_material;{0}/mentalrayForMaya2015/presets/attrPresets/mia_material_x;{0}/mentalrayForMaya2015/presets/attrPresets/mia_material_x_passes;{0}/mentalrayForMaya2015/presets;{0}/solidangle/mtoadeploy/2015/presets;{0}/Maya2015/plug-ins/substance/presets;{0}/Maya2015/plug-ins/xgen/presets
-XBMLANGPATH = {0}/Maya2015/icons;{0}/Maya2015/app-defaults;{0}/Maya2015/icons/paintEffects;{0}/Maya2015/icons/fluidEffects;{0}/Maya2015/icons/hair;{0}/Maya2015/icons/cloth;{0}/Maya2015/icons/live;{0}/Maya2015/icons/fur;{0}/Maya2015/icons/muscle;{0}/Maya2015/icons/turtle;{0}/Maya2015/icons/FBX;{0}/Maya2015/icons/mayaHIK;{0}/Maya2015/plug-ins/bifrost/icons;{0}/Maya2015/plug-ins/fbx/icons;{0}/mentalrayForMaya2015/icons;{0}/solidangle/mtoadeploy/2015/icons;{0}/Maya2015/plug-ins/substance/icons;{0}/Maya2015/plug-ins/xgen/icons;{0}/PeregrineLabs/Yeti/icons
+MAYA_SCRIPT_PATH = {1};{0}/{3}/scripts;{0}/{3}/scripts/startup;{0}/{3}/scripts/others;{0}/{3}/scripts/AETemplates;{0}/{3}/scripts/unsupported;{0}/{3}/scripts/paintEffects;{0}/{3}/scripts/fluidEffects;{0}/{3}/scripts/hair;{0}/{3}/scripts/cloth;{0}/{3}/scripts/live;{0}/{3}/scripts/fur;{0}/{3}/scripts/muscle;{0}/{3}/scripts/turtle;{0}/{3}/scripts/FBX;{0}/{3}/scripts/mayaHIK;{0}/{3}/plug-ins/bifrost/scripts/presets;{0}/{3}/plug-ins/bifrost/scripts;{0}/{3}/plug-ins/fbx/scripts;{0}/mentalrayForMaya{5}/scripts/AETemplates;{0}/mentalrayForMaya{5}/scripts/mentalray;{0}/mentalrayForMaya{5}/scripts/unsupported;{0}/mentalrayForMaya{5}/scripts;{0}/solidangle/mtoadeploy/{5}/scripts;{0}/PeregrineLabs/Yeti/scripts;
+IMF_PLUG_IN_PATH = {0}/mentalrayForMaya{5}/bin/image
+MAYA_PLUGIN_RESOURCE_PATH = {1};{0}/{3}/plug-ins/bifrost/resources;{0}/{3}/plug-ins/fbx/resources;{0}/mentalrayForMaya{5}/resources;{0}/solidangle/mtoadeploy/{5}/resources;{0}/{3}/plug-ins/substance/resources;{0}/{3}/plug-ins/xgen/resources
+MAYA_PRESET_PATH = {0}/{3}/plug-ins/bifrost/presets;{0}/{3}/plug-ins/fbx/presets;{0}/mentalrayForMaya{5}/presets/attrPresets;{0}/mentalrayForMaya{5}/presets/attrPresets/maya_bifrost_liquid;{0}/mentalrayForMaya{5}/presets/attrPresets/mia_material;{0}/mentalrayForMaya{5}/presets/attrPresets/mia_material_x;{0}/mentalrayForMaya{5}/presets/attrPresets/mia_material_x_passes;{0}/mentalrayForMaya{5}/presets;{0}/solidangle/mtoadeploy/{5}/presets;{0}/{3}/plug-ins/substance/presets;{0}/{3}/plug-ins/xgen/presets
+XBMLANGPATH = {0}/{3}/icons;{0}/{3}/app-defaults;{0}/{3}/icons/paintEffects;{0}/{3}/icons/fluidEffects;{0}/{3}/icons/hair;{0}/{3}/icons/cloth;{0}/{3}/icons/live;{0}/{3}/icons/fur;{0}/{3}/icons/muscle;{0}/{3}/icons/turtle;{0}/{3}/icons/FBX;{0}/{3}/icons/mayaHIK;{0}/{3}/plug-ins/bifrost/icons;{0}/{3}/plug-ins/fbx/icons;{0}/mentalrayForMaya{5}/icons;{0}/solidangle/mtoadeploy/{5}/icons;{0}/{3}/plug-ins/substance/icons;{0}/{3}/plug-ins/xgen/icons;{0}/PeregrineLabs/Yeti/icons
 DYLD_LIBRARY_PATH = {0}/PeregrineLabs/Yeti/bin;
 LD_LIBRARY_PATH = {0}/PeregrineLabs/Yeti/bin;
 YETI_HOME = {0}/PeregrineLabs/Yeti;

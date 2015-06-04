@@ -55,6 +55,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>MayaScripts.resx</DependentUpon>
     </Compile>
+    <Compile Include="Settings\ApplicationSettings.cs" />
+    <Compile Include="Settings\RenderSettings.cs" />
     <Compile Include="TaskParameters.cs" />
     <Compile Include="TaskProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

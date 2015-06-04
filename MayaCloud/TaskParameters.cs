@@ -36,6 +36,7 @@ using System.Threading.Tasks;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using Microsoft.Azure.Batch.Apps.Cloud;
+using Maya.Cloud.Settings;
 using System.IO;
 
 namespace Maya.Cloud
@@ -44,27 +45,21 @@ namespace Maya.Cloud
     {
         public static readonly IList<String> ThumbFormats = new List<String> { ".png", ".bmp", ".jpg", ".tga", ".exr" };
 
-        public static readonly String Application = "Maya2015";
-
-        public static readonly String ExeDirectory = @"Maya2015\bin";
-
         public static readonly String Executable = "render.exe";
 
         public static readonly String Command = @"-renderer {0} -log ""{1}"" -proj ""{2}"" -preRender ""renderPrep"" -rd ""{3}"" -s {4} -e {4} ""{5}""";
 
-        public static readonly String EnvDirectory = "2015-x64";
-
-        public static readonly IDictionary<String, String> EnvVariables = new Dictionary<String, String> { { "YETI_HOME", @"{0}\PeregrineLabs\Yeti\bin" },
-                                                                                                           { "YETI_INTERACTIVE_LICENSE", "0" },
+        public static readonly IDictionary<String, String> EnvVariables = new Dictionary<String, String> {// { "YETI_HOME", @"{0}\PeregrineLabs\Yeti\bin" },
+                                                                                                          // { "YETI_INTERACTIVE_LICENSE", "0" },
                                                                                                            { "MAYA_APP_DIR", @"{2}" } };
 
         public static readonly IList<String> PathVariables = new List<String> { @"{0}\{1}\bin",
                                                                                 @"{0}\{1}\plug-ins\substance\bin",
                                                                                 @"{0}\{1}\plug-ins\xgen\bin",
-                                                                                @"{0}\{1}\plug-ins\bifrost\bin",
-                                                                                @"{0}\mentalrayForMaya2015\bin",
-                                                                                @"{0}\solidangle\mtoadeploy\2015\bin",
-                                                                                @"{0}\PeregrineLabs\Yeti\bin"};
+                                                                                @"{0}\{1}\plug-ins\bifrost\bin"};
+                                                                                //@"{0}\mentalrayForMaya2015\bin",
+                                                                                //@"{0}\solidangle\mtoadeploy\2015\bin",
+                                                                                //@"{0}\PeregrineLabs\Yeti\bin"};
 
         public abstract bool Valid { get; }
 
@@ -72,7 +67,9 @@ namespace Maya.Cloud
 
         public abstract int End { get; }
 
-        public abstract MayaSettings Settings { get; }
+        public abstract RenderSettings RenderSettings { get; }
+
+        public abstract ApplicationSettings ApplicationSettings { get; }
 
         public abstract string JobFile { get; }
 
@@ -97,20 +94,21 @@ namespace Maya.Cloud
 
             return new ValidMayaParameters(start, end, jobfile, engine);
         }
-        public static MayaParameters FromTask(ITask task)
+        public static MayaParameters FromTask(ITask task, String applicationpath)
         {
             var errors = new List<string>();
 
             string jobfile = GetStringParameter(task.Parameters, "jobfile", errors);
             string engine = GetStringParameter(task.Parameters, "engine", errors);
-            MayaSettings settings = GetSettingsParameter(task.Parameters, "settings", errors);
+            RenderSettings rendersettings = GetSettingsParameter(task.Parameters, "settings", errors);
+            ApplicationSettings appsettings = GetApplicationSettings(Path.Combine(applicationpath, "app.config"), errors);
             
             if (errors.Any())
             {
                 return new InvalidMayaParameters(string.Join(Environment.NewLine, errors.Select(e => "* " + e)));
             }
 
-            return new ValidMayaParameters(jobfile, engine, settings);
+            return new ValidMayaParameters(jobfile, engine, rendersettings, appsettings);
         }
 
 
@@ -159,30 +157,48 @@ namespace Maya.Cloud
             return text;
         }
 
-        private static MayaSettings GetSettingsParameter(IDictionary<string, string> parameters, string parameterName, List<string> errors)
+        private static RenderSettings GetSettingsParameter(IDictionary<string, string> parameters, string parameterName, List<string> errors)
         {
             var jsonSettings = GetStringParameter(parameters, parameterName, errors);
-            var settings = new MayaSettings();
+            var settings = new RenderSettings();
 
             try
             {
-                DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(MayaSettings));
+                DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(RenderSettings));
                 MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(jsonSettings));
-                settings = (MayaSettings)ser.ReadObject(stream);
+                settings = (RenderSettings)ser.ReadObject(stream);
             }
             catch (Exception ex)
             {
-                errors.Add("Error deserializing json settings: " + ex.Message);
+                errors.Add("Error deserializing json render settings: " + ex.Message);
             }
             return settings;
         }
 
-        [DataContract]
-        public class MayaSettings
+        private static ApplicationSettings GetApplicationSettings(String configfile, List<string> errors)
         {
-            [DataMember]
-            public List<string> PathMaps { get; set; }
+            var settings = new ApplicationSettings();
+            if (!(File.Exists(configfile)))
+            {
+                errors.Add("No config file found on the Application Image");
+                return settings;
+            }
+
+            try
+            {
+                using (Stream input = File.OpenRead(configfile))
+                {
+                    DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(ApplicationSettings));
+                    settings = (ApplicationSettings)ser.ReadObject(input);
+                }
+            }
+            catch (Exception ex)
+            {
+                errors.Add("Error deserializing json application settings: " + ex.Message);
+            }
+            return settings;
         }
+        
 
 
         private class ValidMayaParameters : MayaParameters
@@ -191,7 +207,8 @@ namespace Maya.Cloud
             private readonly int _end;
             private readonly string _jobfile;
             private readonly string _renderer;
-            private readonly MayaSettings _settings;
+            private readonly RenderSettings _render_settings;
+            private readonly ApplicationSettings _app_settings;
 
             public ValidMayaParameters(int start, int end, string jobfile, string engine)
             {
@@ -201,11 +218,12 @@ namespace Maya.Cloud
                 _renderer = engine;
             }
 
-            public ValidMayaParameters(string jobfile, string engine, MayaSettings settings)
+            public ValidMayaParameters(string jobfile, string engine, RenderSettings rendersettings, ApplicationSettings appsettings)
             {
                 _jobfile = jobfile;
                 _renderer = engine;
-                _settings = settings;
+                _render_settings = rendersettings;
+                _app_settings = appsettings;
             }
 
             public override bool Valid
@@ -233,9 +251,14 @@ namespace Maya.Cloud
                 get { return _renderer; }
             }
 
-            public override MayaSettings Settings
+            public override RenderSettings RenderSettings
             {
-                get { return _settings; }
+                get { return _render_settings; }
+            }
+
+            public override ApplicationSettings ApplicationSettings
+            {
+                get { return _app_settings; }
             }
 
             public override string ErrorText
@@ -278,9 +301,14 @@ namespace Maya.Cloud
                 get { throw new InvalidOperationException("Renderer does not apply to invalid parameters"); }
             }
 
-            public override MayaSettings Settings
+            public override RenderSettings RenderSettings
             {
-                get { throw new InvalidOperationException("Settings does not apply to invalid parameters"); }
+                get { throw new InvalidOperationException("RenderSettings does not apply to invalid parameters"); }
+            }
+
+            public override ApplicationSettings ApplicationSettings
+            {
+                get { throw new InvalidOperationException("ApplicationSettings does not apply to invalid parameters"); }
             }
 
             public override string ErrorText
