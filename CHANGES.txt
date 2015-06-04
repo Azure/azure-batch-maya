@@ -1,1 +1,6 @@
+v0.2.0, 2015-06-04	- Added ability to select pool on submission
+					- Added ability to select Maya version on submission
+					- Made assemblies non-version specific - version information now loaded from config file in application image
+					- Plugin prompts user if Maya scene has unsaved changes
+					- Plugin allows user to give filename to downloaded outputs
 v0.1.0, 2015-05-26	- Initial release.

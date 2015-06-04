@@ -200,7 +200,7 @@ class TestSubmissionCombined(unittest.TestCase):
 
         ui_maya = args[1]
         ui_maya.radio_group.return_value = 2
-        ui_maya.text_field.return_value = "12345"
+        ui_maya.menu.return_value = "12345"
         ui_maya.int_slider.return_value = 6
 
         def add_tab(tab):

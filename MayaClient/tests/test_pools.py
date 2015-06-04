@@ -70,18 +70,38 @@ class TestBatchAppsPools(unittest.TestCase):
         mock_mgr.assert_called_with("creds", "conf")
         self.assertEqual(session, self.mock_self._session)
 
-    def test_get_pools(self):
+    def test_list_pools(self):
 
         mgr = mock.create_autospec(PoolManager)
-        mgr.get_pools.return_value = [mock.Mock(id="1234")]
+
+        pool1 = mock.create_autospec(Pool)
+        pool1.auto = False
+        pool1.id = "12345"
+
+        pool2 = mock.create_autospec(Pool)
+        pool2.id = "67890"
+        pool2.auto = True
+
+        mgr.get_pools.return_value = [pool1, pool2]
         mgr.__len__.return_value = 1
+        self.mock_self.manager = mgr
 
         def call(func):
             self.assertEqual(func, mgr.get_pools)
             return func()
-
-        self.mock_self.manager = mgr
+        
         self.mock_self._call = call
+        pool_list = BatchAppsPools.list_pools(self.mock_self)
+        self.assertEqual(pool_list, ["12345"])
+        self.assertEqual(len(self.mock_self.pools), 2)
+
+    def test_get_pools(self):
+
+        def list_pools():
+            self.mock_self.pools = [mock.Mock(id="1234")]
+            self.mock_self.count = 1
+
+        self.mock_self.list_pools = list_pools
         self.mock_self.ui = mock.create_autospec(PoolsUI)
         self.mock_self.ui.create_pool_entry.return_value = "pool_entry"
 
@@ -272,6 +292,7 @@ class TestPoolsCombined(unittest.TestCase):
 
         pool2 = mock.create_autospec(Pool)
         pool2.id = "67890"
+        pool2.auto = True
 
         pools.manager.get_pools.return_value = []
         pools.manager.__len__.return_value = 0
