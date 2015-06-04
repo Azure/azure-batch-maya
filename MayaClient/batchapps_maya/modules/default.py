@@ -96,6 +96,14 @@ class BatchAppsRenderJob(object):
         else:
             return cmds.text(label=value, align='left')
 
+    def display_menu(self, label, options):
+        cmds.text(label=label, align='right')
+        menu = cmds.optionMenu()
+        for opt in options:
+            cmds.menuItem(label=opt)
+        cmds.setParent('..')
+        return menu
+
     def display_button(self, label, cmd):
         cmds.text(label="")
         return cmds.button(label=label, command=cmd, align='center')
