@@ -155,6 +155,10 @@ class BatchAppsSubmission:
                 self._log.info("Using existing pool.")
                 new_job.pool = str(pool_spec[2])
 
+                if new_job.pool == "None":
+                    maya.error("No pool selected.")
+                    return
+
             if pool_spec.get(3):
                 self._log.info("Creating new pool.")
                 new_job.pool = self.pool_manager.create_pool(int(pool_spec[3]))
@@ -169,8 +173,6 @@ class BatchAppsSubmission:
                 for (asset, exp) in failed:
                     self._log.warning("File {0} failed with {1}".format(asset, exp))
                 maya.error("One or more files failed to upload. Submission aborted.")
-                self.renderer.disable(True)
-                self.ui.processing(True)
                 return
 
             self._log.info("Upload complete. Submitting...")

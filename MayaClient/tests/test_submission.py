@@ -251,6 +251,11 @@ class TestSubmissionCombined(unittest.TestCase):
         job.add_file_collection.assert_called_with(["abc"])
         self.assertEqual(job.pool, "12345")
 
+        ui_maya.menu.return_value = None
+        sub.submit()
+        mock_maya.error.assert_called_with("No pool selected.")
+        mock_maya.error.call_count = 0
+
         ui_maya.radio_group.return_value = 1
         sub.submit()
         self.assertEqual(mock_maya.error.call_count, 0)
