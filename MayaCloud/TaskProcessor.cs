@@ -47,8 +47,12 @@ namespace Maya.Cloud
 
         protected override string GetApplicationVersion(ITask task)
         {
-            //return base.GetApplicationVersion(task);
-            return task.Parameters["version"];
+            string version;
+            if (task.Parameters.TryGetValue("version", out version))
+                return version;
+
+            return base.GetApplicationVersion(task);
+
         }
 
         /// <summary>
