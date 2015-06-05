@@ -56,19 +56,6 @@ class BatchAppsAssets(object):
 
         self.ui = AssetsUI(self, frame)
 
-    #def start(self):
-    #    self._log.debug("Starting BatchAppsAssets...")
-    #    try:
-    #        self.ui.refresh()
-    #        return True
-
-    #    except Exception as exp:
-    #        message = "Error starting Assets UI: {0}".format(exp)
-    #        self._log.warning(message)
-    #        Utils.error_dialog(message)
-    #        return False
-
-
     def configure(self, session):
         self._session = session
         self.manager = FileManager(self._session.credentials, self._session.config)
@@ -116,10 +103,10 @@ class BatchAppsAssets(object):
         self.renderer = BatchAppsRenderAssets()
         self._log.debug("Configured renderer to {0}".format(self.renderer.render_engine))
         
-    def refresh_assets(self):
-        self.assets = Assets()
-        self.scene = self.get_scene()
-        self.set_assets()
+    #def refresh_assets(self):
+    #    self.assets = Assets()
+    #    self.scene = self.get_scene()
+    #    self.set_assets()
              
     def set_assets(self):
         self.configure_renderer()
@@ -185,6 +172,8 @@ class Assets(object):
         
     def gather(self, manager):
         self.manager = manager
+        self.refs = {'Additional': []}
+        self.pathmaps = []
 
         self.refs.update(self.get_textures())
         self.refs.update(self.get_caches())

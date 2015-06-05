@@ -220,7 +220,6 @@ class BatchAppsJobInfo:
 
     def on_expand(self):
 
-        self.content.append(maya.text(label=""))
         self.content.append(maya.text(label="Preview:   ", parent=self.listbox, align="right"))
 
         self._thumbnail = maya.image(parent=self.listbox)

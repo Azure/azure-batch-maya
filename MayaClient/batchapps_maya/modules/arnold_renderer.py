@@ -107,6 +107,7 @@ class ArnoldRenderAssets(BatchAppsRenderAssets):
     render_engine = "arnold"
 
     def renderer_assets(self):
+        self.assets['Arnold Assets'] = []
         iter_nodes = om.MItDependencyNodes()
 
 
