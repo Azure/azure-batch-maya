@@ -259,13 +259,21 @@ class TestAssets(unittest.TestCase):
 
     @mock.patch("assets.Asset")
     @mock.patch("assets.maya")
-    def test_get_caches(self, mock_maya, mock_asset):
+    @mock.patch("assets.glob")
+    def test_get_caches(self, mock_glob, mock_maya, mock_asset):
+
+        def get_attr(node):
+            if node.endswith("cachePath"):
+                return "/test_path"
+            else:
+                return "test_file"
 
         self.mock_self.pathmaps = []
         self.mock_self.manager = mock.create_autospec(FileManager)
         mock_asset.return_value = mock.create_autospec(Asset)
         mock_maya.get_list.return_value = ["1", "2", "3"]
-        mock_maya.get_attr.return_value = "/test_path/test_file"
+        mock_maya.get_attr = get_attr
+        mock_glob.glob.return_value = ["pathA"]
         self.mock_self.manager.file_from_path.return_value = "UserFile"
 
         caches = Assets.get_caches(self.mock_self)
