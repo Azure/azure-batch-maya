@@ -43,6 +43,7 @@ class ArnoldRenderJob(BatchAppsRenderJob):
 
         self._renderer = "arnold"
         self.label = "Arnold"
+        self.versions = {"Maya 2015": "2015", "MayaIO 2017": "2017"}
 
     def settings(self):
         if self.scene_name == "":
@@ -51,11 +52,20 @@ class ArnoldRenderJob(BatchAppsRenderJob):
         else:
             job_name = str(os.path.splitext(os.path.basename(self.scene_name))[0])
 
+        file_prefix = mel.eval("getAttr defaultRenderGlobals.imageFilePrefix")
+
+        if file_prefix:
+            file_prefix = os.path.split(file_prefix)[1]
+        else:
+            file_prefix = "<Scene>.<Camera>.<RenderLayer>"
+
         self.job_name = self.display_string("Job Name:   ", job_name)
+        self.output_name = self.display_string("Output Prefix:   ", file_prefix)
 
         self.start = self.display_int("Start frame:   ", self.start_frame, edit=True)
         self.end = self.display_int("End frame:   ", self.end_frame, edit=True)
         self.step = self.display_int("Frame step:   ", self.frame_step, edit=True)
+        self.version = self.display_menu("Version:   ", self.versions.keys())
 
     def get_title(self):
         return str(cmds.textField(self.job_name, query=True, text=True))
@@ -98,6 +108,15 @@ class ArnoldRenderJob(BatchAppsRenderJob):
         params["end"] = cmds.intField(self.end, query=True, value=True)
         params["engine"] = "arnold"
         params["jobfile"] = os.path.basename(self.scene_name)
+
+        version = cmds.optionMenu(self.version, query=True, value=True)
+        params["version"] = self.versions[version]
+
+        filename = str(cmds.textField(self.output_name, query=True, text=True))
+        if '/' in filename or '\\' in filename:
+            raise ValueError("Subfolders not supported in output filename.")
+
+        params["prefix"] = filename
 
         return params
 
