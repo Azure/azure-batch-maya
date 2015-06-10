@@ -86,9 +86,8 @@ namespace Maya.Cloud
             var inputFile = Path.Combine(LocalStoragePath, taskParameters.JobFile);
             var logFile = string.Format("{0}.log", task.TaskId);
 
-
             var externalProcessArgs = string.Format(CultureInfo.InvariantCulture, MayaParameters.Command, taskParameters.Renderer,
-                logFile, LocalStoragePath, LocalStoragePath, task.TaskIndex, inputFile);
+                logFile, LocalStoragePath, taskParameters.OutputName, task.TaskIndex, inputFile);
 
             Log.Info("Calling '{0}' with Args '{1}' for Task '{2}' / Job '{3}' .", RenderPath, externalProcessArgs, task.TaskId, task.JobId);
             var processResult = ExecuteProcess(externalProcessPath, externalProcessArgs);
@@ -233,6 +232,17 @@ namespace Maya.Cloud
             //        modFile.Write(formattedMod);
             //    }
             //}
+
+            var mtoaMod = Path.Combine(LocalStoragePath, "mtoa.mod");
+            if (!File.Exists(mtoaMod))
+            {
+                var formattedMod = string.Format("+ mtoa any {0}\\{1}", ExecutablePath("solidangle\\mtoadeploy"), app.Version);
+                using (var modFile = new StreamWriter(mtoaMod))
+                {
+                    modFile.WriteLine(formattedMod);
+                    modFile.WriteLine("PATH +:= bin");
+                }
+            }
                 
             return project;
         }
