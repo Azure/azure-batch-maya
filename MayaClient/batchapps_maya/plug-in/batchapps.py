@@ -38,7 +38,7 @@ import sys
 import inspect
 
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 
 cmd_name = "BatchApps"
 fMayaExitingCB = None

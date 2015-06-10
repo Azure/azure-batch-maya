@@ -1,3 +1,8 @@
+v0.2.2, 2015-06-10	- Added Version select to Arnold module
+					- Dynamically create mtoa.mod
+					- Removed some Yeti references to help debug Arnold
+					- Fixed cache file reference search
+					- Added output file prefix setting to fix multiple outputs of the same name
 v0.2.1, 2015-06-05	- Fixed UI alignment bug in Job History tab
 					- Fixed UI refresh bugs in Assets tab
 v0.2.0, 2015-06-04	- Added ability to select pool on submission
