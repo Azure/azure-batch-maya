@@ -30,6 +30,7 @@ import logging
 import os
 import sys
 import json
+import glob
 
 import pkgutil
 import inspect
@@ -242,10 +243,15 @@ class Assets(object):
         for c in cacheFiles:
 
             c_path = maya.get_attr(c+".cachePath")
-            if c_path:
-                self.pathmaps.append(os.path.dirname(c_path))
-                asset = Asset(self.manager.file_from_path(c_path), assets['Caches'])
-                assets['Caches'].append(asset)
+            c_name = maya.get_attr(c+".cacheName")
+
+            if c_path and c_name:
+                self.pathmaps.append(c_path)
+                full_path = os.path.join(c_path + c_name)
+                path_matches = glob.glob(full_path + "*")
+                for cache_path in path_matches:
+                    asset = Asset(self.manager.file_from_path(cache_path), assets['Caches'])
+                    assets['Caches'].append(asset)
 
         self._log.debug("Found {0} caches.".format(len(assets['Caches'])))
         return assets
