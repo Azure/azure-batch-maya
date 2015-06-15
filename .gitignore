@@ -218,3 +218,4 @@ packages/Microsoft.Azure.Batch.Apps.Cloud.1.0.1-preview/lib/net40/Microsoft.Azur
 packages/Microsoft.Azure.Batch.Apps.Cloud.1.0.1-preview/lib/net45/Microsoft.Azure.Batch.Apps.Cloud.XML
 *.nupkg
 packages/repositories.config
+src.zip

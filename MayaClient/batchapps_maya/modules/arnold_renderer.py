@@ -33,6 +33,7 @@ import maya.OpenMayaMPx as omp
 import os
 import sys
 import gzip
+import glob
 
 from default import BatchAppsRenderJob, BatchAppsRenderAssets
 
@@ -125,8 +126,20 @@ class ArnoldRenderAssets(BatchAppsRenderAssets):
     assets = {'Arnold Assets': []}
     render_engine = "arnold"
 
+
+    def check_path(self, path):
+        path = os.path.abspath(path)
+
+        if '#' in path:
+            path = path.replace('#', '[0-9]')
+            return glob.glob(path)
+        else:
+            return [path]
+
     def renderer_assets(self):
         self.assets['Arnold Assets'] = []
+        collected = []
+
         iter_nodes = om.MItDependencyNodes()
 
 
@@ -139,7 +152,9 @@ class ArnoldRenderAssets(BatchAppsRenderAssets):
             if depend_fn.typeName() == 'aiStandIn':
                 dso = depend_fn.attribute('dso')
                 dso_attr = om.MPlug(obj, dso)
-                self.assets['Arnold Assets'].append(dso_attr.asString())
+                collected.append(dso_attr.asString())
             iter_nodes.next()
 
+        for path in collected:
+            self.assets['Arnold Assets'].extend(self.check_path(path))
         return self.assets
