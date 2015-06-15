@@ -94,7 +94,7 @@ namespace Maya.Cloud {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to MAYA_MODULE_PATH ={0}/{3}/modules;{1}/{4}/modules;{1};{0}/Common Files/Autodesk Shared/Modules/maya/{5}
+        ///   Looks up a localized string similar to MAYA_MODULE_PATH = {0}/{3}/modules;{1}/{4}/modules;{0}/Common Files/Autodesk Shared/Modules/maya/{5}
         ///FBX_LOCATION = {0}/{3}/plug-ing/fbx/
         ///MENTALRAY_LOCATION = {0}/mentalrayForMaya{5}/
         ///MAYA_SCRIPT_BASE = {0}/{3}
@@ -102,7 +102,7 @@ namespace Maya.Cloud {
         ///MAYA_LOCATION = {0}\{3}
         ///TMPDIR = {2}
         ///MENTALRAY_BIN_LOCATION = {0}/mentalrayForMaya{5}/bin
-        ///MAYA_PLUG_IN_PATH = {1};{0}/{3}/bin/plug-ins;{0}/{3}/plug-ins/bifrost/plug-ins;{0}/{3}/plug-ins/fbx/plug-ins;{0}/mentalrayForMaya{5}/plug-ins;{0}/solidangle/mtoadeploy/{5}/plug-ins;{0}/{3}/ [rest of string was truncated]&quot;;.
+        ///MAYA_PLUG_IN_PATH = {0}/{3}/bin/plug-ins;{0}/{3}/plug-ins/bifrost/plug-ins;{0}/{3}/plug-ins/fbx/plug-ins;{0}/mentalrayForMaya{5}/plug-ins;{0}/solidangle/mtoadeploy/{5}/plug-ins;{0}/{3}/plug-in [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string env {
             get {

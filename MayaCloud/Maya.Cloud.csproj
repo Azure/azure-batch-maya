@@ -50,12 +50,18 @@
     <Compile Include="Exceptions\NoOutputsFoundException.cs" />
     <Compile Include="Exceptions\ZipException.cs" />
     <Compile Include="JobSplitter.cs" />
+    <Compile Include="MayaEnvironment.cs" />
     <Compile Include="MayaScripts.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>MayaScripts.resx</DependentUpon>
     </Compile>
+    <Compile Include="Plugins\arnold.cs" />
+    <Compile Include="Plugins\mentalray.cs" />
+    <Compile Include="Plugins\plugin.cs" />
+    <Compile Include="Plugins\yeti.cs" />
     <Compile Include="Settings\ApplicationSettings.cs" />
+    <Compile Include="Settings\PluginSettings.cs" />
     <Compile Include="Settings\RenderSettings.cs" />
     <Compile Include="TaskParameters.cs" />
     <Compile Include="TaskProcessor.cs" />

@@ -86,6 +86,8 @@ namespace Maya.Cloud
             var inputFile = Path.Combine(LocalStoragePath, taskParameters.JobFile);
             var logFile = string.Format("{0}.log", task.TaskId);
 
+            //var extraParam = taskParameters.OutputName + "";
+
             var externalProcessArgs = string.Format(CultureInfo.InvariantCulture, MayaParameters.Command, taskParameters.Renderer,
                 logFile, LocalStoragePath, taskParameters.OutputName, task.TaskIndex, inputFile);
 
@@ -211,6 +213,12 @@ namespace Maya.Cloud
                 Directory.CreateDirectory(scriptDir);
             }
 
+            var modDir = Path.Combine(envDir, "modules");
+            if (!Directory.Exists(modDir))
+            {
+                Directory.CreateDirectory(modDir);
+            }
+
             var envPath = Path.Combine(envDir, "Maya.env");
             if (!File.Exists(envPath))
             {
@@ -223,17 +231,17 @@ namespace Maya.Cloud
                 }
             }
 
-            //var yetiMod = Path.Combine(LocalStoragePath, "pgYetiMaya.mod");
-            //if (!File.Exists(yetiMod))
-            //{
-            //    var formattedMod = string.Format("+ pgYetiMaya 1.3.19 {0}", ExecutablePath("PeregrineLabs\\Yeti"));
-            //    using (var modFile = new StreamWriter(yetiMod))
-            //    {
-            //        modFile.Write(formattedMod);
-            //    }
-            //}
+            var yetiMod = Path.Combine(modDir, "pgYetiMaya.mod");
+            if (!File.Exists(yetiMod))
+            {
+                var formattedMod = string.Format("+ pgYetiMaya 1.3.19 {0}", ExecutablePath("PeregrineLabs\\Yeti"));
+                using (var modFile = new StreamWriter(yetiMod))
+                {
+                    modFile.Write(formattedMod);
+                }
+            }
 
-            var mtoaMod = Path.Combine(LocalStoragePath, "mtoa.mod");
+            var mtoaMod = Path.Combine(modDir, "mtoa.mod");
             if (!File.Exists(mtoaMod))
             {
                 var formattedMod = string.Format("+ mtoa any {0}\\{1}", ExecutablePath("solidangle\\mtoadeploy"), app.Version);
@@ -286,6 +294,9 @@ namespace Maya.Cloud
                     pathsScript += string.Format("dirmap -m \"{0}\" \"{1}\";\n", p, LocalStoragePath.Replace('\\', '/'));
                 }
                 formattedScript = string.Format(MayaScripts.dirMap, "dirmap -en true;", pathsScript);
+                var yetiScript = string.Format("\npgYetiRenderCommand -preRenderCache -fileName \"{0}\\fur.%04d.fur\" pgYetiMaya;", LocalStoragePath);
+                Log.Info("Yeti command {0}", yetiScript);
+                formattedScript += yetiScript;
             }
             else
                 formattedScript = string.Format(MayaScripts.dirMap, string.Empty, string.Empty);
@@ -333,6 +344,8 @@ namespace Maya.Cloud
             fileSet.RemoveWhere(f => f.EndsWith("mayaLog"));
             fileSet.RemoveWhere(f => f.EndsWith(".mel"));
             fileSet.RemoveWhere(f => f.EndsWith(".gbtaskcompletion"));
+            fileSet.RemoveWhere(f => f.EndsWith(".cat"));
+            fileSet.RemoveWhere(f => f.EndsWith(".lock"));
         }
 
         /// <summary>
