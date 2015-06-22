@@ -42,6 +42,9 @@ from batchapps import FileManager
 
 from default import BatchAppsRenderAssets
 
+SYS_SEARCHPATHS = []
+USR_SEARCHPATHS = []
+
 class BatchAppsAssets(object):
     
     def __init__(self, frame, call):
@@ -51,7 +54,6 @@ class BatchAppsAssets(object):
         self._session = None
 
         self.manager = None
-        self.scene = None
         self.assets = None
         self.modules = self.collect_modules()
 
@@ -60,7 +62,8 @@ class BatchAppsAssets(object):
     def configure(self, session):
         self._session = session
         self.manager = FileManager(self._session.credentials, self._session.config)
-        self.scene = self.get_scene()
+        self.set_searchpaths()
+
         self.assets = Assets()
             
     def collect_modules(self):
@@ -103,11 +106,7 @@ class BatchAppsAssets(object):
 
         self.renderer = BatchAppsRenderAssets()
         self._log.debug("Configured renderer to {0}".format(self.renderer.render_engine))
-        
-    #def refresh_assets(self):
-    #    self.assets = Assets()
-    #    self.scene = self.get_scene()
-    #    self.set_assets()
+       
              
     def set_assets(self):
         self.configure_renderer()
@@ -144,12 +143,23 @@ class BatchAppsAssets(object):
     def get_assets(self, category):
         return self.assets.refs.get(category, [])
 
-    def get_scene(self):
+    def set_searchpaths(self):
+        global SYS_SEARCHPATHS
+        SYS_SEARCHPATHS = []
+
         scene = os.path.abspath(maya.file(q=True, sn=True))
         if ((scene.endswith('.mb')) or (scene.endswith('.ma'))) and (os.path.exists(scene)):
-            return str(os.path.normpath(scene))
-        else:
-            return ''
+            SYS_SEARCHPATHS.append(os.path.dirname(scene))
+
+        proj = maya.workspace(query=True, rootDirectory=True)
+        SYS_SEARCHPATHS.append(proj)
+        SYS_SEARCHPATHS.append(os.path.join(proj, "sourceImages"))
+        SYS_SEARCHPATHS.append(maya.workspace(query=True, directory=True))
+        SYS_SEARCHPATHS.append(os.getcwd())
+        SYS_SEARCHPATHS = list(set(SYS_SEARCHPATHS))
+
+        return SYS_SEARCHPATHS
+
 
     def add_files(self, files, layout):
         for f in files:
@@ -170,7 +180,25 @@ class Assets(object):
         self.manager = None
         self.refs = {'Additional': []}
         self.pathmaps = []
-        
+       
+    def search_path(self, ref_path):
+
+        self.pathmaps.append(os.path.dirname(ref_path))
+        if os.path.exists(ref_path):
+            return ref_path
+
+        ref_file = os.path.basename(ref_path)
+        searchpaths = set(USR_SEARCHPATHS + SYS_SEARCHPATHS)
+
+        for searchpath in searchpaths:
+            alt_path = os.path.join(searchpath, ref_file)
+
+            if os.path.exists(alt_path):
+                self.pathmaps.append(searchpath)
+                return alt_path
+
+        return ref_path
+
     def gather(self, manager):
         self.manager = manager
         self.refs = {'Additional': []}
@@ -186,10 +214,10 @@ class Assets(object):
             assets[key] = []
 
             for f in value:
-                self.pathmaps.append(os.path.dirname(f))
-                
+
                 try:
-                    asset = Asset(self.manager.file_from_path(f), assets[key])
+                    checked_path = self.search_path(f)
+                    asset = Asset(self.manager.file_from_path(checked_path), assets[key])
 
                     if not asset.check(assets[key]):
                         assets[key].append(asset)
@@ -203,7 +231,6 @@ class Assets(object):
 
         userfiles = []
         for key, value in self.refs.items():
-
             for userfile in value:
                 if userfile.included():
                     userfiles.append(userfile.file)
@@ -219,9 +246,10 @@ class Assets(object):
 
             references = iter_nodes.get_references()
             for filepath in references:
+
                 try:
-                    self.pathmaps.append(os.path.dirname(filepath))
-                    asset = Asset(self.manager.file_from_path(filepath), assets['Files'])
+                    checked_path = self.search_path(filepath)
+                    asset = Asset(self.manager.file_from_path(checked_path), assets['Files'])
 
                     if not asset.check(assets['Files']):
                         assets['Files'].append(asset)
@@ -276,7 +304,6 @@ class Assets(object):
 class Asset(object):
 
     def __init__(self, file, parent):
-        test = bool(file)
         self.path = file.path
         self.label = "    {0}".format(os.path.basename(self.path))
         self.file = file
@@ -285,27 +312,51 @@ class Asset(object):
         self.check_box = None
 
     def display(self, layout, enable=True):
-        self.check_box = maya.check_box(label=self.label,
-                                        value=bool(self.file),
-                                        enable=bool(self.file),
-                                        parent=layout,
-                                        onCommand=lambda e: self.include(),
-                                        offCommand=lambda e: self.exclude(),
-                                        annotation=self.note)
+        found = bool(self.file)
+        if found:
+            self.check_box = maya.symbol_check_box(value=True,
+                                            parent=layout,
+                                            onCommand=lambda e: self.include(),
+                                            offCommand=lambda e: self.exclude(),
+                                            annotation="Click to remove asset from submission")
+
+        else:
+            self.check_box = maya.symbol_button("out_aimConstraint.png",
+                                            parent=layout,
+                                            command=lambda e: self.search(),
+                                            height=17,
+                                            annotation="Add search path")
+
+        maya.text(self.label, parent=layout, enable=found, annotation=self.note, align="left")
+
 
     def included(self):
-        if self.check_box:
-            return bool(maya.check_box(self.check_box, query=True, value=True))
+        if self.check_box and bool(self.file):
+            return bool(maya.symbol_check_box(self.check_box, query=True, value=True))
         else:
             return bool(self.file)
 
     def include(self):
         if self not in self.parent_list:
             self.parent_list.append(self)
+        maya.symbol_check_box(self.check_box, edit=True, annotation="Click to remove asset from submission")
+
+    def search(self):
+        global USR_SEARCHPATHS
+
+        cap = "Select directory of assets"
+        okCap = "Add Search Path"
+        new_dir = maya.file_select(fileMode=3, okCaption=okCap, caption=cap)
+        if not new_dir:
+            return
+
+        USR_SEARCHPATHS.append(new_dir[0])
+        maya.warning("New search path added. Click Refresh.")
 
     def exclude(self):
         try:
             self.parent_list.remove(self)
+            maya.symbol_check_box(self.check_box, edit=True, annotation="Click to include asset in submission")
         except ValueError:
             pass
 

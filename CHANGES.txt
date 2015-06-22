@@ -1,3 +1,6 @@
+v0.3.0,	2015-06-22	- Added search path feature to assets tab
+					- Gave asset references icons according to whether they were found
+					- Add .lock and .cat extensions to server output filter
 v0.2.2, 2015-06-10	- Added Version select to Arnold module
 					- Dynamically create mtoa.mod
 					- Removed some Yeti references to help debug Arnold

@@ -70,11 +70,10 @@ class AssetsUI:
                          parent=self.asset_display):
 
             with utils.ScrollLayout(v_scrollbar=3, h_scrollbar=0):
-                with utils.RowLayout() as layout:
+                with utils.ColumnLayout(2) as layout:
 
                     for f in self.base.get_assets(label):
-                        enabled = os.path.normcase(f.path) == os.path.normcase(self.base.scene)
-                        f.display(layout, enable=(not enabled))
+                        f.display(layout)
 
                     return layout
 

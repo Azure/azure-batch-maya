@@ -95,6 +95,13 @@ class MayaAPI(object):
                                   icon="warning")
 
     @staticmethod
+    def workspace(*args, **kwargs):
+        try:
+            return cmds.workspace(*args, **kwargs)
+        except:
+            return None
+
+    @staticmethod
     def dependency_nodes():
         return NodeIterator()
 
@@ -143,9 +150,27 @@ class MayaAPI(object):
             return None
 
     @staticmethod
+    def symbol_button(image, *args, **kwargs):
+        try:
+            return cmds.symbolButton(image=image, *args, **kwargs)
+        except Exception as exp:
+            print("symbolButton failed:",str(exp))
+            return None
+
+    @staticmethod
     def check_box(*args, **kwargs):
         try:
             return cmds.checkBox(*args, **kwargs)
+        except Exception as exp:
+            print("symbolCheck failed",str(exp))
+            return None
+
+    @staticmethod
+    def symbol_check_box(*args, **kwargs):
+        try:
+            if kwargs.get('query') or kwargs.get('q'):
+                return cmds.symbolCheckBox(*args, **kwargs)
+            return cmds.symbolCheckBox(*args, onImage="precompExportChecked.png", offImage="precompExportUnchecked.png", **kwargs)
         except:
             return None
 
@@ -289,7 +314,8 @@ class MayaReferences(object):
             _role = []
             self._table.getEntryByIndex(i, _path, _node, _role)
             if _path:
-                paths.append(_path[0])
+                if '.' in _path[0]:
+                    paths.append(_path[0])
 
         return paths
 
