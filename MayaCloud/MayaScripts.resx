@@ -164,8 +164,7 @@
     <value>global proc renderPrep() 
 {{ 
 {0} 
-{1}
-}}</value>
+{1}</value>
   </data>
   <data name="env" xml:space="preserve">
     <value>MAYA_MODULE_PATH = {0}/{3}/modules;{1}/{4}/modules;{0}/Common Files/Autodesk Shared/Modules/maya/{5}

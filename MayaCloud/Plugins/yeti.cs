@@ -50,12 +50,12 @@ namespace Maya.Cloud.Plugins
             }
         }
 
-        public override void CreateModFile(string location, string executables)
+        public override void CreateModFile(string ExeRoot, string Location)
         {
-            var mtoaMod = Path.Combine(location, "mtoa.mod");
+            var mtoaMod = Path.Combine(Location, "mtoa.mod");
             if (!File.Exists(mtoaMod))
             {
-                var formattedMod = string.Format("+ mtoa any {0}", String.Format(ExePath, executables));
+                var formattedMod = string.Format("+ mtoa any {0}\\{1}", ExeRoot, ExePath);
                 using (var modFile = new StreamWriter(mtoaMod))
                 {
                     modFile.WriteLine(formattedMod);
@@ -76,7 +76,7 @@ namespace Maya.Cloud.Plugins
         public override void SetupEnv(IDictionary<String, String> Env, string ExeRoot, string Localpath)
         {
             var FormattedEnv = new Dictionary<String, String>();
-            foreach (var item in Env)
+            foreach (var item in EnvVariables)
                 FormattedEnv[item.Key] = String.Format(item.Value, ExeRoot, ExePath, Localpath);
 
             MergeParameters(Env, FormattedEnv);
@@ -85,10 +85,15 @@ namespace Maya.Cloud.Plugins
         public override void SetupMayaEnv(IDictionary<String, String> MayaEnv, string ExeRoot, string Localpath)
         {
             var FormattedMayaEnv = new Dictionary<String, String>();
-            foreach (var item in MayaEnv)
+            foreach (var item in MayaEnvVariables)
                 FormattedMayaEnv[item.Key] = String.Format(item.Value, ExeRoot, ExePath, Localpath, Path.GetTempPath());
 
-            MergeParameters(MayaEnv, MayaEnvVariables);
+            MergeParameters(MayaEnv, FormattedMayaEnv);
         }
+
+        public override void PreRenderScript(StreamWriter script, string ExeRoot, string LocalPath)
+        {
+            script.WriteLine("pgYetiRenderCommand -preRenderCache -fileName \"{0}\\fur.%04d.fur\" pgYetiMaya;");
+        }
     }
 }

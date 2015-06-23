@@ -74,44 +74,39 @@ namespace Maya.Cloud
                 };
             }
 
-            var RenderPath = String.Format(@"{0}\bin\{1}", taskParameters.ApplicationSettings.Application, MayaParameters.Executable);
-            var externalProcessPath = ExecutablePath(RenderPath);
+            var env = new MayaEnvironment(taskParameters, LocalStoragePath, ExecutablesPath, task.TaskId, task.TaskIndex, Log);
+            //var projDir = ConfigureMayaEnv(taskParameters.ApplicationSettings);
 
-            var projDir = ConfigureMayaEnv(taskParameters.ApplicationSettings);
-
-            CreateEnvVariables(taskParameters.ApplicationSettings);
-            CreatePreRenderScript(taskParameters);
+            //CreateEnvVariables(taskParameters.ApplicationSettings);
+            //CreatePreRenderScript(taskParameters);
 
             var initialFiles = CollectFiles(LocalStoragePath);
             var inputFile = Path.Combine(LocalStoragePath, taskParameters.JobFile);
             var logFile = string.Format("{0}.log", task.TaskId);
 
-            //var extraParam = taskParameters.OutputName + "";
-
-            var externalProcessArgs = string.Format(CultureInfo.InvariantCulture, MayaParameters.Command, taskParameters.Renderer,
-                logFile, LocalStoragePath, taskParameters.OutputName, task.TaskIndex, inputFile);
-
-            Log.Info("Calling '{0}' with Args '{1}' for Task '{2}' / Job '{3}' .", RenderPath, externalProcessArgs, task.TaskId, task.JobId);
-            var processResult = ExecuteProcess(externalProcessPath, externalProcessArgs);
+            Log.Info("Calling '{0}' with Args '{1}' for Task '{2}' / Job '{3}' .", env.Executable, env.Command + inputFile, task.TaskId, task.JobId);
+            var processResult = ExecuteProcess(env.Executable, env.Command + inputFile);
             var newFiles = GetNewFiles(initialFiles, LocalStoragePath);
 
-            if (processResult == null || newFiles.Length < 1)
-            {
-                if (File.Exists(logFile))
-                    return new TaskProcessResult
-                    {
-                        Success = TaskProcessSuccess.PermanentFailure,
-                        ProcessorOutput = File.ReadAllText(logFile)
-                    };
-
-                else
-                    return new TaskProcessResult { Success = TaskProcessSuccess.PermanentFailure };
-            }
-
-            
-            var result = TaskProcessResult.FromExternalProcessResult(processResult, newFiles);
+            var result = new TaskProcessResult();
             if (File.Exists(logFile))
                 result.ProcessorOutput = File.ReadAllText(logFile);
+
+            if (processResult == null || newFiles.Length < 1)
+                result.Success = TaskProcessSuccess.PermanentFailure;
+
+            else
+                result.Success = TaskProcessSuccess.Succeeded;
+
+            foreach (var output in newFiles)
+            {
+                var taskOutput = new TaskOutputFile
+                {
+                    FileName = output,
+                    Kind = TaskOutputFileKind.Output
+                };
+                result.OutputFiles.Add(taskOutput);
+            }
 
             var thumbnail = CreateThumbnail(task, newFiles);
 
@@ -167,145 +162,6 @@ namespace Maya.Cloud
 
             result.PreviewFile = CreateThumbnail(mergeTask, inputFiles.ToArray());
             return result;
-        }
-
-        private string ConfigureMayaEnv(ApplicationSettings app)
-        {
-
-            var project = Path.Combine(LocalStoragePath, "workspace.mel");
-            if (!File.Exists(project))
-            {
-                using (StreamWriter workspace = new StreamWriter(project))
-                {
-                    workspace.Write(MayaScripts.workspace);
-                }
-            }
-
-            var license = Path.Combine(ExecutablesPath, app.Application, "bin",  "License.env");
-            if (!File.Exists(license))
-            {
-                var formattedLic = string.Format(MayaScripts.lic, ExecutablesPath);
-                using (var licFile = new StreamWriter(license))
-                {
-                    licFile.Write(formattedLic);
-                }
-            }
-
-            var client = Path.Combine(ExecutablePath("Adlm"), "AdlmThinClientCustomEnv.xml");
-            if (!File.Exists(client))
-            {
-                var formattedClient = string.Format(MayaScripts.client, ExecutablesPath, app.Adlm);
-                using (var clientFile = new StreamWriter(client))
-                {
-                    clientFile.Write(formattedClient);
-                }
-            }
-
-            var envDir = Path.Combine(LocalStoragePath, app.UserDirectory);
-            if (!Directory.Exists(envDir))
-            {
-                Directory.CreateDirectory(envDir);
-            }
-
-            var scriptDir = Path.Combine(envDir, "scripts");
-            if (!Directory.Exists(scriptDir))
-            {
-                Directory.CreateDirectory(scriptDir);
-            }
-
-            var modDir = Path.Combine(envDir, "modules");
-            if (!Directory.Exists(modDir))
-            {
-                Directory.CreateDirectory(modDir);
-            }
-
-            var envPath = Path.Combine(envDir, "Maya.env");
-            if (!File.Exists(envPath))
-            {
-                var formattedEnv = string.Format(MayaScripts.env, ExecutablesPath, LocalStoragePath, Path.GetTempPath(),
-                    app.Application, app.UserDirectory, app.Version);
-
-                using (var envFile = new StreamWriter(envPath))
-                {
-                    envFile.Write(formattedEnv);
-                }
-            }
-
-            var yetiMod = Path.Combine(modDir, "pgYetiMaya.mod");
-            if (!File.Exists(yetiMod))
-            {
-                var formattedMod = string.Format("+ pgYetiMaya 1.3.19 {0}", ExecutablePath("PeregrineLabs\\Yeti"));
-                using (var modFile = new StreamWriter(yetiMod))
-                {
-                    modFile.Write(formattedMod);
-                }
-            }
-
-            var mtoaMod = Path.Combine(modDir, "mtoa.mod");
-            if (!File.Exists(mtoaMod))
-            {
-                var formattedMod = string.Format("+ mtoa any {0}\\{1}", ExecutablePath("solidangle\\mtoadeploy"), app.Version);
-                using (var modFile = new StreamWriter(mtoaMod))
-                {
-                    modFile.WriteLine(formattedMod);
-                    modFile.WriteLine("PATH +:= bin");
-                }
-            }
-                
-            return project;
-        }
-
-        private void CreateEnvVariables(ApplicationSettings app)
-        {
-            foreach (var EnvVar in MayaParameters.EnvVariables)
-            {
-                var CurrentVar = Environment.GetEnvironmentVariable(EnvVar.Key);
-                if (CurrentVar == null)
-                {
-                    var NewVar = String.Format(EnvVar.Value, ExecutablesPath, app.Application, LocalStoragePath);
-                    Environment.SetEnvironmentVariable(EnvVar.Key, NewVar);
-                }
-            }
-
-            var SysPath = Environment.GetEnvironmentVariable("PATH");
-
-            var PathVar = String.Join(";", MayaParameters.PathVariables.ToArray());
-            PathVar = String.Format(PathVar, ExecutablesPath, app.Application, LocalStoragePath);
-
-            Environment.SetEnvironmentVariable("PATH", string.Format(@"{0};{1}", SysPath, PathVar)); 
-        }
-
-        private void CreatePreRenderScript(MayaParameters parameters)
-        {
-            var scriptPath = Path.Combine(LocalStoragePath, parameters.ApplicationSettings.UserDirectory, "scripts", "renderPrep.mel");
-            var remappedPaths = parameters.RenderSettings.PathMaps;
-            var pathsScript = "";
-
-            if (File.Exists(scriptPath))
-                return;
-
-            string formattedScript;
-
-            if (remappedPaths.Count > 0)
-            {
-                foreach (var p in remappedPaths)
-                {
-                    Log.Info("Remapping path {0}", p);
-                    pathsScript += string.Format("dirmap -m \"{0}\" \"{1}\";\n", p, LocalStoragePath.Replace('\\', '/'));
-                }
-                formattedScript = string.Format(MayaScripts.dirMap, "dirmap -en true;", pathsScript);
-                var yetiScript = string.Format("\npgYetiRenderCommand -preRenderCache -fileName \"{0}\\fur.%04d.fur\" pgYetiMaya;", LocalStoragePath);
-                Log.Info("Yeti command {0}", yetiScript);
-                formattedScript += yetiScript;
-            }
-            else
-                formattedScript = string.Format(MayaScripts.dirMap, string.Empty, string.Empty);
-
-            using (var scriptFile = new StreamWriter(scriptPath))
-            {
-                scriptFile.Write(formattedScript);
-            }
-
         }
 
         /// <summary>
@@ -416,6 +272,13 @@ namespace Maya.Cloud
             }
             catch (ExternalProcessException ex)
             {
+                if (ex.ExitCode == 211)
+                {
+                    Log.Error("Maya failed to load a dependency. This may mean that a required plug-in is not available or has failed to load. "+
+                              "Check the Maya processor log for further details.");
+                    return null;
+                }
+
                 string outputInfo = "No program output";
                 if (!string.IsNullOrEmpty(ex.StandardError) || !string.IsNullOrEmpty(ex.StandardOutput))
                 {

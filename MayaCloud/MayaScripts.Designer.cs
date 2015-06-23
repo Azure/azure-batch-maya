@@ -84,8 +84,7 @@ namespace Maya.Cloud {
         ///   Looks up a localized string similar to global proc renderPrep() 
         ///{{ 
         ///{0} 
-        ///{1}
-        ///}}.
+        ///{1}.
         /// </summary>
         internal static string dirMap {
             get {
@@ -154,7 +153,7 @@ namespace Maya.Cloud {
         ///
         ///workspace -fr &quot;furFiles&quot; &quot;.&quot;;
         ///
-        ///workspace -fr &quot;O [rest of string was truncated]&quot;;.
+        /// [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string workspace {
             get {

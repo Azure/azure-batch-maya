@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
+using System.Globalization;
 
 namespace Maya.Cloud.Plugins
 {
@@ -18,13 +20,15 @@ namespace Maya.Cloud.Plugins
 
         public abstract IList<string> PathVariables { get; }
 
-        public abstract void CreateModFile(string location);
+        public virtual void CreateModFile(string ExeRoot, string Location) { }
 
-        public abstract void SetupEnv(IDictionary<String, String> Env, string ExeRoot, string Localpath) { }
+        public virtual void SetupEnv(IDictionary<String, String> Env, string ExeRoot, string Localpath) { }
 
-        public abstract void SetupMayaEnv(IDictionary<String, String> MayaEnv, string ExeRoot, string Localpath) { }
+        public virtual void SetupMayaEnv(IDictionary<String, String> MayaEnv, string ExeRoot, string Localpath) { }
 
-        public abstract string SetupPath(string ExeRoot, string Localpath)
+        public virtual void PreRenderScript(StreamWriter script, string ExeRoot, string Localpath) { }
+
+        public virtual string SetupPath(string ExeRoot, string Localpath)
         {
             return String.Empty;
         }

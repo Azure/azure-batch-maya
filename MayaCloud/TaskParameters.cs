@@ -281,6 +281,11 @@ namespace Maya.Cloud
                 get { return _app_settings; }
             }
 
+            public override PluginSettings PluginSettings
+            {
+                get { return _plugin_settings; }
+            }
+
             public override string ErrorText
             {
                 get { throw new InvalidOperationException("ErrorText does not apply to valid parameters"); }

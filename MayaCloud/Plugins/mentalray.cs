@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
+using System.Globalization;
 
 namespace Maya.Cloud.Plugins
 {
@@ -43,7 +45,7 @@ namespace Maya.Cloud.Plugins
         {
             get
             {
-                return new Dictionary<String, String> { { "MAYA_PLUG_IN_PATH ", @"{0}\{1}\plug-ins;" },
+                return new Dictionary<String, String> { { "MAYA_PLUG_IN_PATH", @"{0}\{1}\plug-ins;" },
                                                         { "MENTALRAY_LOCATION ", @"{0}\{1}\;" },
                                                         { "MENTALRAY_BIN_LOCATION ", @"{0}\{1}\bin;" },
                                                         { "PYTHONPATH", @"{0}\{1}\scripts\AETemplates;{0}\{1}\scripts\mentalray;{0}\{1}\scripts\unsupported;{0}\{1}\scripts;" },
@@ -70,10 +72,10 @@ namespace Maya.Cloud.Plugins
         public override void SetupMayaEnv(IDictionary<String, String> MayaEnv, string ExeRoot, string Localpath)
         {
             var FormattedMayaEnv = new Dictionary<String, String>();
-            foreach (var item in MayaEnv)
+            foreach (var item in MayaEnvVariables)
                 FormattedMayaEnv[item.Key] = String.Format(item.Value, ExeRoot, ExePath);
 
-            MergeParameters(MayaEnv, MayaEnvVariables);
+            MergeParameters(MayaEnv, FormattedMayaEnv);
         }
     }
 }

@@ -12,7 +12,7 @@ using System.IO;
 namespace Maya.Cloud.Settings
 {
     [DataContract]
-    class PluginSettings
+    public class PluginSettings
     {
         [DataMember]
         public IList<string> Plugins { get; set; } 

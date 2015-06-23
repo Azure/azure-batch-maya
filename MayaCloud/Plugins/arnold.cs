@@ -41,7 +41,7 @@ namespace Maya.Cloud.Plugins
         {
             get
             {
-                return new Dictionary<String, String> { { "MAYA_PLUG_IN_PATH ", @"{0}\{1}\plug-ins;" },
+                return new Dictionary<String, String> { { "MAYA_PLUG_IN_PATH", @"{0}\{1}\plug-ins;" },
                                                         { "MTOA_EXTENSIONS_PATH ", @"{0}\{1}\extensions;" },
                                                         { "MTOA_PROCEDURAL_PATH ", @"{0}\{1}\procedurals;" },
                                                         { "PYTHONPATH", @"{0}\{1}\scripts;" },
@@ -54,15 +54,14 @@ namespace Maya.Cloud.Plugins
             }; }
         }
 
-        public override void CreateModFile(string location, string executables)
+        public override void CreateModFile(string ExeRoot, string Location)
         {
-            var mtoaMod = Path.Combine(location, "mtoa.mod");
+            var mtoaMod = Path.Combine(Location, "mtoa.mod");
             if (!File.Exists(mtoaMod))
             {
-                var formattedMod = string.Format("+ mtoa any {0}", String.Format(ExePath, executables));
                 using (var modFile = new StreamWriter(mtoaMod))
                 {
-                    modFile.WriteLine(formattedMod);
+                    modFile.WriteLine(string.Format("+ mtoa any {0}\\{1}", ExeRoot, ExePath));
                     modFile.WriteLine("PATH +:= bin");
                 }
             }
@@ -71,10 +70,10 @@ namespace Maya.Cloud.Plugins
         public override void SetupMayaEnv(IDictionary<String, String> MayaEnv, string ExeRoot, string Localpath)
         {
             var FormattedMayaEnv = new Dictionary<String, String>();
-            foreach (var item in MayaEnv)
+            foreach (var item in MayaEnvVariables)
                 FormattedMayaEnv[item.Key] = String.Format(item.Value, ExeRoot, ExePath, Localpath);
 
-            MergeParameters(MayaEnv, MayaEnvVariables);
+            MergeParameters(MayaEnv, FormattedMayaEnv);
         }
     }
 }
