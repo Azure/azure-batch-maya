@@ -42,6 +42,7 @@ namespace Maya.Cloud.Plugins
             get
             {
                 return new Dictionary<String, String> { { "MAYA_PLUG_IN_PATH", @"{0}\{1}\plug-ins;" },
+                                                        { "MAYA_RENDER_DESC_PATH", @"{0}\{1};" },
                                                         { "MTOA_EXTENSIONS_PATH ", @"{0}\{1}\extensions;" },
                                                         { "MTOA_PROCEDURAL_PATH ", @"{0}\{1}\procedurals;" },
                                                         { "PYTHONPATH", @"{0}\{1}\scripts;" },
@@ -50,6 +51,7 @@ namespace Maya.Cloud.Plugins
                                                         { "MAYA_SCRIPT_PATH", @"{0}\{1}\scripts;" },
                                                         { "MAYA_PLUGIN_RESOURCE_PATH", @"{0}\{1}\resources;" },
                                                         { "MAYA_PRESET_PATH", @"{0}\{1}\presets;" },
+                                                        { "MTOA_LOG_PATH", @"{2}" }
 
             }; }
         }
