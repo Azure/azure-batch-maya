@@ -127,8 +127,27 @@ class BatchAppsSubmission:
     def available_pools(self):
         pools = self.pool_manager.list_pools(lazy=True)
         return pools
-        
+
+    def check_outputs(self):
+        cameras = maya.get_list(type="camera")
+        render_cams = [maya.get_attr(c + ".renderable") for c in cameras]
+        if not any(render_cams):
+            return "No render camera selected. Please select a render camera and save the scene before submitting."
+
+        layers = maya.get_list(type="renderLayer")
+        render_layers = [maya.get_attr(l + ".renderable") for l in layers]
+        if not any(render_layers):
+            return "No render layers enabled. Please enable a render layer and save the scene before submitting."
+
+        return None
+
     def submit(self):
+
+        invalid_outputs = self.check_outputs()
+        if invalid_outputs:
+            maya.error(invalid_outputs)
+            return
+
         self.renderer.disable(False)
         self.ui.processing(False)
         maya.refresh()

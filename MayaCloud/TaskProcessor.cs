@@ -249,7 +249,7 @@ namespace Maya.Cloud
             }
             catch (ExternalProcessException ex)
             {
-                Log.Info("No thumbnail generated: {0}", ex);
+                Log.Info("No thumbnail generated: {0}", ex.ToString());
                 return string.Empty;
             }
 

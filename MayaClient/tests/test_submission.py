@@ -134,6 +134,7 @@ class TestBatchAppsSubmission(unittest.TestCase):
             self.assertTrue(hasattr(func, '__call__'))
             return func()
 
+        self.mock_self.check_outputs.return_value = None
         self.mock_self.job_manager = mock.create_autospec(JobManager)
         job = mock.create_autospec(JobSubmission)
         job.required_files = mock.Mock()
@@ -173,9 +174,14 @@ class TestBatchAppsSubmission(unittest.TestCase):
         job.submit.assert_called_with()
         self.assertEqual(job.pool, '4')
 
+        self.mock_self.check_outputs.return_value = "No camera"
+        BatchAppsSubmission.submit(self.mock_self)
+        self.assertEqual(mock_maya.error.call_count, 2)
+        self.mock_self.check_outputs.return_value = None
+
         self.mock_self.ui.get_pool.return_value = {3: 4}
         BatchAppsSubmission.submit(self.mock_self)
-        self.assertEqual(mock_maya.error.call_count, 1)
+        self.assertEqual(mock_maya.error.call_count, 2)
         self.mock_self.renderer.disable.assert_called_with(True)
         self.mock_self.ui.processing.assert_called_with(True)
 
@@ -185,14 +191,14 @@ class TestBatchAppsSubmission(unittest.TestCase):
 
         self.mock_self.asset_manager.collect_assets.return_value = {1,2,3}
         BatchAppsSubmission.submit(self.mock_self)
-        self.assertEqual(mock_maya.error.call_count, 2)
+        self.assertEqual(mock_maya.error.call_count, 3)
         self.mock_self.renderer.disable.assert_called_with(True)
         self.mock_self.ui.processing.assert_called_with(True)
         self.assertEqual(job.submit.call_count, 0)
 
         self.mock_self.pool_manager.create_pool.side_effect = SessionExpiredException("Logged out!")
         BatchAppsSubmission.submit(self.mock_self)
-        self.assertEqual(mock_maya.error.call_count, 2)
+        self.assertEqual(mock_maya.error.call_count, 3)
         self.mock_self.renderer.disable.assert_called_with(True)
         self.mock_self.ui.processing.assert_called_with(True)
         self.assertEqual(job.submit.call_count, 0)
@@ -207,6 +213,8 @@ class TestSubmissionCombined(unittest.TestCase):
 
         mock_maya = args[0]
         mock_maya.mel.return_value = "Renderer"
+        mock_maya.get_list.return_value = ["1","2","3"]
+        mock_maya.get_attr.return_value = True
 
         ui_maya = args[1]
         ui_maya.radio_group.return_value = 2
@@ -250,6 +258,12 @@ class TestSubmissionCombined(unittest.TestCase):
         self.assertEqual(job.params, {"setting_A":1, "setting_B":2})
         job.add_file_collection.assert_called_with(["abc"])
         self.assertEqual(job.pool, "12345")
+
+        mock_maya.get_attr.return_value = False
+        sub.submit()
+        mock_maya.error.assert_called_with(mock.ANY)
+        mock_maya.error.call_count = 0
+        mock_maya.get_attr.return_value = True
 
         ui_maya.menu.return_value = None
         sub.submit()

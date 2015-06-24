@@ -1,7 +1,7 @@
 v0.4.0				- Restructured assemblies for plugin isolation
 					- Better messaging for Maya 211 error
 					- Better messaging for no task output error
-					- Prevent scene submission with no render camera selected, or no render layer enabled
+v0.3.1, 2015-06-24	- Added pre-submission check for a render camera and enabled render layer
 v0.3.0,	2015-06-22	- Added search path feature to assets tab
 					- Gave asset references icons according to whether they were found
 					- Add .lock and .cat extensions to server output filter
