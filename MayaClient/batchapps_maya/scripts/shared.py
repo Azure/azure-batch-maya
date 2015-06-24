@@ -38,6 +38,7 @@ from submission import BatchAppsSubmission
 from history import BatchAppsHistory
 from assets import BatchAppsAssets
 from pools import BatchAppsPools
+from environment import BatchAppsEnvironment
 
 from api import MayaAPI as maya
 
@@ -67,6 +68,7 @@ class BatchAppsSettings(object):
             self.submission = BatchAppsSubmission(self.frame, self.call)
             self.assets = BatchAppsAssets(self.frame, self.call)
             self.pools = BatchAppsPools(self.frame, self.call)
+            self.env = BatchAppsEnvironment(self.frame, self.call)
             self.history =  BatchAppsHistory(self.frame, self.call)
 
             self.start()
@@ -114,6 +116,7 @@ class BatchAppsSettings(object):
                 self.history.configure(self.config)
                 self.assets.configure(self.config)
                 self.pools.configure(self.config)
+                self.env.configure(self.config)
 
                 self.submission.start(self.config, self.assets, self.pools)
 

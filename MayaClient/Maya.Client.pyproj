@@ -42,6 +42,9 @@
     <Compile Include="batchapps_maya\scripts\config.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="batchapps_maya\scripts\environment.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="batchapps_maya\scripts\history.py">
       <SubType>Code</SubType>
     </Compile>
@@ -56,6 +59,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="batchapps_maya\scripts\ui\ui_config.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="batchapps_maya\scripts\ui\ui_environment.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="batchapps_maya\scripts\ui\ui_history.py">

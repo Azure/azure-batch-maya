@@ -269,6 +269,13 @@ class MayaAPI(object):
     def execute(*args):
         utils.executeDeferred(*args)
 
+    @staticmethod
+    def plugins(*args, **kwargs):
+        try:
+            return cmds.pluginInfo(*args, **kwargs)
+        except:
+            return None
+
 class NodeIterator(object):
 
     def __init__(self):
