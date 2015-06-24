@@ -92,8 +92,14 @@ namespace Maya.Cloud
             if (File.Exists(logFile))
                 result.ProcessorOutput = File.ReadAllText(logFile);
 
-            if (processResult == null || newFiles.Length < 1)
+            if (processResult == null)
                 result.Success = TaskProcessSuccess.PermanentFailure;
+
+            else if (newFiles.Length < 1)
+            {
+                Log.Info("Maya generated no output files. Task failed, retrying.");
+                result.Success = TaskProcessSuccess.RetryableFailure;
+            }
 
             else
                 result.Success = TaskProcessSuccess.Succeeded;
