@@ -33,8 +33,10 @@ import pkgutil
 import inspect
 import importlib
 import logging
+import json
 
 from api import MayaAPI as maya
+from api import MayaCallbacks as callback
 
 from ui_submission import SubmissionUI
 
@@ -59,14 +61,19 @@ class BatchAppsSubmission:
         self.job_manager = None
         self.asset_manager = None
         self.pool_manager = None
+        self.env_manager = None
+
+        callback.after_new(self.ui.refresh)
+        callback.after_open(self.ui.refresh)
 
 
-    def start(self, session, assets, pools):
+    def start(self, session, assets, pools, env):
         self._log.debug("Starting BatchAppsSubmission...")
 
         self.job_manager = JobManager(session.credentials, session.config)
         self.asset_manager = assets
         self.pool_manager = pools
+        self.env_manager = env
 
         if self.renderer:
             self.renderer.delete()
@@ -80,7 +87,6 @@ class BatchAppsSubmission:
             
     def collect_modules(self):
         self._log.info("Collecting modules...")
-        #TODO: Get this not to conflict with existing modules, e.g. arnold
 
         render_modules = []
         module_dir = os.environ['BATCHAPPS_MODULES']
@@ -141,6 +147,13 @@ class BatchAppsSubmission:
 
         return None
 
+    def configure_environment(self, job):
+        job.version = self.env_manager.version
+        plugins = self.env_manager.plugins
+        env_vars = self.env_manager.environment_variables
+        settings = {"Plugins":plugins, "EnvVariables":env_vars}
+        job.plugins = json.dumps(settings)
+
     def submit(self):
 
         invalid_outputs = self.check_outputs()
@@ -186,18 +199,19 @@ class BatchAppsSubmission:
             new_job.settings = file_set.get('pathmaps', "")
 
             new_job.params = self.renderer.get_params()
+            self.configure_environment(new_job)
 
-            failed = self._call(new_job.required_files.upload)
-            if failed:
-                for (asset, exp) in failed:
-                    self._log.warning("File {0} failed with {1}".format(asset, exp))
-                maya.error("One or more files failed to upload. Submission aborted.")
-                return
+            #failed = self._call(new_job.required_files.upload)
+            #if failed:
+            #    for (asset, exp) in failed:
+            #        self._log.warning("File {0} failed with {1}".format(asset, exp))
+            #    maya.error("One or more files failed to upload. Submission aborted.")
+            #    return
 
-            self._log.info("Upload complete. Submitting...")
+            #self._log.info("Upload complete. Submitting...")
             self._log.debug(new_job._create_job_message())
 
-            self._call(new_job.submit)
+            #self._call(new_job.submit)
 
         except SessionExpiredException:
             pass

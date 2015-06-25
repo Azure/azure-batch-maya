@@ -124,7 +124,8 @@ class Dropdown(object):
         return self
 
     def __exit__(self, type, value, traceback):
-        maya.parent()
+        pass
+        #maya.parent()
 
     def add_item(self, item):
         maya.menu_option(label=item, parent=self.menu)

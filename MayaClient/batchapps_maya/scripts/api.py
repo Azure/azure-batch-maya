@@ -306,6 +306,24 @@ class NodeIterator(object):
         except Exception as exp:
             True
 
+class MayaCallbacks(object):
+
+    @staticmethod
+    def after_save(func):
+        return om.MSceneMessage.addCallback(om.MSceneMessage.kAfterSave, func)
+
+    @staticmethod
+    def after_new(func):
+        return om.MSceneMessage.addCallback(om.MSceneMessage.kAfterNew, func)
+
+    @staticmethod
+    def after_open(func):
+        return om.MSceneMessage.addCallback(om.MSceneMessage.kAfterFileRead, func)
+
+    @staticmethod
+    def remove(callback):
+        om.MSceneMessage.removeCallback(callback)
+
 class MayaReferences(object):
 
     def __init__(self):

@@ -30,86 +30,73 @@ import os
 import logging
 
 from api import MayaAPI as maya
+from api import MayaCallbacks as callback
 
 from ui_environment import EnvironmentUI
 
-IGNORE = ["Batchapps.py"]
-SUPPORTED = ["Mayatomr.mll"]
+MAYA_VERSIONS = {"Maya 2015": "2015", "MayaIO 2017": "2017"}
+
+SUPPORTED = [
+    {"name": "MentalRay", "plugin": "Mayatomr.mll", "license": False},
+    {"name": "Arnold", "plugin": "mtoa.mll", "license": True},
+    {"name": "Yeti", "plugin": "pgYetiMaya.mll", "license": True}]
+
 DEFAULT = [
-    "3dsImport.mll",
-    "audioWave.mll",
-    "closestPointOnCurve.mll",
-    "corrosionTexture.mll",
-    "cvColorShader.mll",
-    "denimTexture.mll",
-    "diffractionShader.mll",
-    "drawReduceTool.mll",
-    "drawSplitTool.mll",
-    "frecklesTexture.mll",
-    "gameInputDevice.mll",
-    "hwColorPerVertexShader.mll",
-    "hwManagedTextureShader.mll",
-    "measure.mll",
-    "nodeCreatedCBCmd.mll",
-    "pointOnMeshInfo.mll",
-    "polyNurbsProjection.mll",
-    "PolyTools.mll",
-    "polyVariance.mll",
-    "randomizerDevice.mll",
-    "ringsTexture.mll",
-    "scallopTexture.mll",
-    "skinShader.mll",
-    "splatterTexture.mll",
-    "streaksTexture.mll",
-    "stringFormatNode.mll",
-    "sun.mll",
-    "treeBarkTexture.mll",
-    "udpDevice.mll",
-    "veiningTexture.mll",
-    "woodGrainTexture.mll",
-    "AbcExport.mll",
-    "AbcImport.mll",
-    "animImportExport.mll",
-    "anzovinRigNodes.mll",
-    "atomImportExport.mll",
-    "AutodeskPacketFile.mll",
-    "bullet.mll",
-    "cgfxShader.mll",
-    "cleanPerFaceAssignment.mll",
-    "clearcoat.mll",
-    "ddsFloatReader.mll",
-    "dgProfiler.mll",
-    "DirectConnect.mll",
-    "fbxmaya.mll",
-    "fltTranslator.mll",
-    "Fur.mll",
-    "ge2Export.mll",
-    "gpuCache.mll",
-    "hlslShader.mll",
-    "hotOceanDeformer.mll",
-    "ik2Bsolver.mll",
-    "ikSpringSolver.mll",
-    "matrixNodes.mll",
-    "mayaCharacterization.mll",
-    "mayaHIK.mll",
-    "MayaMuscle.mll",
-    "melProfiler.mll",
-    "nearestPointOnMesh.mll",
-    "objExport.mll",
-    "OneClick.mll",
-    "OpenEXRLoader.mll",
-    "openInventor.mll",
-    "quatNodes.mll",
-    "retargeterNodes.py",
-    "rotateHelper.mll",
-    "rtgExport.mll",
-    "stereoCamera.mll",
-    "studioImport.mll",
-    "Substance.mll",
-    "TESTmaya.py",
-    "tiffFloatReader.mll",
-    "VectorRender.mll",
-    "vrml2Export.mll"]
+    'AbcBullet.mll',
+    'AbcExport.mll',
+    'AbcImport.mll',
+    'animImportExport.mll',
+    'ArubaTessellator.mll',
+    'atomImportExport.mll',
+    'AutodeskPacketFile.mll',
+    'autoLoader.mll',
+    'batchapps.py',
+    'bullet.mll',
+    'cgfxShader.mll',
+    'cleanPerFaceAssignment.mll',
+    'clearcoat.mll',
+    'ddsFloatReader.mll',
+    'dgProfiler.mll',
+    'DirectConnect.mll',
+    'dx11Shader.mll',
+    'fltTranslator.mll',
+    'Fur.mll',
+    'ge2Export.mll',
+    'gpuCache.mll',
+    'hlslShader.mll',
+    'ik2Bsolver.mll',
+    'ikSpringSolver.mll',
+    'matrixNodes.mll',
+    'mayaCharacterization.mll',
+    'mayaHIK.mll',
+    'MayaMuscle.mll',
+    'melProfiler.mll',
+    'modelingToolkit.mll',
+    'nearestPointOnMesh.mll',
+    'objExport.mll',
+    'OneClick.mll',
+    'OpenEXRLoader.mll',
+    'openInventor.mll',
+    'quatNodes.mll',
+    'retargeterNodes.py',
+    'rotateHelper.mll',
+    'rtgExport.mll',
+    'sceneAssembly.mll',
+    'shaderFXPlugin.mll',
+    'stereoCamera.mll',
+    'studioImport.mll',
+    'tiffFloatReader.mll',
+    'Turtle.mll',
+    'Unfold3D.mll',
+    'VectorRender.mll',
+    'vrml2Export.mll',
+    'BifrostMain.mll',
+    'bifrostshellnode.mll',
+    'bifrostvisplugin.mll',
+    'fbxmaya.mll',
+    'Substance.mll',
+    'xgenMR.py',
+    'xgenToolkit.mll']
 
 class BatchAppsEnvironment(object):
     
@@ -119,10 +106,28 @@ class BatchAppsEnvironment(object):
         self._call = call
         self._session = None
 
-        self._maya_versions = ["Maya 2015", "MayaIO 2017"]
-        self._plugins = self.get_plugins()
+        self._server_plugins = []
+        self._plugins = []
+        self._version = "2017"
 
-        self.ui = EnvironmentUI(self, frame)
+        self.ui = EnvironmentUI(self, frame, MAYA_VERSIONS.keys())
+        self._plugins = []
+
+        self.refresh()
+        callback.after_new(self.ui.refresh)
+        callback.after_open(self.ui.refresh)
+
+    @property
+    def plugins(self):
+        return self._server_plugins
+
+    @property
+    def environment_variables(self):
+        return self.ui.get_env_vars()
+
+    @property
+    def version(self):
+        return self._version
 
     def configure(self, session):
         self._session = session
@@ -135,12 +140,22 @@ class BatchAppsEnvironment(object):
         plugins = []
 
         for plugin in extra_plugins:
-            enabled = maya.plugins(plugin, query=True, loaded=True)
-            plugins.append([plugin, (plugin in SUPPORTED), enabled])
+            support = [p for p in SUPPORTED if p["plugin"]==plugin]
+            loaded = maya.plugins(plugin, query=True, loaded=True)
+            plugin_ref = BatchPlugin(self, plugin, loaded, support)
+            plugin_ref.is_used(used_plugins if used_plugins else [])
+            plugins.append(plugin_ref)
+
+        if self.warning_plugins:
+            warning = "The following plugins are used in the scene, but not yet supported.\nRendering may be affected.\n"
+            for plugin in self.warning_plugins:
+                warning += plugin + "\n"
+            maya.warning(warning)
+
+        return plugins
 
 
     def search_for_plugins(self):
-        
         found_plugins = []
         search_locations = os.environ["MAYA_PLUG_IN_PATH"].split(os.pathsep)
 
@@ -148,8 +163,102 @@ class BatchAppsEnvironment(object):
             if os.path.isdir(plugin_dir):
                 plugins = os.listdir(os.path.normpath(plugin_dir))
                 for plugin in plugins:
-                    if (plugin.endswith(".mll") or plugin.endswith(".py")) and plugin not in IGNORE:
+                    if (plugin.endswith(".mll") or plugin.endswith(".py")):
                         found_plugins.append(plugin)
 
         return list(set(found_plugins) - set(DEFAULT))
+
+    def set_version(self, version):
+        self._version = MAYA_VERSIONS[version]
+
+    def refresh(self):
+        print("refreshing")
+        self._server_plugins = []
+        self.warning_plugins = []
+        for plugin in self._plugins:
+            plugin.delete()
+
+        self._plugins = self.get_plugins()
+
+
+
+
+class BatchPlugin(object):
+
+    def __init__(self, base, plugin, loaded, support):
+
+        self.plugin = plugin
+        self.label = plugin
+        self.supported = bool(support)
+        self.loaded = loaded
+        self.used = False
+        self.base = base
+        self.license = False
+        self.contents = []
+
+        print(self.plugin, self.loaded)
+
+        if self.supported:
+            self.label = support[0]["name"]
+            self.license = support[0]["license"]
+
+        self.create_checkbox()
+
+    def create_checkbox(self):
+        self.checkbox = maya.check_box(label=self.label if self.supported else "Unsupported: {0}".format(self.label),
+                                       value=False,
+                                       onCommand=self.include,
+                                       offCommand=self.exclude,
+                                       parent=self.base.ui.plugin_layout,
+                                       enable=self.supported)
+
+        if self.license:
+            self.license_check = maya.check_box(label="Use my license", value=False, parent=self.base.ui.plugin_layout, changeCommand=self.use_license, enable=False)
+            self.custom_license_endp = maya.text_field( placeholderText='License Server', enable=False, parent=self.base.ui.plugin_layout)
+            self.custom_license_port = maya.text_field( placeholderText='Port', enable=False, parent=self.base.ui.plugin_layout)
+            self.contents.extend([self.license_check, self.custom_license_endp, self.custom_license_port])
+        else:
+            self.contents.append(maya.text(label="", parent=self.base.ui.plugin_layout))
+        self.contents.append(self.checkbox)
+
+    def is_used(self, used_plugins):
+        print("used plugins", used_plugins)
+        self.used = False
+        for plugin in used_plugins:
+            if plugin == os.path.splitext(self.plugin)[0]:
+                self.used = True
+                break
+
+        if self.loaded and self.supported and self.used:
+            maya.check_box(self.checkbox, edit=True, value=True)
+            if self.license:
+                maya.check_box(self.license_check, edit=True, enable=True)
+            self.base.plugins.append(self.label)
+
+        if self.loaded and self.used and not self.supported:
+            self.base.warning_plugins.append(self.plugin)
+
+    def use_license(self, license):
+        if self.license:
+            maya.text_field(self.custom_license_endp, edit=True, enable=license)
+            maya.text_field(self.custom_license_port, edit=True, enable=license)
+
+    def include(self, *args):
+        self.base.plugins.append(self.label)
+
+        if self.license:
+            maya.check_box(self.license_check, edit=True, enable=True)
+
+    def exclude(self, *args):
+        if self.used:
+            maya.warning("This plugin is currently in use. Excluding it may affect rendering.")
+
+        self.base.plugins.remove(self.label)
+        if self.license:
+            maya.check_box(self.license_check, edit=True, enable=False)
+
+    def delete(self):
+        for c in self.contents:
+            maya.delete_ui(c, control=True)
+
         

@@ -87,6 +87,10 @@ class BatchAppsConfig(object):
     def auth(self):
         return self._auth
 
+    @property
+    def path(self):
+        return os.path.join(self._data_dir, self._ini_file)
+
     def _configure_plugin(self):
         cfg = None
         try:
@@ -98,6 +102,7 @@ class BatchAppsConfig(object):
             
             cfg.add_jobtype("Maya")
             cfg.current_jobtype("Maya")
+            cfg.save_config()
             
         except (InvalidConfigException, IndexError) as exp:
             raise Exception("Error occurred during configuration {0}".format(exp))

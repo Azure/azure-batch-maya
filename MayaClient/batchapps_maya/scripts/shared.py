@@ -57,9 +57,6 @@ class BatchAppsSettings(object):
     def __init__(self):
 
         self._log = logging.getLogger('BatchAppsMaya')
-
-        self.supported_versions = [2015, 2016, 2017]
-        self.version = self.check_maya_version()
         
         try:
             self.frame = BatchAppsUI(self)
@@ -79,32 +76,6 @@ class BatchAppsSettings(object):
 
             message = "Batch Plugin Failed to Start: {0}".format(exp)
             maya.error(message)
-        
-    def check_maya_version(self):
-
-        self._log.info("Checking maya version...")
-        current_version = int(maya.mel("getApplicationVersionAsFloat()"))
-        checked_version = self.check_version(current_version)
-
-        if checked_version != current_version:
-            message = "You are using a version of Maya ({0}) that BatchApps does not support.\n"\
-                      "Your job will render with the closest available version ({1}), however\n"\
-                      "we cannot guarantee its success.".format(current_version, checked_version)
-
-            maya.warning(message)
-        return checked_version
-
-    def check_version(self, version):
-        if version not in self.supported_versions:
-
-            if version < self.supported_versions[0]:
-                return self.supported_versions[0]
-
-            elif version > self.supported_versions[-1]:
-                return self.supported_versions[-1]
-
-        else:
-            return version
 
     def start(self):
         try:
@@ -118,7 +89,7 @@ class BatchAppsSettings(object):
                 self.pools.configure(self.config)
                 self.env.configure(self.config)
 
-                self.submission.start(self.config, self.assets, self.pools)
+                self.submission.start(self.config, self.assets, self.pools, self.env)
 
             else:
                 self.frame.is_logged_out()
@@ -138,8 +109,6 @@ class BatchAppsSettings(object):
             raise  
 
         except RestCallException as exp:
-            #if (maya.window("BatchApps", q=1, exists=1)):
-            #    maya.delete_ui("BatchApps")
             maya.error("API call failed: {0}".format(exp))
             raise
 

@@ -41,7 +41,6 @@ class BatchAppsMayaJob(BatchAppsRenderJob):
 
         self._renderer = "mayaSoftware"
         self.label = "Maya Software"
-        self.versions = {"Maya 2015": "2015", "MayaIO 2017": "2017"}
 
     def settings(self):
         if self.scene_name == "":
@@ -63,7 +62,6 @@ class BatchAppsMayaJob(BatchAppsRenderJob):
         self.start = self.display_int("Start frame:   ", self.start_frame, edit=True)
         self.end = self.display_int("End frame:   ", self.end_frame, edit=True)
         self.step = self.display_int("Frame step:   ", self.frame_step, edit=True)
-        self.version = self.display_menu("Version:   ", self.versions.keys())
 
     def get_title(self):
         return str(cmds.textField(self.job_name, query=True, text=True))
@@ -107,9 +105,6 @@ class BatchAppsMayaJob(BatchAppsRenderJob):
         params["end"] = cmds.intField(self.end, query=True, value=True)
         params["engine"] = "sw"
         params["jobfile"] = os.path.basename(self.scene_name)
-
-        version = cmds.optionMenu(self.version, query=True, value=True)
-        params["version"] = self.versions[version]
 
         filename = str(cmds.textField(self.output_name, query=True, text=True))
         if '/' in filename or '\\' in filename:
