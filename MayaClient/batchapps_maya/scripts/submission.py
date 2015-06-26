@@ -147,12 +147,16 @@ class BatchAppsSubmission:
 
         return None
 
-    def configure_environment(self, job):
+    def configure_environment(self, job, settings):
         job.version = self.env_manager.version
         plugins = self.env_manager.plugins
         env_vars = self.env_manager.environment_variables
-        settings = {"Plugins":plugins, "EnvVariables":env_vars}
-        job.plugins = json.dumps(settings)
+        license = self.env_manager.license
+        #settings = {"Plugins":plugins, "EnvVariables":env_vars}
+        settings["Plugins"] = plugins
+        settings["EnvVariables"] = env_vars
+        settings.update(license)
+        job.settings = json.dumps(settings)
 
     def submit(self):
 
@@ -196,22 +200,21 @@ class BatchAppsSubmission:
                 new_job.pool = self.pool_manager.create_pool(int(pool_spec[3]))
 
             new_job.add_file_collection(file_set.get('assets', []))
-            new_job.settings = file_set.get('pathmaps', "")
 
             new_job.params = self.renderer.get_params()
-            self.configure_environment(new_job)
+            self.configure_environment(new_job, file_set.get('pathmaps', ""))
 
-            #failed = self._call(new_job.required_files.upload)
-            #if failed:
-            #    for (asset, exp) in failed:
-            #        self._log.warning("File {0} failed with {1}".format(asset, exp))
-            #    maya.error("One or more files failed to upload. Submission aborted.")
-            #    return
+            failed = self._call(new_job.required_files.upload)
+            if failed:
+                for (asset, exp) in failed:
+                    self._log.warning("File {0} failed with {1}".format(asset, exp))
+                maya.error("One or more files failed to upload. Submission aborted.")
+                return
 
-            #self._log.info("Upload complete. Submitting...")
+            self._log.info("Upload complete. Submitting...")
             self._log.debug(new_job._create_job_message())
 
-            #self._call(new_job.submit)
+            self._call(new_job.submit)
 
         except SessionExpiredException:
             pass

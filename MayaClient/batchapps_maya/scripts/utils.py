@@ -114,6 +114,21 @@ class ScrollLayout(Layout):
         super(ScrollLayout, self).__init__(maya.scroll_layout, layout=settings, **kwargs)
 
 
+class ClickMenu(object):
+
+    def __init__(self, command, **kwargs):
+        self.menu = maya.popup_menu(**kwargs)
+        self.command = command
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        pass
+
+    def add_item(self, item):
+        maya.menu_option(label=item, parent=self.menu, command=lambda a: self.command(item))
+
 class Dropdown(object):
 
     def __init__(self, command, **kwargs):

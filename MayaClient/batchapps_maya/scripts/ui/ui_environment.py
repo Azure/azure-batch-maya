@@ -31,8 +31,6 @@ from api import MayaAPI as maya
 import os
 import utils
 
-from maya import cmds
-
 def edit_cell(*args):
     return 1
 
@@ -53,35 +51,34 @@ class EnvironmentUI:
                         with utils.ColumnLayout(2, col_width=((1,160),(2,160)), row_spacing=(1,5),
                                     row_offset=((1, "top", 15),(3, "bottom", 15))):
 
-                            cmds.text(label="Use Maya version: ", align='right')
+                            maya.text(label="Use Maya version: ", align='right')
                             with utils.Dropdown(self.set_version) as version_settings:
                                 self._maya_version = version_settings
                                 for v in versions:
                                     self._maya_version.add_item(v)
 
-                            cmds.text(label="Use my license server: ", align='right')
+                            maya.text(label="Use my license server: ", align='right')
                             self.use_license = maya.check_box(label="", value=False, changeCommand=self.user_license_server)
-                            self.custom_license_endp = cmds.textFieldGrp( placeholderText='License Server', enable=False)
-                            self.custom_license_port = cmds.textFieldGrp( placeholderText='Port', enable=False )
+                            self.custom_license_endp = maya.text_field( placeholderText='License Server', enable=False)
+                            self.custom_license_port = maya.text_field( placeholderText='Port', enable=False )
 
                     with utils.FrameLayout(label="Environment Variables", collapsable=True, width=325, collapse=True):
-                        self.env_vars = cmds.scriptTable(rows=0, columns=2, label=[(1,"Setting"), (2,"Value")], columnWidth=[(1,155), (2,155)],
+                        self.env_vars = maya.table(rows=0, columns=2, columnWidth=[(1,155), (2,155)], label=[(1,"Setting"), (2,"Value")], 
                                                     rowHeight=15, editable=False, selectionBehavior=1, getCellCmd=self.populate_row)
 
                         with utils.ColumnLayout(2, col_width=((1,160),(2,160))):
-                            self.custom_env_var = cmds.textFieldGrp( placeholderText='Env Variable' )
-                            self.custom_env_val = cmds.textFieldGrp( placeholderText='Value' )
-                            popup = cmds.popupMenu(parent=self.custom_env_val, button=3) 
-                            cmds.menuItem(label='<storage>', command=lambda a: self.insert_path("<storage>")) 
-                            cmds.menuItem(label='<maya_root>', command=lambda a: self.insert_path("<maya_root>")) 
-                            cmds.menuItem(label='<mentalray_root>', command=lambda a: self.insert_path("<mentalray_root>"))
-                            cmds.menuItem(label='<arnold_root>', command=lambda a: self.insert_path("<arnold_root>"))
-                            cmds.menuItem(label='<user_scripts>', command=lambda a: self.insert_path("<user_scripts>"))
-                            cmds.menuItem(label='<user_modules>', command=lambda a: self.insert_path("<user_modules>"))
-                            cmds.menuItem(label='<temp_dir>', command=lambda a: self.insert_path("<temp_dir>"))
+                            self.custom_env_var = maya.text_field( placeholderText='Env Variable' )
+                            self.custom_env_val = maya.text_field( placeholderText='Value' )
 
-                            addButton = cmds.button(label="Add",command=self.add_row)
-                            deleteButton = cmds.button(label="Delete",command=self.delete_row)
+                            with utils.ClickMenu(self.insert_path, parent=self.custom_env_val, button=3) as menu:
+                                menu.add_item('<storage>')
+                                menu.add_item('<maya_root>')
+                                menu.add_item('<user_scripts>')
+                                menu.add_item('<user_modules>')
+                                menu.add_item('<temp_dir>')
+
+                            addButton = maya.button(label="Add",command=self.add_row)
+                            deleteButton = maya.button(label="Delete",command=self.delete_row)
 
                     with utils.FrameLayout(label="Plugins", collapsable=True, width=325, collapse=True):
                         with utils.ColumnLayout(2, col_width=((1,180),(2,140))) as plugin_layout:
@@ -94,48 +91,57 @@ class EnvironmentUI:
         self.is_logged_out()
 
     def delete_row(self, *args):
-        selected_row = cmds.scriptTable(self.env_vars, query=True, selectedRow=True)
-        cmds.scriptTable(self.env_vars, edit=True, deleteRow=selected_row)
+        selected_row = maya.table(self.env_vars, query=True, selectedRow=True)
+        maya.table(self.env_vars, edit=True, deleteRow=selected_row)
 
     def add_row(self, *args):
-        env_var = cmds.textFieldGrp(self.custom_env_var, query=True, text=True )
-        env_val = cmds.textFieldGrp(self.custom_env_val, query=True, text=True )
+        env_var = maya.text_field(self.custom_env_var, query=True, text=True )
+        env_val = maya.text_field(self.custom_env_val, query=True, text=True )
         if env_var and env_val:
-            cmds.scriptTable(self.env_vars, edit=True, insertRow=1)
+            maya.table(self.env_vars, edit=True, insertRow=1)
 
     def populate_row(self, row, column):
         if column == 1:
-            env_var = cmds.textFieldGrp(self.custom_env_var, query=True, text=True )
-            cmds.textFieldGrp(self.custom_env_var, edit=True, text="" )
+            env_var = maya.text_field(self.custom_env_var, query=True, text=True )
+            maya.text_field(self.custom_env_var, edit=True, text="" )
             return env_var
 
         if column == 2:
-            env_val = cmds.textFieldGrp(self.custom_env_val, query=True, text=True )
-            cmds.textFieldGrp(self.custom_env_val, edit=True, text="" )
+            env_val = maya.text_field(self.custom_env_val, query=True, text=True )
+            maya.text_field(self.custom_env_val, edit=True, text="" )
             return env_val
 
     def set_version(self, version):
         self.base.set_version(version)
 
     def insert_path(self, path):
-        cmds.textFieldGrp(self.custom_env_val, edit=True, insertText=path)
+        maya.text_field(self.custom_env_val, edit=True, insertText=path)
 
     def get_env_vars(self):
         vars = {}
-        rows = cmds.scriptTable(self.env_vars, query=True, rows=True)
+        rows = maya.table(self.env_vars, query=True, rows=True)
         for row in range(1, rows):
-            row_key = cmds.scriptTable(self.env_vars, cellIndex=(row, 1), query=True, cellValue=True)
-            row_val = cmds.scriptTable(self.env_vars, cellIndex=(row, 2), query=True, cellValue=True)
+            row_key = maya.table(self.env_vars, cellIndex=(row, 1), query=True, cellValue=True)
+            row_val = maya.table(self.env_vars, cellIndex=(row, 2), query=True, cellValue=True)
             vars[str(row_key[0])] = str(row_val[0])
 
         return vars
 
     def user_license_server(self, enabled):
-        cmds.textFieldGrp(self.custom_license_endp, edit=True, enable=enabled)
-        cmds.textFieldGrp(self.custom_license_port, edit=True, enable=enabled)
+        maya.text_field(self.custom_license_endp, edit=True, enable=enabled)
+        maya.text_field(self.custom_license_port, edit=True, enable=enabled)
+
+    def get_license_server(self):
+        license = {"LicenseServer":"", "LicensePort":""}
+        enabled = maya.check_box(self.use_license, query=True, value=True)
+        if enabled:
+            license["LicenseServer"] = str(maya.text_field(self.custom_license_endp, query=True, text=True))
+            license["LicensePort"] = str(maya.text_field(self.custom_license_port, query=True, text=True))
+
+        return license
 
     def refresh(self, *args):
-        cmds.scriptTable(self.env_vars, edit=True, clearTable=True, rows=0)
+        maya.table(self.env_vars, edit=True, clearTable=True, rows=0)
         self.base.refresh()
         maya.refresh()
 

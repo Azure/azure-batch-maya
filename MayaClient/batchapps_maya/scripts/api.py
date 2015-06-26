@@ -231,6 +231,13 @@ class MayaAPI(object):
             return None
 
     @staticmethod
+    def popup_menu(*args, **kwargs):
+        try:
+            return cmds.popupMenu(*args, **kwargs)
+        except:
+            return None
+
+    @staticmethod
     def menu(*args, **kwargs):
         try:
             return cmds.optionMenu(*args, **kwargs)
@@ -248,6 +255,13 @@ class MayaAPI(object):
     def radio_group(*args, **kwargs):
         try:
             return cmds.radioButtonGrp(*args, **kwargs)
+        except:
+            return None
+
+    @staticmethod
+    def table(*args, **kwargs):
+        try:
+            return cmds.scriptTable(*args, **kwargs)
         except:
             return None
 
@@ -318,6 +332,10 @@ class MayaCallbacks(object):
 
     @staticmethod
     def after_open(func):
+        return om.MSceneMessage.addCallback(om.MSceneMessage.kAfterOpen, func)
+
+    @staticmethod
+    def after_read(func):
         return om.MSceneMessage.addCallback(om.MSceneMessage.kAfterFileRead, func)
 
     @staticmethod

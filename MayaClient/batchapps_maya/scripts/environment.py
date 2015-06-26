@@ -38,8 +38,8 @@ MAYA_VERSIONS = {"Maya 2015": "2015", "MayaIO 2017": "2017"}
 
 SUPPORTED = [
     {"name": "MentalRay", "plugin": "Mayatomr.mll", "license": False},
-    {"name": "Arnold", "plugin": "mtoa.mll", "license": True},
-    {"name": "Yeti", "plugin": "pgYetiMaya.mll", "license": True}]
+    {"name": "Arnold", "plugin": "mtoa.mll", "license": True, "license_var": {"key":"solidangle_LICENSE", "value":"{port}@{host}"}},
+    {"name": "Yeti", "plugin": "pgYetiMaya.mll", "license": True, "license_var": {"key":"peregrinel_LICENSE", "value":"{port}@{host}"}}]
 
 DEFAULT = [
     'AbcBullet.mll',
@@ -115,7 +115,7 @@ class BatchAppsEnvironment(object):
 
         self.refresh()
         callback.after_new(self.ui.refresh)
-        callback.after_open(self.ui.refresh)
+        callback.after_read(self.ui.refresh)
 
     @property
     def plugins(self):
@@ -123,11 +123,18 @@ class BatchAppsEnvironment(object):
 
     @property
     def environment_variables(self):
-        return self.ui.get_env_vars()
+        custom_vars = self.ui.get_env_vars()
+        for plugin in self._plugins:
+            custom_vars.update(plugin.get_variables())
+        return custom_vars
 
     @property
     def version(self):
         return self._version
+
+    @property
+    def license(self):
+        return self.ui.get_license_server()
 
     def configure(self, session):
         self._session = session
@@ -201,6 +208,7 @@ class BatchPlugin(object):
         if self.supported:
             self.label = support[0]["name"]
             self.license = support[0]["license"]
+            self.license_var = support[0].get("license_var", {})
 
         self.create_checkbox()
 
@@ -260,5 +268,19 @@ class BatchPlugin(object):
     def delete(self):
         for c in self.contents:
             maya.delete_ui(c, control=True)
+
+    def get_variables(self):
+        vars = {}
+        if self.license and maya.check_box(self.license_check, query=True, value=True):
+            license_key = self.license_var["key"]
+            license_val = self.license_var["value"]
+            
+            host = str(maya.text_field(self.custom_license_endp, query=True, text=True))
+            port = str(maya.text_field(self.custom_license_port, query=True, text=True))
+            if host and port:
+                vars[license_key] = license_val.format(host=host, port=port)
+
+        return vars
+
 
         
