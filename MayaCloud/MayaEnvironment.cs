@@ -78,7 +78,7 @@ namespace Maya.Cloud
 
             log.Info("Env paths: {0}, {1}, {2}, {3}, {4}", _localpath, _exeroot, _exepath, _executable, _plugins.Count);
 
-            SetLicense(AppParams.ApplicationSettings.Adlm);
+            SetLicense(AppParams.EnvironmentSettings, AppParams.ApplicationSettings.Adlm);
             SetEnvVariables(AppParams.EnvironmentSettings);
             SetWorkspace(AppParams.ApplicationSettings);
             CreateMayaEnv(AppParams.ApplicationSettings);
@@ -101,22 +101,38 @@ namespace Maya.Cloud
             get { return _executable; }
         }
 
-        private void SetLicense(string Adlm)
+        private void SetLicense(EnvironmentSettings EnvSettings, string Adlm)
         {
             var license = Path.Combine(_exepath, "bin",  "License.env");
+            var license_path = Path.Combine(_exeroot, "Adlm");
             if (!File.Exists(license))
             {
-                var formattedLic = string.Format(MayaScripts.lic, _exeroot);
+                var formattedLicEnv = string.Format(MayaScripts.license_env, _exeroot);
                 using (var licFile = new StreamWriter(license))
                 {
-                    licFile.Write(formattedLic);
+                    licFile.Write(formattedLicEnv);
+                }
+            }
+
+            
+            if (EnvSettings.LicenseServer != String.Empty && EnvSettings.LicensePort != String.Empty)
+            {
+                var license_server = Path.Combine(_localpath, "LICPATH.LIC");
+                license_path = _localpath;
+                if (!File.Exists(license_server))
+                {
+                    var formattedLic = string.Format(MayaScripts.license, EnvSettings.LicenseServer, EnvSettings.LicensePort);
+                    using (var licFile = new StreamWriter(license_server))
+                    {
+                        licFile.Write(formattedLic);
+                    }
                 }
             }
 
             var client = Path.Combine(_exeroot, "Adlm", "AdlmThinClientCustomEnv.xml");
             if (!File.Exists(client))
             {
-                var formattedClient = string.Format(MayaScripts.client, _exeroot, Adlm);
+                var formattedClient = string.Format(MayaScripts.client, _exeroot, Adlm, license_path);
                 using (var clientFile = new StreamWriter(client))
                 {
                     clientFile.Write(formattedClient);
@@ -252,10 +268,10 @@ namespace Maya.Cloud
                 foreach (var p in remappedPaths)
                     pathsScript += string.Format("dirmap -m \"{0}\" \"{1}\";\n", p, _localpath.Replace('\\', '/'));
 
-                formattedScript = string.Format(MayaScripts.dirMap, "dirmap -en true;", pathsScript);
+                formattedScript = string.Format(MayaScripts.render_prep, "dirmap -en true;", pathsScript);
             }
             else
-                formattedScript = string.Format(MayaScripts.dirMap, string.Empty, string.Empty);
+                formattedScript = string.Format(MayaScripts.render_prep, string.Empty, string.Empty);
 
             using (var scriptFile = new StreamWriter(scriptPath))
             {
