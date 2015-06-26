@@ -33,6 +33,10 @@
     <Reference Include="Microsoft.Azure.Batch.Apps.Cloud">
       <HintPath>..\packages\Microsoft.Azure.Batch.Apps.Cloud.1.0.1-preview\lib\net45\Microsoft.Azure.Batch.Apps.Cloud.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
@@ -61,8 +65,7 @@
     <Compile Include="Plugins\plugin.cs" />
     <Compile Include="Plugins\yeti.cs" />
     <Compile Include="Settings\ApplicationSettings.cs" />
-    <Compile Include="Settings\PluginSettings.cs" />
-    <Compile Include="Settings\RenderSettings.cs" />
+    <Compile Include="Settings\EnvironmentSettings.cs" />
     <Compile Include="TaskParameters.cs" />
     <Compile Include="TaskProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

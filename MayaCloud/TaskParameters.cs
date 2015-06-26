@@ -38,6 +38,7 @@ using System.Runtime.Serialization.Json;
 using Microsoft.Azure.Batch.Apps.Cloud;
 using Maya.Cloud.Settings;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace Maya.Cloud
 {
@@ -52,11 +53,9 @@ namespace Maya.Cloud
 
         public abstract int End { get; }
 
-        public abstract RenderSettings RenderSettings { get; }
-
-        public abstract PluginSettings PluginSettings { get; }
-
         public abstract ApplicationSettings ApplicationSettings { get; }
+
+        public abstract EnvironmentSettings EnvironmentSettings { get; }
 
         public abstract string JobFile { get; }
 
@@ -91,8 +90,7 @@ namespace Maya.Cloud
             string engine = GetStringParameter(task.Parameters, "engine", errors);
             string filename = GetStringParameter(task.Parameters, "prefix", errors);
 
-            RenderSettings rendersettings = GetSettingsParameter(task.Parameters, "settings", errors);
-            PluginSettings pluginsettings = GetPluginParameter(task.Parameters, "plugins", errors);
+            EnvironmentSettings envsettings = GetSettingsParameter(task.Parameters, "settings", errors);
             ApplicationSettings appsettings = GetApplicationSettings(Path.Combine(applicationpath, "app.config"), errors);
             
             if (errors.Any())
@@ -100,7 +98,7 @@ namespace Maya.Cloud
                 return new InvalidMayaParameters(string.Join(Environment.NewLine, errors.Select(e => "* " + e)));
             }
 
-            return new ValidMayaParameters(jobfile, engine, filename, rendersettings, pluginsettings, appsettings);
+            return new ValidMayaParameters(jobfile, engine, filename, envsettings, appsettings);
         }
 
 
@@ -149,38 +147,19 @@ namespace Maya.Cloud
             return text;
         }
 
-        private static RenderSettings GetSettingsParameter(IDictionary<string, string> parameters, string parameterName, List<string> errors)
+        private static EnvironmentSettings GetSettingsParameter(IDictionary<string, string> parameters, string parameterName, List<string> errors)
         {
             var jsonSettings = GetStringParameter(parameters, parameterName, errors);
-            var settings = new RenderSettings();
+            var settings = new EnvironmentSettings();
 
+            
             try
             {
-                DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(RenderSettings));
-                MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(jsonSettings));
-                settings = (RenderSettings)ser.ReadObject(stream);
+                settings = JsonConvert.DeserializeObject<EnvironmentSettings>(jsonSettings);
             }
             catch (Exception ex)
             {
-                errors.Add("Error deserializing json render settings: " + ex.Message);
-            }
-            return settings;
-        }
-
-        private static PluginSettings GetPluginParameter(IDictionary<string, string> parameters, string parameterName, List<string> errors)
-        {
-            var jsonSettings = GetStringParameter(parameters, parameterName, errors);
-            var settings = new PluginSettings();
-
-            try
-            {
-                DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(PluginSettings));
-                MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(jsonSettings));
-                settings = (PluginSettings)ser.ReadObject(stream);
-            }
-            catch (Exception ex)
-            {
-                errors.Add("Error deserializing json plugin settings: " + ex.Message);
+                errors.Add("Error deserializing json environment settings: " + ex.Message);
             }
             return settings;
         }
@@ -196,11 +175,7 @@ namespace Maya.Cloud
 
             try
             {
-                using (Stream input = File.OpenRead(configfile))
-                {
-                    DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(ApplicationSettings));
-                    settings = (ApplicationSettings)ser.ReadObject(input);
-                }
+                settings = JsonConvert.DeserializeObject<ApplicationSettings>(File.ReadAllText(configfile));
             }
             catch (Exception ex)
             {
@@ -218,8 +193,7 @@ namespace Maya.Cloud
             private readonly string _jobfile;
             private readonly string _renderer;
             private readonly string _output;
-            private readonly RenderSettings _render_settings;
-            private readonly PluginSettings _plugin_settings;
+            private readonly EnvironmentSettings _env_settings;
             private readonly ApplicationSettings _app_settings;
 
             public ValidMayaParameters(int start, int end, string jobfile, string engine)
@@ -230,14 +204,13 @@ namespace Maya.Cloud
                 _renderer = engine;
             }
 
-            public ValidMayaParameters(string jobfile, string engine, string output, RenderSettings rendersettings, 
-                PluginSettings pluginsettings, ApplicationSettings appsettings)
+            public ValidMayaParameters(string jobfile, string engine, string output,
+                EnvironmentSettings envsettings, ApplicationSettings appsettings)
             {
                 _jobfile = jobfile;
                 _renderer = engine;
                 _output = output;
-                _render_settings = rendersettings;
-                _plugin_settings = pluginsettings;
+                _env_settings = envsettings;
                 _app_settings = appsettings;
             }
 
@@ -271,19 +244,14 @@ namespace Maya.Cloud
                 get { return _output; }
             }
 
-            public override RenderSettings RenderSettings
-            {
-                get { return _render_settings; }
-            }
-
             public override ApplicationSettings ApplicationSettings
             {
                 get { return _app_settings; }
             }
 
-            public override PluginSettings PluginSettings
+            public override EnvironmentSettings EnvironmentSettings
             {
-                get { return _plugin_settings; }
+                get { return _env_settings; }
             }
 
             public override string ErrorText
@@ -331,14 +299,9 @@ namespace Maya.Cloud
                 get { throw new InvalidOperationException("OutputName does not apply to invalid parameters"); }
             }
 
-            public override RenderSettings RenderSettings
+            public override EnvironmentSettings EnvironmentSettings
             {
-                get { throw new InvalidOperationException("RenderSettings does not apply to invalid parameters"); }
-            }
-
-            public override PluginSettings PluginSettings
-            {
-                get { throw new InvalidOperationException("PluginSettings does not apply to invalid parameters"); }
+                get { throw new InvalidOperationException("EnvironmentSettings does not apply to invalid parameters"); }
             }
 
             public override ApplicationSettings ApplicationSettings

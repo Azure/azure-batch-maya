@@ -74,15 +74,12 @@ namespace Maya.Cloud
                 };
             }
 
+
             var env = new MayaEnvironment(taskParameters, LocalStoragePath, ExecutablesPath, task.TaskId, task.TaskIndex, Log);
-            //var projDir = ConfigureMayaEnv(taskParameters.ApplicationSettings);
-
-            //CreateEnvVariables(taskParameters.ApplicationSettings);
-            //CreatePreRenderScript(taskParameters);
-
             var initialFiles = CollectFiles(LocalStoragePath);
             var inputFile = Path.Combine(LocalStoragePath, taskParameters.JobFile);
             var logFile = string.Format("{0}.log", task.TaskId);
+
 
             Log.Info("Calling '{0}' with Args '{1}' for Task '{2}' / Job '{3}' .", env.Executable, env.Command + inputFile, task.TaskId, task.JobId);
             var processResult = ExecuteProcess(env.Executable, env.Command + inputFile);

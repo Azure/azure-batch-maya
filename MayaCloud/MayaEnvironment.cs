@@ -17,6 +17,7 @@ namespace Maya.Cloud
         private string _localpath;
         private string _exeroot;
         private string _exepath;
+        private string _userdir;
         private IList<MayaPlugin> _plugins;
 
         public ILog log;
@@ -64,20 +65,24 @@ namespace Maya.Cloud
             _localpath = Localpath;
             _exeroot = ExeRoot;
             _exepath = String.Format(@"{0}\{1}", ExeRoot, AppParams.ApplicationSettings.Application);
+            _userdir = Path.Combine(_localpath, AppParams.ApplicationSettings.UserDirectory);
 
             _executable = String.Format(_executable, _exepath);
             _plugins = new List<MayaPlugin>();
 
-            foreach (var plugin in AppParams.PluginSettings.Plugins)
+            foreach (var plugin in AppParams.EnvironmentSettings.Plugins)
+            {
+                log.Info("Using plugin: {0}", plugin);
                 _plugins.Add(PluginMap[plugin](AppParams.ApplicationSettings.Version));
+            }
 
             log.Info("Env paths: {0}, {1}, {2}, {3}, {4}", _localpath, _exeroot, _exepath, _executable, _plugins.Count);
 
             SetLicense(AppParams.ApplicationSettings.Adlm);
-            SetEnvVariables();
+            SetEnvVariables(AppParams.EnvironmentSettings);
             SetWorkspace(AppParams.ApplicationSettings);
             CreateMayaEnv(AppParams.ApplicationSettings);
-            CreatePreRenderScript(AppParams.ApplicationSettings, AppParams.RenderSettings);
+            CreatePreRenderScript(AppParams.ApplicationSettings, AppParams.EnvironmentSettings);
 
             foreach (var plugin in _plugins)
                 _command += plugin.Command;
@@ -119,7 +124,7 @@ namespace Maya.Cloud
             }
         }
 
-        private void SetEnvVariables()
+        private void SetEnvVariables(EnvironmentSettings EnvSettings)
         {
             var PathVar = String.Join("", PathVariables.ToArray());
             PathVar = String.Format(PathVar, _exepath);
@@ -144,8 +149,21 @@ namespace Maya.Cloud
                 log.Info("Checking env var: {0}", EnvVar.Key);
                 var CurrentVar = Environment.GetEnvironmentVariable(EnvVar.Key);
                 if (CurrentVar == null)
+                {
                     log.Info("Setting to {0}", EnvVar.Value);
                     Environment.SetEnvironmentVariable(EnvVar.Key, EnvVar.Value);
+                }
+            }
+
+            foreach (var CustomEnvVar in EnvSettings.EnvVariables)
+            {
+                log.Info("Checking custom env var: {0}", CustomEnvVar.Key);
+                var CurrentVar = Environment.GetEnvironmentVariable(CustomEnvVar.Key);
+                if (CurrentVar == null)
+                {
+                    log.Info("Setting to {0}", FormatCustomEnvVar(CustomEnvVar.Value.ToString()));
+                    Environment.SetEnvironmentVariable(CustomEnvVar.Key, FormatCustomEnvVar(CustomEnvVar.Value.ToString()));
+                }
             }
 
             var SysPath = Environment.GetEnvironmentVariable("PATH");
@@ -165,19 +183,18 @@ namespace Maya.Cloud
                 }
             }
 
-            var userDir = Path.Combine(_localpath, app.UserDirectory);
-            if (!Directory.Exists(userDir))
+            if (!Directory.Exists(_userdir))
             {
-                Directory.CreateDirectory(userDir);
+                Directory.CreateDirectory(_userdir);
             }
 
-            var scriptDir = Path.Combine(userDir, "scripts");
+            var scriptDir = Path.Combine(_userdir, "scripts");
             if (!Directory.Exists(scriptDir))
             {
                 Directory.CreateDirectory(scriptDir);
             }
 
-            var modDir = Path.Combine(userDir, "modules");
+            var modDir = Path.Combine(_userdir, "modules");
             if (!Directory.Exists(modDir))
             {
                 Directory.CreateDirectory(modDir);
@@ -192,7 +209,6 @@ namespace Maya.Cloud
 
         private void CreateMayaEnv(ApplicationSettings app)
         {
-            var userDir = Path.Combine(_localpath, app.UserDirectory);
             Dictionary<string, string> formattedMayaVars = new Dictionary<string, string>();
 
             foreach (var env in MayaEnvVariables)
@@ -205,7 +221,7 @@ namespace Maya.Cloud
             foreach (var plugin in _plugins)
                 plugin.SetupMayaEnv(formattedMayaVars, _exeroot, _localpath);
 
-            var envPath = Path.Combine(userDir, "Maya.env");
+            var envPath = Path.Combine(_userdir, "Maya.env");
             if (!File.Exists(envPath))
             {
                 using (var envFile = new StreamWriter(envPath))
@@ -220,10 +236,10 @@ namespace Maya.Cloud
 
         }
 
-        private void CreatePreRenderScript(ApplicationSettings app, RenderSettings render)
+        private void CreatePreRenderScript(ApplicationSettings app, EnvironmentSettings env)
         {
             var scriptPath = Path.Combine(_localpath, app.UserDirectory, "scripts", "renderPrep.mel");
-            var remappedPaths = render.PathMaps;
+            var remappedPaths = env.PathMaps;
             var pathsScript = "";
 
             if (File.Exists(scriptPath))
@@ -251,6 +267,16 @@ namespace Maya.Cloud
                 scriptFile.WriteLine("}");
             }
 
+        }
+
+        private string FormatCustomEnvVar(string EnvVar)
+        {
+            string formattedvar = EnvVar.Replace("<storage>", _localpath);
+            formattedvar = formattedvar.Replace("<maya_root>", _exepath);
+            formattedvar = formattedvar.Replace("<user_scripts>", Path.Combine(_userdir, "scripts"));
+            formattedvar = formattedvar.Replace("<user_modules>", Path.Combine(_userdir, "modules"));
+            formattedvar = formattedvar.Replace("<temp_dir>", Path.GetTempPath());
+            return formattedvar;
         }
 
         
