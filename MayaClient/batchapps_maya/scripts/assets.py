@@ -37,6 +37,8 @@ import inspect
 import importlib
 
 from api import MayaAPI as maya
+from api import MayaCallbacks as callback
+
 from ui_assets import AssetsUI
 from batchapps import FileManager
 
@@ -58,6 +60,13 @@ class BatchAppsAssets(object):
         self.modules = self.collect_modules()
 
         self.ui = AssetsUI(self, frame)
+        callback.after_new(self.callback_refresh)
+        callback.after_read(self.callback_refresh)
+
+    def callback_refresh(self, *args):
+        if self.ui.ready:
+            print("refreshing")
+            self.ui.refresh()
 
     def configure(self, session):
         self._session = session
@@ -125,8 +134,10 @@ class BatchAppsAssets(object):
         self._log.info("Converting assets into user files...")
         collected = {}
 
-        if len(self.assets.refs) == 1:
-            self.set_assets()
+        #if len(self.assets.refs) == 1:
+        #    self.set_assets()
+        if not self.ui.ready:
+            self.ui.prepare()
 
         user_files = self.assets.collect()
 
@@ -299,7 +310,7 @@ class Assets(object):
         clean_list = [str(p) for p in path_list if p]
 
         path_mapping = {'PathMaps':clean_list}
-        return json.dumps(path_mapping)
+        return path_mapping
 
 class Asset(object):
 

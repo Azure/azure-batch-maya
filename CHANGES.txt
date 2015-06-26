@@ -1,6 +1,8 @@
 v0.4.0				- Restructured assemblies for plugin isolation
+					- Added environment tab to plugin for configuration of Maya env
 					- Better messaging for Maya 211 error
 					- Better messaging for no task output error
+					- Auto refresh for submission, assets and env tabs when new maya scene is loaded
 v0.3.1, 2015-06-24	- Added pre-submission check for a render camera and enabled render layer
 v0.3.0,	2015-06-22	- Added search path feature to assets tab
 					- Gave asset references icons according to whether they were found
