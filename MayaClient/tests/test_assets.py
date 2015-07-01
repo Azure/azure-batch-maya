@@ -601,31 +601,5 @@ class TestAssetsCombined(unittest.TestCase):
         self.assertEqual(len(assets.assets.pathmaps), 0)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-
-
-
-
-
-
-
-
-
-        
-
-
 if __name__ == '__main__':
     unittest.main()

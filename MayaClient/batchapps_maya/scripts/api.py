@@ -266,6 +266,13 @@ class MayaAPI(object):
             return None
 
     @staticmethod
+    def progress_bar(*args, **kwargs):
+        try:
+            return cmds.progressBar(*args, **kwargs)
+        except:
+            return None
+
+    @staticmethod
     def window(*args, **kwargs):
         try:
             return cmds.window(*args, **kwargs)

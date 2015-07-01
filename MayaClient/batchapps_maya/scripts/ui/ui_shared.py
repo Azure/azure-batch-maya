@@ -82,6 +82,9 @@ class BatchAppsUI():
             selected_tab = self.tabs[selected-1]
             selected_tab.prepare()
 
+    def select_tab(self, tab):
+        maya.tab_layout(self.tab_display, edit=True, selectTabIndex=tab)
+
     def add_tab(self, content):
         maya.row_layout(content.page, edit=True, parent=self.tab_display)
         self.tabs.append(content)

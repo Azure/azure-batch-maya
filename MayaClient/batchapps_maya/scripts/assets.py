@@ -31,6 +31,7 @@ import os
 import sys
 import json
 import glob
+import time
 
 import pkgutil
 import inspect
@@ -38,6 +39,8 @@ import importlib
 
 from api import MayaAPI as maya
 from api import MayaCallbacks as callback
+
+from utils import ProgressBar
 
 from ui_assets import AssetsUI
 from batchapps import FileManager
@@ -60,6 +63,7 @@ class BatchAppsAssets(object):
         self.modules = self.collect_modules()
 
         self.ui = AssetsUI(self, frame)
+        self.frame = frame
         callback.after_new(self.callback_refresh)
         callback.after_read(self.callback_refresh)
 
@@ -134,8 +138,6 @@ class BatchAppsAssets(object):
         self._log.info("Converting assets into user files...")
         collected = {}
 
-        #if len(self.assets.refs) == 1:
-        #    self.set_assets()
         if not self.ui.ready:
             self.ui.prepare()
 
@@ -181,6 +183,70 @@ class BatchAppsAssets(object):
             for r, d, f in os.walk(f):
                 for files in f:
                     self.assets.add_asset(os.path.join(r, files), layout)
+
+    def upload(self, job_set=[], progress_bar=None):
+
+        cancelled = False
+        asset_refs = self.collect_assets(job_set)
+        collection = self.manager.create_file_set(*asset_refs['assets'])
+
+        if not progress_bar:
+            progress_bar = ProgressBar()
+
+        not_uploaded = collection.is_uploaded()
+        if len(not_uploaded) == 0:
+            if not job_set:
+                progress_bar.end()
+            return collection, asset_refs["pathmaps"], progress_bar
+
+        if progress_bar.is_cancelled():
+            self._log.warning("File upload cancelled")
+            return collection, asset_refs["pathmaps"], None
+
+        progress_bar.status('Uploading files...')
+        progress_bar.max(len(collection)+len(job_set))
+        self.frame.select_tab(3)
+        self.ui.disable(False)
+        maya.refresh()
+
+        self.ui.upload_status("Uploading... [Press ESC to cancel]")
+        for category, assets in self.assets.refs.items():
+            for index, asset in enumerate(assets):
+                if progress_bar.is_cancelled():
+                    self._log.warning("File upload cancelled")
+                    cancelled = True
+                    break
+
+                asset.upload(index, upload=(asset.file in not_uploaded))
+                try: not_uploaded.remove(asset.file)
+                except: pass
+                progress_bar.step()
+
+        for category, assets in self.assets.refs.items():
+            for asset in assets:
+                asset.restore_label()
+
+        if cancelled:
+            return collection, asset_refs["pathmaps"], None
+
+        if job_set and len(not_uploaded) > 0:
+            def _callback(progress):
+                self.ui.upload_status("Uploading scene file - {0}% [Press ESC to cancel]".format(int(progress)))
+
+            failed = not_uploaded.upload(force=True, callback=_callback)
+            if failed:
+                for (asset, exp) in failed:
+                    self._log.warning("File {0} failed with {1}".format(asset, exp))
+                raise ValueError("Failed to upload scene file")
+        
+        if not job_set:
+            progress_bar.end()
+
+        self.ui.disable(True)
+        self.ui.upload_status("Upload")
+        maya.refresh()
+
+        return collection, asset_refs["pathmaps"], progress_bar
     
 
 class Assets(object):
@@ -302,7 +368,7 @@ class Assets(object):
         asset = Asset(self.manager.file_from_path(file), self.refs['Additional'])
 
         if not asset.check(self.refs['Additional']):
-            asset.display(layout)
+            asset.display(*layout)
             self.refs['Additional'].append(asset)
 
     def get_pathmaps(self):
@@ -322,8 +388,15 @@ class Asset(object):
         self.parent_list = parent
         self.check_box = None
 
-    def display(self, layout, enable=True):
+    def display(self, layout, scroll, enable=True):
+        self.scroll_layout=scroll
         found = bool(self.file)
+        current_children = maya.col_layout(layout, query=True, childArray=True)
+        if current_children is None:
+            self.index = 0
+        else:
+            self.index = len(current_children)/2
+
         if found:
             self.check_box = maya.symbol_check_box(value=True,
                                             parent=layout,
@@ -338,7 +411,7 @@ class Asset(object):
                                             height=17,
                                             annotation="Add search path")
 
-        maya.text(self.label, parent=layout, enable=found, annotation=self.note, align="left")
+        self.display_text = maya.text(self.label, parent=layout, enable=found, annotation=self.note, align="left")
 
 
     def included(self):
@@ -380,3 +453,37 @@ class Asset(object):
 
     def check(self, files):
         return any(os.path.normcase(f.path) == os.path.normcase(self.path) for f in files)
+
+    def restore_label(self):
+        maya.text(self.display_text, edit=True, label=self.label)
+
+    def make_visible(self, index):
+        if index == 0:
+            maya.scroll_layout(self.scroll_layout, edit=True, scrollPage="up")
+        
+        elif index >= 4:
+            maya.scroll_layout(self.scroll_layout, edit=True, scrollByPixel=("down",17))
+
+        maya.refresh()
+
+    def upload(self, index, upload=True):
+        self.make_visible(index)
+        name = os.path.basename(self.path)
+
+        if upload:
+            def progress(prog):
+                maya.text(self.display_text, edit=True, label="    Uploading {0}% {1}".format(name, int(prog)))
+                maya.refresh()
+
+            uploaded = self.file.upload(force=True, callback=progress)
+            if not uploaded.success:
+                raise ValueError("Upload failed for {0}: {1}".format(name, uploaded.result))
+
+        elif self.included():
+            maya.text(self.display_text, edit=True, label="    Already uploaded {0}".format(name))
+            maya.refresh()
+
+        else:
+            maya.text(self.display_text, edit=True, label="    Skipped {0}".format(name))
+            maya.refresh()
+

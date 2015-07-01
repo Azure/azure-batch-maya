@@ -57,6 +57,7 @@ class BatchAppsSubmission:
         self.ui = SubmissionUI(self, frame)
         self.modules = self.collect_modules()
         self.renderer = None
+        self.frame = frame
 
         self.job_manager = None
         self.asset_manager = None
@@ -152,10 +153,11 @@ class BatchAppsSubmission:
         plugins = self.env_manager.plugins
         env_vars = self.env_manager.environment_variables
         license = self.env_manager.license
-        #settings = {"Plugins":plugins, "EnvVariables":env_vars}
+
         settings["Plugins"] = plugins
         settings["EnvVariables"] = env_vars
         settings.update(license)
+
         job.settings = json.dumps(settings)
 
     def submit(self):
@@ -167,19 +169,30 @@ class BatchAppsSubmission:
 
         self.renderer.disable(False)
         self.ui.processing(False)
+        progress = utils.ProgressBar()
         maya.refresh()
 
         try:
+            self.ui.submit_status("Checking assets...")
             renderer_data = self.renderer.get_jobdata()
-            file_set = self.asset_manager.collect_assets(renderer_data)
+            files, maps, progress = self.asset_manager.upload(renderer_data, progress_bar=progress)
+            if not progress:
+                raise Exception("Job submission cancelled")
 
         except Exception as exp:
             maya.error(str(exp))
             self.renderer.disable(True)
             self.ui.processing(True)
+            if progress:
+                progress.end()
             return
 
+        finally:
+            self.frame.select_tab(2)
+
         try:
+            self.ui.submit_status("Setting pool...")
+            progress.status("Setting pool...")
             new_job = self.job_manager.create_job(self.renderer.get_title())
             pool_spec = self.ui.get_pool()
 
@@ -199,22 +212,21 @@ class BatchAppsSubmission:
                 self._log.info("Creating new pool.")
                 new_job.pool = self.pool_manager.create_pool(int(pool_spec[3]))
 
-            new_job.add_file_collection(file_set.get('assets', []))
-
+            new_job.add_file_collection(files)
+            self.ui.submit_status("Configuring job...")
+            progress.status("Configuring job...")
             new_job.params = self.renderer.get_params()
-            self.configure_environment(new_job, file_set.get('pathmaps', ""))
-
-            failed = self._call(new_job.required_files.upload)
-            if failed:
-                for (asset, exp) in failed:
-                    self._log.warning("File {0} failed with {1}".format(asset, exp))
-                maya.error("One or more files failed to upload. Submission aborted.")
+            self.configure_environment(new_job, maps)
+            if progress.is_cancelled():
+                maya.error("Job submission cancelled")
                 return
-
+                    
             self._log.info("Upload complete. Submitting...")
             self._log.debug(new_job._create_job_message())
-
+            self.ui.submit_status("Submitting...")
+            progress.status("Submitting...")
             self._call(new_job.submit)
+            
 
         except SessionExpiredException:
             pass
@@ -223,6 +235,7 @@ class BatchAppsSubmission:
             maya.error(str(exp))
 
         finally:
+            progress.end()
             self.renderer.disable(True)
             self.ui.processing(True)
 

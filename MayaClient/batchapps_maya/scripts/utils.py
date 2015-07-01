@@ -153,3 +153,28 @@ class Dropdown(object):
 
     def select(self, value):
         maya.menu(self.menu, edit=True, select=int(value))
+
+class ProgressBar(object):
+
+    def __init__(self):
+        self._progress = maya.mel('$tmp = $gMainProgressBar')
+        maya.progress_bar(self._progress, edit=True, beginProgress=True, isInterruptable=True)
+
+    def end(self):
+        maya.progress_bar(self._progress, edit=True, endProgress=True)
+
+    def is_cancelled(self):
+        if maya.progress_bar(self._progress, query=True, isCancelled=True):
+            self.end()
+            return True
+
+        return False
+
+    def step(self):
+        maya.progress_bar(self._progress, edit=True, step=1)
+
+    def status(self, status):
+        maya.progress_bar(self._progress, edit=True, status=str(status))
+
+    def max(self, max_value):
+        maya.progress_bar(self._progress, edit=True, maxValue=int(max_value))

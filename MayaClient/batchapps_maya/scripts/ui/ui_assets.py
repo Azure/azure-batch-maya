@@ -42,7 +42,7 @@ class AssetsUI:
         with utils.RowLayout(width=360) as layout:
             self.page = layout
 
-            with utils.ScrollLayout(v_scrollbar=3, h_scrollbar=0, height=495, width=355):
+            with utils.ScrollLayout(v_scrollbar=3, h_scrollbar=0, height=475, width=355):
                 with utils.RowLayout(row_spacing=20, width=330) as sublayout:
                     self.asset_display = sublayout
 
@@ -51,6 +51,7 @@ class AssetsUI:
                        maya.button(label="Add Files", command=self.add_asset)
                        maya.button(label="Add Directory", command=self.add_dir)
 
+                self.upload_button = maya.button(label="Upload", command=self.upload)
                 maya.button(label="Refresh", command=self.refresh)
 
         frame.add_tab(self)
@@ -65,17 +66,27 @@ class AssetsUI:
 
         self.user_assets = self.list_display('Additional')
 
+    def upload(self, *args):
+        self.base.upload()
+
+    def upload_status(self, status):
+        maya.button(self.upload_button, edit=True, label=status)
+        maya.refresh()
+
+    def disable(self, enabled):
+        maya.row_layout(self.page, edit=True, enable=enabled)
+
     def list_display(self, label):
         with utils.FrameLayout(label=label, collapsable=True, width=325,
                          parent=self.asset_display):
 
-            with utils.ScrollLayout(v_scrollbar=3, h_scrollbar=0):
+            with utils.ScrollLayout(v_scrollbar=3, h_scrollbar=0) as scroll:
                 with utils.ColumnLayout(2) as layout:
 
                     for f in self.base.get_assets(label):
-                        f.display(layout)
+                        f.display(layout, scroll)
 
-                    return layout
+                    return (layout, scroll)
 
     def clear_ui(self):
         children = maya.row_layout(self.asset_display,

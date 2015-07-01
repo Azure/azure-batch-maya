@@ -100,6 +100,10 @@ class SubmissionUI(object):
         self.base.refresh_renderer(self.render_module)
         maya.refresh()
 
+    def submit_status(self, status):
+        maya.button(self.submit_button, edit=True, label=status + "[Press ESC to cancel]")
+        maya.refresh()
+
     def processing(self, enabled):
         if enabled:
             maya.button(self.submit_button, edit=True, label="Submit Job", enable=True)
