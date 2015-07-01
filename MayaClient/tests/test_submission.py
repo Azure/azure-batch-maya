@@ -50,6 +50,7 @@ from batchapps.exceptions import SessionExpiredException
 
 from assets import BatchAppsAssets
 from pools import BatchAppsPools
+from environment import BatchAppsEnvironment
 
 class TestBatchAppsSubmission(unittest.TestCase):
     
@@ -208,15 +209,17 @@ class TestSubmissionCombined(unittest.TestCase):
 
     @mock.patch("ui_submission.utils")
     @mock.patch("ui_submission.maya")
+    @mock.patch("submission.callback")
     @mock.patch("submission.maya")
     def test_submission(self, *args):
 
+        mock_callback = args[1]
         mock_maya = args[0]
         mock_maya.mel.return_value = "Renderer"
         mock_maya.get_list.return_value = ["1","2","3"]
         mock_maya.get_attr.return_value = True
 
-        ui_maya = args[1]
+        ui_maya = args[2]
         ui_maya.radio_group.return_value = 2
         ui_maya.menu.return_value = "12345"
         ui_maya.int_slider.return_value = 6
@@ -231,14 +234,17 @@ class TestSubmissionCombined(unittest.TestCase):
         layout = mock.Mock(add_tab=add_tab)
         sub = BatchAppsSubmission(layout, call)
         self.assertEqual(len(sub.modules), 4)
+        self.assertTrue(mock_callback.after_new.called)
+        self.assertTrue(mock_callback.after_open.called)
 
         creds = mock.create_autospec(Credentials)
         conf = mock.create_autospec(Configuration)
         session = mock.Mock(credentials=creds, config=conf)
         assets = mock.create_autospec(BatchAppsAssets)
         pools = mock.create_autospec(BatchAppsPools)
+        env = mock.create_autospec(BatchAppsEnvironment)
 
-        sub.start(session, assets, pools)
+        sub.start(session, assets, pools, env)
         
         mock_maya.mel.return_value = "Renderer_A"
         sub.ui.refresh()

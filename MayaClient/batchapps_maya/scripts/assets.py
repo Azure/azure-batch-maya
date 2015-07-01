@@ -41,6 +41,7 @@ from api import MayaAPI as maya
 from api import MayaCallbacks as callback
 
 from utils import ProgressBar
+from exceptions import CancellationException
 
 from ui_assets import AssetsUI
 from batchapps import FileManager
@@ -186,67 +187,74 @@ class BatchAppsAssets(object):
 
     def upload(self, job_set=[], progress_bar=None):
 
-        cancelled = False
-        asset_refs = self.collect_assets(job_set)
-        collection = self.manager.create_file_set(*asset_refs['assets'])
+        try:
 
-        if not progress_bar:
-            progress_bar = ProgressBar()
+            if not job_set:
+                progress_bar = ProgressBar()
+                self.ui.disable(False)
+                self.ui.upload_status("Checking assets... [Press ESC to cancel]")
 
-        not_uploaded = collection.is_uploaded()
-        if len(not_uploaded) == 0:
+            cancelled = False
+            asset_refs = self.collect_assets(job_set)
+            collection = self.manager.create_file_set(*asset_refs['assets'])
+
+
+            not_uploaded = collection.is_uploaded()
+            if len(not_uploaded) == 0:
+                if not job_set:
+                    progress_bar.end()
+                raise CancellationException("File upload cancelled")
+
+            if progress_bar.is_cancelled():
+                raise CancellationException("File upload cancelled")
+
+            progress_bar.status('Uploading files...')
+            progress_bar.max(len(collection)+len(job_set))
+            self.frame.select_tab(3)
+            self.ui.disable(False)
+            self.ui.upload_status("Uploading... [Press ESC to cancel]")
+            maya.refresh()
+
+        
+            for category, assets in self.assets.refs.items():
+                for index, asset in enumerate(assets):
+                    if progress_bar.is_cancelled():
+                        self._log.warning("File upload cancelled")
+                        cancelled = True
+                        break
+
+                    asset.upload(index, upload=(asset.file in not_uploaded))
+                    try: not_uploaded.remove(asset.file)
+                    except: pass
+                    progress_bar.step()
+
+            for category, assets in self.assets.refs.items():
+                for asset in assets:
+                    asset.restore_label()
+
+            if cancelled:
+                raise CancellationException("File upload cancelled")
+
+            if job_set and len(not_uploaded) > 0:
+                def _callback(progress):
+                    self.ui.upload_status("Uploading scene file - {0}% [Press ESC to cancel]".format(int(progress)))
+
+                failed = not_uploaded.upload(force=True, callback=_callback)
+                if failed:
+                    for (asset, exp) in failed:
+                        self._log.warning("File {0} failed with {1}".format(asset, exp))
+                    raise ValueError("Failed to upload scene file")
+        
             if not job_set:
                 progress_bar.end()
+
             return collection, asset_refs["pathmaps"], progress_bar
 
-        if progress_bar.is_cancelled():
-            self._log.warning("File upload cancelled")
-            return collection, asset_refs["pathmaps"], None
+        finally:
+            self.ui.disable(True)
+            self.ui.upload_status("Upload")
+            maya.refresh()
 
-        progress_bar.status('Uploading files...')
-        progress_bar.max(len(collection)+len(job_set))
-        self.frame.select_tab(3)
-        self.ui.disable(False)
-        maya.refresh()
-
-        self.ui.upload_status("Uploading... [Press ESC to cancel]")
-        for category, assets in self.assets.refs.items():
-            for index, asset in enumerate(assets):
-                if progress_bar.is_cancelled():
-                    self._log.warning("File upload cancelled")
-                    cancelled = True
-                    break
-
-                asset.upload(index, upload=(asset.file in not_uploaded))
-                try: not_uploaded.remove(asset.file)
-                except: pass
-                progress_bar.step()
-
-        for category, assets in self.assets.refs.items():
-            for asset in assets:
-                asset.restore_label()
-
-        if cancelled:
-            return collection, asset_refs["pathmaps"], None
-
-        if job_set and len(not_uploaded) > 0:
-            def _callback(progress):
-                self.ui.upload_status("Uploading scene file - {0}% [Press ESC to cancel]".format(int(progress)))
-
-            failed = not_uploaded.upload(force=True, callback=_callback)
-            if failed:
-                for (asset, exp) in failed:
-                    self._log.warning("File {0} failed with {1}".format(asset, exp))
-                raise ValueError("Failed to upload scene file")
-        
-        if not job_set:
-            progress_bar.end()
-
-        self.ui.disable(True)
-        self.ui.upload_status("Upload")
-        maya.refresh()
-
-        return collection, asset_refs["pathmaps"], progress_bar
     
 
 class Assets(object):
@@ -388,7 +396,7 @@ class Asset(object):
         self.parent_list = parent
         self.check_box = None
 
-    def display(self, layout, scroll, enable=True):
+    def display(self, layout, scroll):
         self.scroll_layout=scroll
         found = bool(self.file)
         current_children = maya.col_layout(layout, query=True, childArray=True)
@@ -472,7 +480,7 @@ class Asset(object):
 
         if upload:
             def progress(prog):
-                maya.text(self.display_text, edit=True, label="    Uploading {0}% {1}".format(name, int(prog)))
+                maya.text(self.display_text, edit=True, label="    Uploading {0}% {1}".format(int(prog), name))
                 maya.refresh()
 
             uploaded = self.file.upload(force=True, callback=progress)

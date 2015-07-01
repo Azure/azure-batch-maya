@@ -38,6 +38,8 @@ import json
 from api import MayaAPI as maya
 from api import MayaCallbacks as callback
 
+from exceptions import CancellationException
+
 from ui_submission import SubmissionUI
 
 import utils
@@ -139,14 +141,12 @@ class BatchAppsSubmission:
         cameras = maya.get_list(type="camera")
         render_cams = [maya.get_attr(c + ".renderable") for c in cameras]
         if not any(render_cams):
-            return "No render camera selected. Please select a render camera and save the scene before submitting."
+            raise ValueError("No render camera selected. Please select a render camera and save the scene before submitting.")
 
         layers = maya.get_list(type="renderLayer")
         render_layers = [maya.get_attr(l + ".renderable") for l in layers]
         if not any(render_layers):
-            return "No render layers enabled. Please enable a render layer and save the scene before submitting."
-
-        return None
+            raise ValueError("No render layers enabled. Please enable a render layer and save the scene before submitting.")
 
     def configure_environment(self, job, settings):
         job.version = self.env_manager.version
@@ -162,35 +162,18 @@ class BatchAppsSubmission:
 
     def submit(self):
 
-        invalid_outputs = self.check_outputs()
-        if invalid_outputs:
-            maya.error(invalid_outputs)
-            return
-
         self.renderer.disable(False)
         self.ui.processing(False)
         progress = utils.ProgressBar()
         maya.refresh()
 
         try:
+            self.check_outputs()
             self.ui.submit_status("Checking assets...")
             renderer_data = self.renderer.get_jobdata()
             files, maps, progress = self.asset_manager.upload(renderer_data, progress_bar=progress)
-            if not progress:
-                raise Exception("Job submission cancelled")
-
-        except Exception as exp:
-            maya.error(str(exp))
-            self.renderer.disable(True)
-            self.ui.processing(True)
-            if progress:
-                progress.end()
-            return
-
-        finally:
             self.frame.select_tab(2)
 
-        try:
             self.ui.submit_status("Setting pool...")
             progress.status("Setting pool...")
             new_job = self.job_manager.create_job(self.renderer.get_title())
@@ -227,6 +210,8 @@ class BatchAppsSubmission:
             progress.status("Submitting...")
             self._call(new_job.submit)
             
+        except CancellationException:
+            maya.error("Job submission cancelled")
 
         except SessionExpiredException:
             pass
@@ -236,6 +221,7 @@ class BatchAppsSubmission:
 
         finally:
             progress.end()
+            self.frame.select_tab(2)
             self.renderer.disable(True)
             self.ui.processing(True)
 
