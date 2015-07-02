@@ -54,24 +54,24 @@ class TestBatchAppsShared(unittest.TestCase):
 
         return super(TestBatchAppsShared, self).setUp()
 
-    @mock.patch("shared.maya")
-    def test_check_version(self, mock_maya):
+    #@mock.patch("shared.maya")
+    #def test_check_version(self, mock_maya):
 
-        self.mock_self.supported_versions = [2015]
-        mock_maya.mel.return_value = 2015
-        self.mock_self.check_version = lambda a: BatchAppsSettings.check_version(self.mock_self, a)
+    #    self.mock_self.supported_versions = [2015]
+    #    mock_maya.mel.return_value = 2015
+    #    self.mock_self.check_version = lambda a: BatchAppsSettings.check_version(self.mock_self, a)
 
-        ver = BatchAppsSettings.check_maya_version(self.mock_self)
-        self.assertEqual(ver, 2015)
-        self.assertFalse(mock_maya.warning.call_count)
+    #    ver = BatchAppsSettings.check_maya_version(self.mock_self)
+    #    self.assertEqual(ver, 2015)
+    #    self.assertFalse(mock_maya.warning.call_count)
 
-        mock_maya.mel.return_value = 2016
-        ver = BatchAppsSettings.check_maya_version(self.mock_self)
-        self.assertEqual(ver, 2015)
-        self.assertTrue(mock_maya.warning.call_count)
+    #    mock_maya.mel.return_value = 2016
+    #    ver = BatchAppsSettings.check_maya_version(self.mock_self)
+    #    self.assertEqual(ver, 2015)
+    #    self.assertTrue(mock_maya.warning.call_count)
 
-        mock_maya.mel.return_value = 2014
-        ver = BatchAppsSettings.check_maya_version(self.mock_self)
-        self.assertEqual(ver, 2015)
-        self.assertEqual(mock_maya.warning.call_count, 2)
+    #    mock_maya.mel.return_value = 2014
+    #    ver = BatchAppsSettings.check_maya_version(self.mock_self)
+    #    self.assertEqual(ver, 2015)
+    #    self.assertEqual(mock_maya.warning.call_count, 2)
 

@@ -45,7 +45,7 @@
     <Compile Include="batchapps_maya\scripts\environment.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="batchapps_maya\scripts\exceptions.py">
+    <Compile Include="batchapps_maya\scripts\exception.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="batchapps_maya\scripts\history.py">

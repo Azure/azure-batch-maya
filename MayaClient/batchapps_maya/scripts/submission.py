@@ -38,10 +38,11 @@ import json
 from api import MayaAPI as maya
 from api import MayaCallbacks as callback
 
-from exceptions import CancellationException
+#from exceptions import CancellationException
 
 from ui_submission import SubmissionUI
 
+from exception import CancellationException
 import utils
 
 from batchapps import JobManager

@@ -41,7 +41,7 @@ from api import MayaAPI as maya
 from api import MayaCallbacks as callback
 
 from utils import ProgressBar
-from exceptions import CancellationException
+from exception import CancellationException
 
 from ui_assets import AssetsUI
 from batchapps import FileManager
