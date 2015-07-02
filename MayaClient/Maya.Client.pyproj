@@ -87,6 +87,9 @@
     <Compile Include="tests\test_config.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="tests\test_environment.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tests\test_history.py">
       <SubType>Code</SubType>
     </Compile>

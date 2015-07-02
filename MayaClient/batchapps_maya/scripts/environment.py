@@ -107,6 +107,7 @@ class BatchAppsEnvironment(object):
         self._session = None
 
         self._server_plugins = []
+        self.warnings = []
         self._plugins = []
         self._version = "2017"
 
@@ -149,13 +150,14 @@ class BatchAppsEnvironment(object):
         for plugin in extra_plugins:
             support = [p for p in SUPPORTED if p["plugin"]==plugin]
             loaded = maya.plugins(plugin, query=True, loaded=True)
+
             plugin_ref = BatchPlugin(self, plugin, loaded, support)
             plugin_ref.is_used(used_plugins if used_plugins else [])
             plugins.append(plugin_ref)
 
-        if self.warning_plugins:
+        if self.warnings:
             warning = "The following plugins are used in the scene, but not yet supported.\nRendering may be affected.\n"
-            for plugin in self.warning_plugins:
+            for plugin in self.warnings:
                 warning += plugin + "\n"
             maya.warning(warning)
 
@@ -176,18 +178,15 @@ class BatchAppsEnvironment(object):
         return list(set(found_plugins) - set(DEFAULT))
 
     def set_version(self, version):
-        self._version = MAYA_VERSIONS[version]
+        self._version = MAYA_VERSIONS.get(version, "2017")
 
     def refresh(self):
-        print("refreshing")
         self._server_plugins = []
-        self.warning_plugins = []
+        self.warnings = []
         for plugin in self._plugins:
             plugin.delete()
 
         self._plugins = self.get_plugins()
-
-
 
 
 class BatchPlugin(object):
@@ -202,8 +201,6 @@ class BatchPlugin(object):
         self.base = base
         self.license = False
         self.contents = []
-
-        print(self.plugin, self.loaded)
 
         if self.supported:
             self.label = support[0]["name"]
@@ -230,7 +227,6 @@ class BatchPlugin(object):
         self.contents.append(self.checkbox)
 
     def is_used(self, used_plugins):
-        print("used plugins", used_plugins)
         self.used = False
         for plugin in used_plugins:
             if plugin == os.path.splitext(self.plugin)[0]:
@@ -244,7 +240,7 @@ class BatchPlugin(object):
             self.base.plugins.append(self.label)
 
         if self.loaded and self.used and not self.supported:
-            self.base.warning_plugins.append(self.plugin)
+            self.base.warnings.append(self.plugin)
 
     def use_license(self, license):
         if self.license:
@@ -261,7 +257,7 @@ class BatchPlugin(object):
         if self.used:
             maya.warning("This plugin is currently in use. Excluding it may affect rendering.")
 
-        self.base.plugins.remove(self.label)
+        if self.label in self.base.plugins: self.base.plugins.remove(self.label)
         if self.license:
             maya.check_box(self.license_check, edit=True, enable=False)
 
@@ -272,8 +268,8 @@ class BatchPlugin(object):
     def get_variables(self):
         vars = {}
         if self.license and maya.check_box(self.license_check, query=True, value=True):
-            license_key = self.license_var["key"]
-            license_val = self.license_var["value"]
+            license_key = self.license_var.get("key")
+            license_val = self.license_var.get("value")
             
             host = str(maya.text_field(self.custom_license_endp, query=True, text=True))
             port = str(maya.text_field(self.custom_license_port, query=True, text=True))
@@ -281,6 +277,3 @@ class BatchPlugin(object):
                 vars[license_key] = license_val.format(host=host, port=port)
 
         return vars
-
-
-        
