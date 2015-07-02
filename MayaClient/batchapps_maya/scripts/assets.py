@@ -70,7 +70,6 @@ class BatchAppsAssets(object):
 
     def callback_refresh(self, *args):
         if self.ui.ready:
-            print("refreshing")
             self.ui.refresh()
 
     def configure(self, session):
@@ -198,16 +197,13 @@ class BatchAppsAssets(object):
             asset_refs = self.collect_assets(job_set)
             collection = self.manager.create_file_set(*asset_refs['assets'])
 
-
             not_uploaded = collection.is_uploaded()
-            if len(not_uploaded) == 0:
-                if not job_set:
-                    progress_bar.end()
-                raise CancellationException("File upload cancelled")
-
             if progress_bar.is_cancelled():
                 raise CancellationException("File upload cancelled")
 
+            if len(not_uploaded) == 0:
+                return collection, asset_refs["pathmaps"], progress_bar
+            
             progress_bar.status('Uploading files...')
             progress_bar.max(len(collection)+len(job_set))
             self.frame.select_tab(3)
@@ -244,13 +240,25 @@ class BatchAppsAssets(object):
                     for (asset, exp) in failed:
                         self._log.warning("File {0} failed with {1}".format(asset, exp))
                     raise ValueError("Failed to upload scene file")
-        
-            if not job_set:
-                progress_bar.end()
 
             return collection, asset_refs["pathmaps"], progress_bar
 
+        except CancellationException as exp:
+            if job_set:
+                raise
+            else:
+                maya.info(str(exp))
+
+        except Exception as exp:
+            if job_set:
+                raise
+            else:
+                maya.error(str(exp))
+
         finally:
+            if not job_set:
+                progress_bar.end()
+
             self.ui.disable(True)
             self.ui.upload_status("Upload")
             maya.refresh()
@@ -467,7 +475,8 @@ class Asset(object):
 
     def make_visible(self, index):
         if index == 0:
-            maya.scroll_layout(self.scroll_layout, edit=True, scrollPage="up")
+            while maya.scroll_layout(self.scroll_layout, query=True, scrollAreaValue=True)[0] > 0:
+                maya.scroll_layout(self.scroll_layout, edit=True, scrollPage="up")
         
         elif index >= 4:
             maya.scroll_layout(self.scroll_layout, edit=True, scrollByPixel=("down",17))

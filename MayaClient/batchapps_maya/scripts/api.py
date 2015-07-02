@@ -35,6 +35,7 @@ except ImportError:
     print("No maya module found.")
     
 import logging
+LOG = logging.getLogger('BatchAppsMaya')
 
 class MayaAPI(object):
 
@@ -46,28 +47,32 @@ class MayaAPI(object):
     def mel(command):
         try:
             return mel.eval(command)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'mel': {0}".format(exp))
             return None
 
     @staticmethod
     def get_list(**kwargs):
         try:
             return cmds.ls(**kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'get_list': {0}".format(exp))
             return []
 
     @staticmethod
     def get_attr(*args):
         try:
             return cmds.getAttr(*args)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'get_attr': {0}".format(exp))
             return ""
 
     @staticmethod
     def file(**kwargs):
         try:
             return cmds.file(**kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'file': {0}".format(exp))
             return ""
 
     @staticmethod
@@ -76,7 +81,6 @@ class MayaAPI(object):
 
     @staticmethod
     def error(message):
-        log = logging.getLogger('BatchAppsMaya')
         log.warning(message)
         return cmds.confirmDialog(title="Error",
                                   message=message,
@@ -86,8 +90,7 @@ class MayaAPI(object):
 
     @staticmethod
     def warning(message):
-        log = logging.getLogger('BatchAppsMaya')
-        log.warning(message)
+        LOG.warning(message)
         return cmds.confirmDialog(title="Warning",
                                   message=message,
                                   messageAlign="left",
@@ -95,10 +98,20 @@ class MayaAPI(object):
                                   icon="warning")
 
     @staticmethod
+    def info(message):
+        LOG.info(message)
+        return cmds.confirmDialog(title="",
+                                  message=message,
+                                  messageAlign="left",
+                                  button="OK",
+                                  icon="information")
+
+    @staticmethod
     def workspace(*args, **kwargs):
         try:
             return cmds.workspace(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'workspace': {0}".format(exp))
             return None
 
     @staticmethod
@@ -122,7 +135,7 @@ class MayaAPI(object):
         try:
             cmds.deleteUI(*args, **kwargs)
         except Exception as exp:
-            print("Couldn't delete:", str(exp))
+            LOG.debug("MayaAPI exception in 'delete_ui': {0}".format(exp))
 
     @staticmethod
     def parent(parent='..'):
@@ -132,21 +145,24 @@ class MayaAPI(object):
     def text(*args, **kwargs):
         try:
             return cmds.text(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'text': {0}".format(exp))
             return None
 
     @staticmethod
     def text_field(*args, **kwargs):
         try:
             return cmds.textField(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'text_field': {0}".format(exp))
             return None
 
     @staticmethod
     def button(*args, **kwargs):
         try:
             return cmds.button(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'button': {0}".format(exp))
             return None
 
     @staticmethod
@@ -154,7 +170,7 @@ class MayaAPI(object):
         try:
             return cmds.symbolButton(image=image, *args, **kwargs)
         except Exception as exp:
-            print("symbolButton failed:",str(exp))
+            LOG.debug("MayaAPI exception in 'symbol_button': {0}".format(exp))
             return None
 
     @staticmethod
@@ -162,7 +178,7 @@ class MayaAPI(object):
         try:
             return cmds.checkBox(*args, **kwargs)
         except Exception as exp:
-            print("symbolCheck failed",str(exp))
+            LOG.debug("MayaAPI exception in 'check_box': {0}".format(exp))
             return None
 
     @staticmethod
@@ -171,21 +187,24 @@ class MayaAPI(object):
             if kwargs.get('query') or kwargs.get('q'):
                 return cmds.symbolCheckBox(*args, **kwargs)
             return cmds.symbolCheckBox(*args, onImage="precompExportChecked.png", offImage="precompExportUnchecked.png", **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'symbol_check_box': {0}".format(exp))
             return None
 
     @staticmethod
     def image(*args, **kwargs):
         try:
             return cmds.image(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'image': {0}".format(exp))
             return None
 
     @staticmethod
     def row_layout(*args, **kwargs):
         try:
             return cmds.columnLayout(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'row_layout': {0}".format(exp))
             return None
 
     @staticmethod
@@ -193,98 +212,111 @@ class MayaAPI(object):
         try:
             return cmds.rowColumnLayout(*args, **kwargs)
         except Exception as exp:
+            LOG.debug("MayaAPI exception in 'col_layout': {0}".format(exp))
             return None
 
     @staticmethod
     def frame_layout(*args, **kwargs):
         try:
             return cmds.frameLayout(*args, **kwargs)
-        except Exception as e:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'frame_layout': {0}".format(exp))
             return None
 
     @staticmethod
     def scroll_layout(*args, **kwargs):
         try:
             return cmds.scrollLayout(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'scroll_layout': {0}".format(exp))
             return None
 
     @staticmethod
     def form_layout(*args, **kwargs):
         try:
             return cmds.formLayout(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'form_layout': {0}".format(exp))
             return None
 
     @staticmethod
     def tab_layout(*args, **kwargs):
         try:
             return cmds.tabLayout(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'tab_layout': {0}".format(exp))
             return None
 
     @staticmethod
     def int_slider(*args, **kwargs):
         try:
             return cmds.intSliderGrp(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'int_slider': {0}".format(exp))
             return None
 
     @staticmethod
     def popup_menu(*args, **kwargs):
         try:
             return cmds.popupMenu(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'popup_menu': {0}".format(exp))
             return None
 
     @staticmethod
     def menu(*args, **kwargs):
         try:
             return cmds.optionMenu(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'menu': {0}".format(exp))
             return None
 
     @staticmethod
     def menu_option(*args, **kwargs):
         try:
             return cmds.menuItem(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'menu_option': {0}".format(exp))
             return None
 
     @staticmethod
     def radio_group(*args, **kwargs):
         try:
             return cmds.radioButtonGrp(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'radio_group': {0}".format(exp))
             return None
 
     @staticmethod
     def table(*args, **kwargs):
         try:
             return cmds.scriptTable(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'table': {0}".format(exp))
             return None
 
     @staticmethod
     def progress_bar(*args, **kwargs):
         try:
             return cmds.progressBar(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'progress_bar': {0}".format(exp))
             return None
 
     @staticmethod
     def window(*args, **kwargs):
         try:
             return cmds.window(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'window': {0}".format(exp))
             return None
 
     @staticmethod
     def show(ui):
         try:
             cmds.showWindow(ui)
-        except:
-            pass
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'show': {0}".format(exp))
 
     @staticmethod
     def execute(*args):
@@ -294,7 +326,8 @@ class MayaAPI(object):
     def plugins(*args, **kwargs):
         try:
             return cmds.pluginInfo(*args, **kwargs)
-        except:
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'plugins': {0}".format(exp))
             return None
 
 class NodeIterator(object):

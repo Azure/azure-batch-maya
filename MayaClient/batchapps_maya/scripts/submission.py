@@ -202,8 +202,7 @@ class BatchAppsSubmission:
             new_job.params = self.renderer.get_params()
             self.configure_environment(new_job, maps)
             if progress.is_cancelled():
-                maya.error("Job submission cancelled")
-                return
+                raise CancellationException("Job submission cancelled")
                     
             self._log.info("Upload complete. Submitting...")
             self._log.debug(new_job._create_job_message())
@@ -212,7 +211,7 @@ class BatchAppsSubmission:
             self._call(new_job.submit)
             
         except CancellationException:
-            maya.error("Job submission cancelled")
+            maya.info("Job submission cancelled")
 
         except SessionExpiredException:
             pass

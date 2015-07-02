@@ -30,6 +30,8 @@ import traceback
 import logging
 LOG = logging.getLogger('BatchAppsMaya')
 
+from api import MayaAPI as maya
+
 class BatchMayaException(Exception):
 
     def __init__(self, *args):
@@ -46,6 +48,5 @@ class SessionExpiredException(BatchMayaException):
 
 class CancellationException(BatchMayaException):
 
-    def __init__(self, *args):
-        LOG.info("Process cancelled by user.")
-        super(MayaApiException, self).__init__(*args)
+    def __init__(self, message, *args):
+        super(CancellationException, self).__init__(message, *args)
