@@ -50,3 +50,8 @@ class CancellationException(BatchMayaException):
 
     def __init__(self, message, *args):
         super(CancellationException, self).__init__(message, *args)
+
+class FileUploadException(BatchMayaException):
+
+    def __init__(self, *args):
+        super(FileUploadException, self).__init__(*args)
