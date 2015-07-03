@@ -42,7 +42,7 @@ from api import MayaCallbacks as callback
 
 from ui_submission import SubmissionUI
 
-from exception import CancellationException
+from exception import CancellationException, PoolException
 import utils
 
 from batchapps import JobManager
@@ -161,6 +161,24 @@ class BatchAppsSubmission:
 
         job.settings = json.dumps(settings)
 
+    def configure_pool(self, job):
+        pool_spec = self.ui.get_pool()
+
+        if pool_spec.get(1):
+            self._log.info("Using auto-pool.")
+            job.instances = int(pool_spec[1])
+
+        if pool_spec.get(2):
+            self._log.info("Using existing pool.")
+            job.pool = str(pool_spec[2])
+
+            if job.pool == "None":
+                raise PoolException("No pool selected.")
+
+        if pool_spec.get(3):
+            self._log.info("Creating new pool.")
+            job.pool = self.pool_manager.create_pool(int(pool_spec[3]))
+
     def submit(self):
 
         self.renderer.disable(False)
@@ -178,37 +196,22 @@ class BatchAppsSubmission:
             self.ui.submit_status("Setting pool...")
             progress.status("Setting pool...")
             new_job = self.job_manager.create_job(self.renderer.get_title())
-            pool_spec = self.ui.get_pool()
-
-            if pool_spec.get(1):
-                self._log.info("Using auto-pool.")
-                new_job.instances = int(pool_spec[1])
-
-            if pool_spec.get(2):
-                self._log.info("Using existing pool.")
-                new_job.pool = str(pool_spec[2])
-
-                if new_job.pool == "None":
-                    maya.error("No pool selected.")
-                    return
-
-            if pool_spec.get(3):
-                self._log.info("Creating new pool.")
-                new_job.pool = self.pool_manager.create_pool(int(pool_spec[3]))
-
+            self.configure_pool(new_job)
             new_job.add_file_collection(files)
+
             self.ui.submit_status("Configuring job...")
             progress.status("Configuring job...")
             new_job.params = self.renderer.get_params()
             self.configure_environment(new_job, maps)
+
             if progress.is_cancelled():
                 raise CancellationException("Job submission cancelled")
                     
-            self._log.info("Upload complete. Submitting...")
-            self._log.debug(new_job._create_job_message())
             self.ui.submit_status("Submitting...")
             progress.status("Submitting...")
+            self._log.debug(new_job._create_job_message())
             self._call(new_job.submit)
+            maya.info("Job submitted successfully")
             
         except CancellationException:
             maya.info("Job submission cancelled")
