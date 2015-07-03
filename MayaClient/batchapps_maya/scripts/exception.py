@@ -55,3 +55,9 @@ class FileUploadException(BatchMayaException):
 
     def __init__(self, *args):
         super(FileUploadException, self).__init__(*args)
+
+class PoolException(BatchMayaException):
+
+    def __init__(self, *args):
+        super(PoolException, self).__init__(*args)
+
