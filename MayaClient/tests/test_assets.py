@@ -45,6 +45,7 @@ except ImportError:
 from ui_assets import AssetsUI
 from assets import Asset, Assets, BatchAppsAssets
 from exception import FileUploadException
+from utils import ProgressBar
 from batchapps import FileManager, Configuration, Credentials
 from batchapps.files import UserFile, FileCollection
 
@@ -584,92 +585,114 @@ class TestBatchAppsAssets(unittest.TestCase):
     def test_upload_items(self):
 
         mock_file1 = mock.Mock()
+        mock_file2 = mock.Mock()
+        to_upload = [mock_file1]
         self.mock_self.assets = mock.create_autospec(Assets)
-        self.mock_self.assets.refs = {'Test':["file1", "file2"]}
+        self.mock_self.assets.refs = {'Test':[mock_file1, mock_file2]}
+        prog = mock.create_autospec(ProgressBar)
+        prog.is_cancelled.return_value = False
+
+        c = BatchAppsAssets.upload_items(self.mock_self, to_upload, prog)
+        self.assertFalse(c)
+
+        prog.is_cancelled.return_value = True
+        c = BatchAppsAssets.upload_items(self.mock_self, to_upload, prog)
+        self.assertTrue(c)
+
+    @mock.patch("assets.ProgressBar")
+    @mock.patch("assets.maya")
+    def test_upload(self, mock_maya, mock_prog):
+
+        self.mock_self.ui = mock.create_autospec(AssetsUI)
+        self.mock_self.assets = mock.create_autospec(Assets)
+        BatchAppsAssets.upload(self.mock_self)
+
+
 
 
 class TestAssetsCombined(unittest.TestCase):
-    pass
-    #@mock.patch("ui_assets.utils")
-    #@mock.patch("ui_assets.maya")
-    #@mock.patch("assets.maya")
-    #def test_assets(self, *args):
 
-    #    mock_maya = args[0]
-    #    mock_maya.file.return_value = "/test_path/test_scene.mb"
-    #    mock_maya.workspace.return_value = "/test/project"
+    @mock.patch("assets.callback")
+    @mock.patch("ui_assets.utils")
+    @mock.patch("ui_assets.maya")
+    @mock.patch("assets.maya")
+    def test_assets(self, *args):
 
-    #    mock_uimaya = args[1]
-    #    mock_uimaya.file_select.return_value = [os.path.join(os.path.dirname(__file__), "data", "star.png")]
+        mock_maya = args[0]
+        mock_maya.file.return_value = "/test_path/test_scene.mb"
+        mock_maya.workspace.return_value = "/test/project"
 
-    #    def add_tab(tab):
-    #        self.assertFalse(tab.ready)
+        mock_uimaya = args[1]
+        mock_uimaya.file_select.return_value = [os.path.join(os.path.dirname(__file__), "data", "star.png")]
 
-    #    def call(func, *args, **kwargs):
-    #        self.assertTrue(hasattr(func, '__call__'))
-    #        return func()
+        def add_tab(tab):
+            self.assertFalse(tab.ready)
+
+        def call(func, *args, **kwargs):
+            self.assertTrue(hasattr(func, '__call__'))
+            return func()
         
-    #    layout = mock.Mock(add_tab=add_tab)
-    #    assets = BatchAppsAssets(layout, call)
+        layout = mock.Mock(add_tab=add_tab)
+        assets = BatchAppsAssets(layout, call)
 
-    #    self.assertEqual(len(assets.modules), 4)
+        self.assertEqual(len(assets.modules), 4)
 
-    #    creds = mock.create_autospec(Credentials)
-    #    conf = mock.create_autospec(Configuration)
-    #    session = mock.Mock(credentials=creds, config=conf)
+        creds = mock.create_autospec(Credentials)
+        conf = mock.create_autospec(Configuration)
+        session = mock.Mock(credentials=creds, config=conf)
 
-    #    assets.configure(session)
-    #    #self.assertEqual(assets.scene, "")
+        assets.configure(session)
+        #self.assertEqual(assets.scene, "")
 
-    #    mock_maya.file.return_value = os.path.join(os.path.dirname(__file__), "data", "empty.mb")
-    #    assets.configure(session)
-    #    #self.assertTrue(assets.scene.endswith("empty.mb"))
+        mock_maya.file.return_value = os.path.join(os.path.dirname(__file__), "data", "empty.mb")
+        assets.configure(session)
+        #self.assertTrue(assets.scene.endswith("empty.mb"))
 
-    #    assets.ui.prepare()
-    #    self.assertTrue(assets.ui.ready)
-    #    self.assertEqual(assets.assets.refs, {'Additional':[],
-    #                                          'Caches':[],
-    #                                          'Files':[]})
+        assets.ui.prepare()
+        self.assertTrue(assets.ui.ready)
+        self.assertEqual(assets.assets.refs, {'Additional':[],
+                                              'Caches':[],
+                                              'Files':[]})
 
-    #    files = assets.get_assets("Caches")
-    #    self.assertEqual(files, [])
+        files = assets.get_assets("Caches")
+        self.assertEqual(files, [])
 
-    #    assets.ui.add_asset()
-    #    files = assets.get_assets("Additional")
-    #    self.assertEqual(len(files), 1)
+        assets.ui.add_asset()
+        files = assets.get_assets("Additional")
+        self.assertEqual(len(files), 1)
 
-    #    asset = files[0]
-    #    self.assertTrue(asset.included())
-    #    self.assertTrue(asset in asset.parent_list)
-    #    asset.exclude()
-    #    self.assertFalse(asset in asset.parent_list)
+        asset = files[0]
+        self.assertTrue(asset.included())
+        self.assertTrue(asset in asset.parent_list)
+        asset.exclude()
+        self.assertFalse(asset in asset.parent_list)
 
-    #    check_path = mock.Mock(path=mock_uimaya.file_select.return_value[0])
-    #    self.assertTrue(asset.check([check_path]))
-    #    check_path.path = "/test_file"
-    #    self.assertFalse(asset.check([check_path]))
+        check_path = mock.Mock(path=mock_uimaya.file_select.return_value[0])
+        self.assertTrue(asset.check([check_path]))
+        check_path.path = "/test_file"
+        self.assertFalse(asset.check([check_path]))
 
-    #    asset.delete()
+        asset.delete()
 
-    #    files = assets.get_assets("Additional")
-    #    self.assertEqual(len(files), 0)
-    #    self.assertEqual(len(assets.assets.pathmaps), 1)
+        files = assets.get_assets("Additional")
+        self.assertEqual(len(files), 0)
+        self.assertEqual(len(assets.assets.pathmaps), 1)
 
-    #    assets.ui.add_asset()
-    #    files = assets.get_assets("Additional")
-    #    self.assertEqual(len(files), 1)
-    #    self.assertEqual(len(assets.assets.pathmaps), 2)
+        assets.ui.add_asset()
+        files = assets.get_assets("Additional")
+        self.assertEqual(len(files), 1)
+        self.assertEqual(len(assets.assets.pathmaps), 2)
 
-    #    collected = assets.collect_assets([])
-    #    self.assertTrue(collected.get('assets'))
-    #    self.assertTrue(collected.get('pathmaps'))
-    #    decoded = json.loads(collected.get('pathmaps'))['PathMaps']
-    #    self.assertEqual(len(decoded), 1)
+        collected = assets.collect_assets([])
+        self.assertTrue(collected.get('assets'))
+        self.assertTrue(collected.get('pathmaps'))
+        decoded = collected.get('pathmaps')['PathMaps']
+        self.assertEqual(len(decoded), 1)
 
-    #    assets.ui.refresh()
-    #    files = assets.get_assets("Additional")
-    #    self.assertEqual(len(files), 0)
-    #    self.assertEqual(len(assets.assets.pathmaps), 0)
+        assets.ui.refresh()
+        files = assets.get_assets("Additional")
+        self.assertEqual(len(files), 0)
+        self.assertEqual(len(assets.assets.pathmaps), 0)
 
 
 if __name__ == '__main__':
