@@ -29,7 +29,6 @@
 import logging
 import os
 import sys
-import json
 import glob
 import time
 
@@ -41,7 +40,7 @@ from api import MayaAPI as maya
 from api import MayaCallbacks as callback
 
 from utils import ProgressBar
-from exception import CancellationException
+from exception import CancellationException, FileUploadException
 
 from ui_assets import AssetsUI
 from batchapps import FileManager
@@ -69,9 +68,13 @@ class BatchAppsAssets(object):
         callback.after_read(self.callback_refresh)
 
     def callback_refresh(self, *args):
-        if self.ui.ready:
-            self.ui.refresh()
 
+        if self.frame.selected_tab() == 3:
+            self.ui.refresh() # We only want to do a full refresh if Assets is the current tab
+
+        elif self.ui.ready:
+            self.ui.ready = False # Otherwise we'll just reset it to be more efficient
+            
     def configure(self, session):
         self._session = session
         self.manager = FileManager(self._session.credentials, self._session.config)
@@ -184,6 +187,27 @@ class BatchAppsAssets(object):
                 for files in f:
                     self.assets.add_asset(os.path.join(r, files), layout)
 
+    def upload_items(self, to_upload, progress):
+        cancelled = False
+
+        for category, assets in self.assets.refs.items():
+            for index, asset in enumerate(assets):
+                if progress.is_cancelled():
+                    self._log.warning("File upload cancelled")
+                    cancelled = True
+                    break
+
+                asset.upload(index, upload=(asset.file in to_upload))
+                try: to_upload.remove(asset.file)
+                except: pass
+                progress.step()
+
+        for category, assets in self.assets.refs.items():
+            for asset in assets:
+                asset.restore_label()
+
+        return cancelled
+
     def upload(self, job_set=[], progress_bar=None):
 
         try:
@@ -193,7 +217,6 @@ class BatchAppsAssets(object):
                 self.ui.disable(False)
                 self.ui.upload_status("Checking assets... [Press ESC to cancel]")
 
-            cancelled = False
             asset_refs = self.collect_assets(job_set)
             collection = self.manager.create_file_set(*asset_refs['assets'])
 
@@ -211,24 +234,7 @@ class BatchAppsAssets(object):
             self.ui.upload_status("Uploading... [Press ESC to cancel]")
             maya.refresh()
 
-        
-            for category, assets in self.assets.refs.items():
-                for index, asset in enumerate(assets):
-                    if progress_bar.is_cancelled():
-                        self._log.warning("File upload cancelled")
-                        cancelled = True
-                        break
-
-                    asset.upload(index, upload=(asset.file in not_uploaded))
-                    try: not_uploaded.remove(asset.file)
-                    except: pass
-                    progress_bar.step()
-
-            for category, assets in self.assets.refs.items():
-                for asset in assets:
-                    asset.restore_label()
-
-            if cancelled:
+            if self.upload_items(not_uploaded, progress_bar):
                 raise CancellationException("File upload cancelled")
 
             if job_set and len(not_uploaded) > 0:
@@ -239,7 +245,7 @@ class BatchAppsAssets(object):
                 if failed:
                     for (asset, exp) in failed:
                         self._log.warning("File {0} failed with {1}".format(asset, exp))
-                    raise ValueError("Failed to upload scene file")
+                    raise FileUploadException("Failed to upload scene file")
 
             return collection, asset_refs["pathmaps"], progress_bar
 
@@ -405,13 +411,9 @@ class Asset(object):
         self.check_box = None
 
     def display(self, layout, scroll):
+
         self.scroll_layout=scroll
         found = bool(self.file)
-        current_children = maya.col_layout(layout, query=True, childArray=True)
-        if current_children is None:
-            self.index = 0
-        else:
-            self.index = len(current_children)/2
 
         if found:
             self.check_box = maya.symbol_check_box(value=True,
@@ -451,7 +453,7 @@ class Asset(object):
             return
 
         USR_SEARCHPATHS.append(new_dir[0])
-        maya.warning("New search path added. Click Refresh.")
+        maya.info("New search path added. Click Refresh.")
 
     def exclude(self):
         try:
@@ -494,7 +496,7 @@ class Asset(object):
 
             uploaded = self.file.upload(force=True, callback=progress)
             if not uploaded.success:
-                raise ValueError("Upload failed for {0}: {1}".format(name, uploaded.result))
+                raise FileUploadException("Upload failed for {0}: {1}".format(name, uploaded.result))
 
         elif self.included():
             maya.text(self.display_text, edit=True, label="    Already uploaded {0}".format(name))

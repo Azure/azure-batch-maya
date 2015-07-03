@@ -59,6 +59,7 @@ class AssetsUI:
 
     def refresh(self, *args):
         self.clear_ui()
+        maya.refresh()
         self.base.set_assets()
 
         for cat in self.base.asset_categories():
