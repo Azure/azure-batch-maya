@@ -42,7 +42,7 @@ class AssetsUI:
         with utils.RowLayout(width=360) as layout:
             self.page = layout
 
-            with utils.ScrollLayout(v_scrollbar=3, h_scrollbar=0, height=475, width=355):
+            with utils.ScrollLayout(v_scrollbar=3, h_scrollbar=0, height=472, width=355):
                 with utils.RowLayout(row_spacing=20, width=330) as sublayout:
                     self.asset_display = sublayout
 

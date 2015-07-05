@@ -45,7 +45,7 @@ class EnvironmentUI:
         with utils.RowLayout(width=360) as layout:
             self.page = layout
 
-            with utils.ScrollLayout(v_scrollbar=3, h_scrollbar=0, height=495, width=355):
+            with utils.ScrollLayout(v_scrollbar=3, h_scrollbar=0, height=520, width=355):
                 with utils.RowLayout(row_spacing=20) as sublayout:
                     with utils.FrameLayout(label="Maya Version", collapsable=True, width=325):
                         with utils.ColumnLayout(2, col_width=((1,160),(2,160)), row_spacing=(1,5),
