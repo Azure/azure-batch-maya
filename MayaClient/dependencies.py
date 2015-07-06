@@ -65,7 +65,7 @@ LIBS = [
     {"lib":"requests-oauthlib", "ver":"0.4.2",  "mod":"requests_oauthlib",  "ext":"tar.gz"},
     {"lib":"requests",          "ver":"2.2.1",  "mod":"requests",           "ext":"tar.gz"},
     {"lib":"keyring",           "ver":"4.0",    "mod":"keyring",            "ext":"zip"},
-    {"lib":"azure-batch-apps",  "ver":"0.4.0",  "mod":"batchapps",          "ext":"tar.gz"}
+    {"lib":"azure-batch-apps",  "ver":"0.5.0",  "mod":"batchapps",          "ext":"tar.gz"}
     ]
 
 def unpack_tar(lib_full, lib_dir, lib_module):

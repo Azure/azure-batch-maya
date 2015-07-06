@@ -59,7 +59,7 @@ LIBS = [
     ]
 
 
-VERSION = "0.4.0"
+VERSION = "0.4.1"
 
 cmd_name = "BatchApps"
 fMayaExitingCB = None

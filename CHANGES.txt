@@ -1,3 +1,5 @@
+v0.4.1, 2015-07-06	- Fixed bugs in Pool selection and API
+					- Fixed error handling in start up dependency check
 v0.4.0, 2015-07-06	- Restructured assemblies for plugin isolation
 					- Added environment tab to plugin for configuration of Maya env
 					- Better messaging for Maya 211 error
