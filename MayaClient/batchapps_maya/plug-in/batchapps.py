@@ -114,13 +114,18 @@ def download_lib(lib_name, lib_version, lib_module, lib_ext):
         shutil.copytree(os.path.join(TEMP_DIR, lib_dir, lib_module), lib_inst)
         print("  - Files moved to: {0}".format(lib_inst))
         print("  - Successfully installed {0}".format(lib['lib']))
+        return None
         
     except EnvironmentError:
-        print("  - Failed to install {0}. Please ensure you have administrator"
-              " access to the Maya installation directory".format(lib_name))
+        message = ("Failed to install {0}. Please ensure you have administrator"
+                  " access to the Maya installation directory".format(lib_name))
+        print("  - " + message)
+        return message
 
     except Exception as exp:
-        print("  - Failed to install {0}. Error: {1}".format(lib_name, exp))
+        message = "Failed to install {0}. Error: {1}".format(lib_name, exp)
+        print("  - " + message)
+        return message
 
     finally:
         print("  - Cleaning up temp files")
@@ -327,7 +332,10 @@ def initializePlugin(obj):
             raise ImportError("Failed to load Azure Batch - missing one or more dependencies")
 
         for lib in missing_libs:
-            download_lib(lib['lib'], lib['ver'], lib['mod'], lib['ext'])
+            error = download_lib(lib['lib'], lib['ver'], lib['mod'], lib['ext'])
+            if error:
+                cmds.confirmDialog(message=error, button='OK')
+                raise ImportError("Failed to load Azure Batch - missing one or more dependencies")
 
     print("Dependency check complete!")
 

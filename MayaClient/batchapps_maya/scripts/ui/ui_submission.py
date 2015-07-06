@@ -155,7 +155,6 @@ class SubmissionUI(object):
             parent=self.pool_settings)
         self.control = maya.text("Loading pools...", align="left", parent=self.pool_settings)
         maya.refresh()
-        maya.execute(self.load_pools)
 
         pool_options = self.base.available_pools()
         maya.delete_ui(self.control)

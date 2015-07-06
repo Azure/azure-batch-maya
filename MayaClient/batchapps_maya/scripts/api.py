@@ -81,7 +81,7 @@ class MayaAPI(object):
 
     @staticmethod
     def error(message):
-        log.warning(message)
+        LOG.warning(message)
         return cmds.confirmDialog(title="Error",
                                   message=message,
                                   messageAlign="left",
