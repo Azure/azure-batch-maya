@@ -103,7 +103,7 @@ namespace Maya.Cloud.Plugins
                 formattedPaths.Add(string.Format(item, exeRoot, ExePath));
             }
 
-            return string.Join(";", formattedPaths.ToArray());
+            return string.Join(";", formattedPaths);
         }
 
         public override void SetupMayaEnv(IDictionary<string, string> mayaEnv, string exeRoot, string localpath)
