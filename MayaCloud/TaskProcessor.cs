@@ -68,7 +68,7 @@ namespace Maya.Cloud
         protected override TaskProcessResult RunExternalTaskProcess(ITask task, TaskExecutionSettings settings)
         {
             var taskParameters = MayaParameters.FromTask(task);
-            var projDir = ConfigureMayaEnv(task, LocalStoragePath, ExecutablesPath);
+            var projDir = ConfigureMayaEnv(LocalStoragePath, ExecutablesPath);
             CreateMappingScript(taskParameters, LocalStoragePath);
 
             var initialFiles = CollectFiles(LocalStoragePath);
@@ -167,7 +167,7 @@ namespace Maya.Cloud
             return result;
         }
 
-        private static string ConfigureMayaEnv(ITask task, string cwd, string exe)
+        private static string ConfigureMayaEnv(string cwd, string exe)
         {
             Environment.SetEnvironmentVariable("MAYA_APP_DIR", cwd);
             var sysPath = Environment.GetEnvironmentVariable("PATH");
