@@ -54,9 +54,9 @@ namespace Maya.Cloud
 
         private static readonly IDictionary<string, Func<string, MayaPlugin>> _pluginMap = new Dictionary<string, Func<string, MayaPlugin>>
         {
-            { "Arnold", (version) => new Arnold(version) },
-            { "Yeti", (version) => new Yeti(version) },
-            { "MentalRay", (version) => new MentalRay(version) },
+            { "Arnold", version => new Arnold(version) },
+            { "Yeti", version => new Yeti(version) },
+            { "MentalRay", version => new MentalRay(version) },
         };
 
         private readonly IList<string> _pathVariables = new List<string>
