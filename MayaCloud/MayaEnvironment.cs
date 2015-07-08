@@ -52,7 +52,7 @@ namespace Maya.Cloud
         private readonly string _command =
             @"-renderer {0} -log ""{1}.log"" -proj ""{2}"" -preRender ""renderPrep"" -rd ""{2}"" -im ""{3}"" -s {4} -e {4} ";
 
-        private static readonly IDictionary<string, Func<string, MayaPlugin>> _pluginMap = new Dictionary<string, Func<string, MayaPlugin>>
+        private static readonly IReadOnlyDictionary<string, Func<string, MayaPlugin>> _pluginMap = new Dictionary<string, Func<string, MayaPlugin>>
         {
             { "Arnold", version => new Arnold(version) },
             { "Yeti", version => new Yeti(version) },
@@ -67,9 +67,9 @@ namespace Maya.Cloud
             @"{0}\plug-ins\bifrost\bin"
         };
 
-        private readonly IDictionary<string, string> _envVariables = new Dictionary<string, string> { { "MAYA_APP_DIR", @"{0}" } };
+        private readonly IReadOnlyDictionary<string, string> _envVariables = new Dictionary<string, string> { { "MAYA_APP_DIR", @"{0}" } };
 
-        private readonly IDictionary<string, string> _mayaEnvVariables = new Dictionary<string, string>
+        private readonly IReadOnlyDictionary<string, string> _mayaEnvVariables = new Dictionary<string, string>
         {
             { "MAYA_MODULE_PATH", @"{0}\{3}\modules;{1}\{4}\modules;{0}\Common Files\Autodesk Shared\Modules\maya\{5}" },
             { "FBX_LOCATION", @"{0}\{3}\plug-ing\fbx\" },
