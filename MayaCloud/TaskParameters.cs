@@ -39,7 +39,7 @@ namespace Maya.Cloud
 {
     public abstract class MayaParameters
     {
-        public static readonly IList<string> ThumbFormats = new List<string> { ".png", ".bmp", ".jpg", ".tga", ".exr" };
+        public static readonly IReadOnlyCollection<string> ThumbFormats = new[] { ".png", ".bmp", ".jpg", ".tga", ".exr" };
 
         public abstract bool Valid { get; }
 
