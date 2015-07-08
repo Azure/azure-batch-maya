@@ -1,50 +1,45 @@
-﻿///--------------------------------------------------------------------------
-///
-/// Maya Batch C# Cloud Assemblies 
-/// 
-/// Copyright (c) Microsoft Corporation.  All rights reserved. 
-/// 
-/// MIT License
-/// 
-/// Permission is hereby granted, free of charge, to any person obtaining a copy 
-/// of this software and associated documentation files (the ""Software""), to deal 
-/// in the Software without restriction, including without limitation the rights 
-/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
-/// copies of the Software, and to permit persons to whom the Software is furnished 
-/// to do so, subject to the following conditions:
-/// 
-/// The above copyright notice and this permission notice shall be included in 
-/// all copies or substantial portions of the Software.
-/// 
-/// THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
-/// THE SOFTWARE.
-/// 
-///--------------------------------------------------------------------------
+﻿//--------------------------------------------------------------------------
+//
+// Maya Batch C# Cloud Assemblies 
+// 
+// Copyright (c) Microsoft Corporation.  All rights reserved. 
+// 
+// MIT License
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy 
+// of this software and associated documentation files (the ""Software""), to deal 
+// in the Software without restriction, including without limitation the rights 
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+// copies of the Software, and to permit persons to whom the Software is furnished 
+// to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in 
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+// THE SOFTWARE.
+// 
+//--------------------------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using System.Globalization;
+using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using Maya.Cloud.Exceptions;
 using Maya.Cloud.Settings;
-
 using Microsoft.Azure.Batch.Apps.Cloud;
-using System.Runtime.CompilerServices;
 
 namespace Maya.Cloud
 {
     public class MayaTaskProcessor : ParallelTaskProcessor
     {
-
         protected override string GetApplicationVersion(ITask task)
         {
             string version;
@@ -120,6 +115,7 @@ namespace Maya.Cloud
                     FileName = thumbnail,
                     Kind = TaskOutputFileKind.Preview
                 };
+
                 result.OutputFiles.Add(taskPreview);
             }
 
@@ -159,7 +155,7 @@ namespace Maya.Cloud
             }
             catch (Exception ex)
             {
-                var error = string.Format("Failed to zip outputs: {0}", ex.ToString());
+                var error = string.Format("Failed to zip outputs: {0}", ex);
                 throw new ZipException(error, ex);
             }
 
@@ -212,9 +208,9 @@ namespace Maya.Cloud
         /// will be created and no error thrown.
         /// </summary>
         /// <param name="task">The task that needs a thumbnail.</param>
-        /// <param name="inputName">The task output from which to generate the thumbnail.</param>
+        /// <param name="inputs">The task output from which to generate the thumbnail.</param>
         /// <returns>The path to the new thumbnail if created, else an empty string.</returns>
-        protected string CreateThumbnail(ITask task, string[] inputs)
+        private string CreateThumbnail(ITask task, string[] inputs)
         {
             var imagemagick = ExecutablePath(@"ImageMagick\convert.exe");
             if (!File.Exists(imagemagick))
@@ -223,8 +219,8 @@ namespace Maya.Cloud
                 return string.Empty;
             }
 
-            var filtered = inputs.Where(x => MayaParameters.ThumbFormats.Contains(Path.GetExtension(x)));
-            if (filtered.Count() < 1)
+            var filtered = inputs.Where(x => MayaParameters.ThumbFormats.Contains(Path.GetExtension(x))).ToList();
+            if (!filtered.Any())
             {
                 Log.Info("No thumbnail compatible images found.");
                 return string.Empty;
@@ -288,7 +284,13 @@ namespace Maya.Cloud
                     outputInfo = Environment.NewLine + "stderr: " + ex.StandardError + Environment.NewLine + "stdout: " + ex.StandardOutput;
                 }
 
-                Log.Error("Failed to invoke command {0} {1}: exit code was {2}.  {3}", ex.CommandPath, ex.Arguments, ex.ExitCode, outputInfo);
+                Log.Error(
+                    "Failed to invoke command {0} {1}: exit code was {2}.  {3}",
+                    ex.CommandPath,
+                    ex.Arguments,
+                    ex.ExitCode,
+                    outputInfo);
+
                 return null;
             }
             catch (Exception ex)
@@ -296,7 +298,6 @@ namespace Maya.Cloud
                 Log.Error("Error in task processor: {0}", ex.ToString());
                 return null;
             }
-
         }
     }
 }

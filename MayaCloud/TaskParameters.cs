@@ -1,40 +1,39 @@
-﻿///--------------------------------------------------------------------------
-///
-/// Maya Batch C# Cloud Assemblies 
-/// 
-/// Copyright (c) Microsoft Corporation.  All rights reserved. 
-/// 
-/// MIT License
-/// 
-/// Permission is hereby granted, free of charge, to any person obtaining a copy 
-/// of this software and associated documentation files (the ""Software""), to deal 
-/// in the Software without restriction, including without limitation the rights 
-/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
-/// copies of the Software, and to permit persons to whom the Software is furnished 
-/// to do so, subject to the following conditions:
-/// 
-/// The above copyright notice and this permission notice shall be included in 
-/// all copies or substantial portions of the Software.
-/// 
-/// THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
-/// THE SOFTWARE.
-/// 
-///--------------------------------------------------------------------------
+﻿//--------------------------------------------------------------------------
+//
+// Maya Batch C# Cloud Assemblies 
+// 
+// Copyright (c) Microsoft Corporation.  All rights reserved. 
+// 
+// MIT License
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy 
+// of this software and associated documentation files (the ""Software""), to deal 
+// in the Software without restriction, including without limitation the rights 
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+// copies of the Software, and to permit persons to whom the Software is furnished 
+// to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in 
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+// THE SOFTWARE.
+// 
+//--------------------------------------------------------------------------
 
 using System;
-using System.Collections.ObjectModel;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Globalization;
-using System.Threading.Tasks;
+using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
+using System.Text;
 using Microsoft.Azure.Batch.Apps.Cloud;
 using Maya.Cloud.Settings;
 using System.IO;
@@ -44,8 +43,7 @@ namespace Maya.Cloud
 {
     public abstract class MayaParameters
     {
-        public static readonly IList<String> ThumbFormats = new List<String> { ".png", ".bmp", ".jpg", ".tga", ".exr" };
-
+        public static readonly IList<string> ThumbFormats = new List<string> { ".png", ".bmp", ".jpg", ".tga", ".exr" };
 
         public abstract bool Valid { get; }
 
@@ -82,6 +80,7 @@ namespace Maya.Cloud
 
             return new ValidMayaParameters(start, end, jobfile, engine);
         }
+
         public static MayaParameters FromTask(ITask task, String applicationpath)
         {
             var errors = new List<string>();
@@ -100,7 +99,6 @@ namespace Maya.Cloud
 
             return new ValidMayaParameters(jobfile, engine, filename, envsettings, appsettings);
         }
-
 
         private static int GetInt32Parameter(IDictionary<string, string> parameters, string parameterName, List<string> errors)
         {
@@ -147,7 +145,10 @@ namespace Maya.Cloud
             return text;
         }
 
-        private static EnvironmentSettings GetSettingsParameter(IDictionary<string, string> parameters, string parameterName, List<string> errors)
+        private static EnvironmentSettings GetSettingsParameter(
+            IDictionary<string, string> parameters,
+            string parameterName,
+            List<string> errors)
         {
             var jsonSettings = GetStringParameter(parameters, parameterName, errors);
             var settings = new EnvironmentSettings();
@@ -185,7 +186,6 @@ namespace Maya.Cloud
         }
         
 
-
         private class ValidMayaParameters : MayaParameters
         {
             private readonly int _start;
@@ -216,27 +216,42 @@ namespace Maya.Cloud
 
             public override bool Valid
             {
-                get { return true; }
+                get
+                {
+                    return true;
+                }
             }
 
             public override int Start
             {
-                get { return _start; }
+                get
+                {
+                    return _start;
+                }
             }
 
             public override int End
             {
-                get { return _end; }
+                get
+                {
+                    return _end;
+                }
             }
 
             public override string JobFile
             {
-                get { return _jobfile; }
+                get
+                {
+                    return _jobfile;
+                }
             }
 
             public override string Renderer
             {
-                get { return _renderer; }
+                get
+                {
+                    return _renderer;
+                }
             }
 
             public override string OutputName
@@ -251,12 +266,18 @@ namespace Maya.Cloud
 
             public override EnvironmentSettings EnvironmentSettings
             {
-                get { return _env_settings; }
+                get
+                {
+                    return _env_settings;
+                }
             }
 
             public override string ErrorText
             {
-                get { throw new InvalidOperationException("ErrorText does not apply to valid parameters"); }
+                get
+                {
+                    throw new InvalidOperationException("ErrorText does not apply to valid parameters");
+                }
             }
         }
 
@@ -271,27 +292,42 @@ namespace Maya.Cloud
 
             public override bool Valid
             {
-                get { return false; }
+                get
+                {
+                    return false;
+                }
             }
 
             public override int Start
             {
-                get { throw new InvalidOperationException("Start does not apply to invalid parameters"); }
+                get
+                {
+                    throw new InvalidOperationException("Start does not apply to invalid parameters");
+                }
             }
 
             public override int End
             {
-                get { throw new InvalidOperationException("End does not apply to invalid parameters"); }
+                get
+                {
+                    throw new InvalidOperationException("End does not apply to invalid parameters");
+                }
             }
 
             public override string JobFile
             {
-                get { throw new InvalidOperationException("JobFile does not apply to invalid parameters"); }
+                get
+                {
+                    throw new InvalidOperationException("JobFile does not apply to invalid parameters");
+                }
             }
 
             public override string Renderer
             {
-                get { throw new InvalidOperationException("Renderer does not apply to invalid parameters"); }
+                get
+                {
+                    throw new InvalidOperationException("Renderer does not apply to invalid parameters");
+                }
             }
 
             public override string OutputName
@@ -306,12 +342,18 @@ namespace Maya.Cloud
 
             public override ApplicationSettings ApplicationSettings
             {
-                get { throw new InvalidOperationException("ApplicationSettings does not apply to invalid parameters"); }
+                get
+                {
+                    throw new InvalidOperationException("ApplicationSettings does not apply to invalid parameters");
+                }
             }
 
             public override string ErrorText
             {
-                get { return _errorText; }
+                get
+                {
+                    return _errorText;
+                }
             }
         }
     }
