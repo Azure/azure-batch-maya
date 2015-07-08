@@ -236,22 +236,13 @@ namespace Maya.Cloud
                 }
             }
 
-            if (!Directory.Exists(_userdir))
-            {
-                Directory.CreateDirectory(_userdir);
-            }
+            Directory.CreateDirectory(_userdir);
 
             var scriptDir = Path.Combine(_userdir, "scripts");
-            if (!Directory.Exists(scriptDir))
-            {
-                Directory.CreateDirectory(scriptDir);
-            }
+            Directory.CreateDirectory(scriptDir);
 
             var modDir = Path.Combine(_userdir, "modules");
-            if (!Directory.Exists(modDir))
-            {
-                Directory.CreateDirectory(modDir);
-            }
+            Directory.CreateDirectory(modDir);
 
             foreach (var plugin in _plugins)
             {
