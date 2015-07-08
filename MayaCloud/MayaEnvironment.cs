@@ -8,9 +8,8 @@ using Microsoft.Azure.Batch.Apps.Cloud;
 
 namespace Maya.Cloud
 {
-    class MayaEnvironment
+    internal class MayaEnvironment
     {
-
         private string _localpath;
         private string _exeroot;
         private string _exepath;
@@ -21,7 +20,8 @@ namespace Maya.Cloud
 
         private string _executable = @"{0}\bin\render.exe";
 
-        private string _command = @"-renderer {0} -log ""{1}.log"" -proj ""{2}"" -preRender ""renderPrep"" -rd ""{2}"" -im ""{3}"" -s {4} -e {4} ";
+        private string _command =
+            @"-renderer {0} -log ""{1}.log"" -proj ""{2}"" -preRender ""renderPrep"" -rd ""{2}"" -im ""{3}"" -s {4} -e {4} ";
 
         private static IDictionary<string, Func<string, MayaPlugin>> PluginMap = new Dictionary<string, Func<string, MayaPlugin>>
         {
@@ -30,31 +30,37 @@ namespace Maya.Cloud
             { "MentalRay", (_version) => new MentalRay(_version) },
         };
 
-        private IList<String> PathVariables = new List<String> { @"{0}\bin;",
-                                                                 @"{0}\plug-ins\substance\bin;",
-                                                                 @"{0}\plug-ins\xgen\bin;",
-                                                                 @"{0}\plug-ins\bifrost\bin;" };
+        private IList<String> PathVariables = new List<String>
+        {
+            @"{0}\bin;",
+            @"{0}\plug-ins\substance\bin;",
+            @"{0}\plug-ins\xgen\bin;",
+            @"{0}\plug-ins\bifrost\bin;"
+        };
 
         private IDictionary<String, String> EnvVariables = new Dictionary<String, String> { { "MAYA_APP_DIR", @"{0}" } };
 
-        private IDictionary<String, String> MayaEnvVariables = new Dictionary<String, String> { { "MAYA_MODULE_PATH", @"{0}\{3}\modules;{1}\{4}\modules;{0}\Common Files\Autodesk Shared\Modules\maya\{5}" },
-                                                                                                { "FBX_LOCATION", @"{0}\{3}\plug-ing\fbx\" },
-                                                                                                { "MAYA_SCRIPT_BASE", @"{0}\{3}" },
-                                                                                                { "TEMP", @"{2}" },
-                                                                                                { "TMP", @"{2}" },
-                                                                                                { "MAYA_LOCATION", @"{0}\{3}" },
-                                                                                                { "TMPDIR", @"{2}" },
-                                                                                                { "MAYA_PLUG_IN_PATH", @"{0}\{3}\bin\plug-ins;{0}\{3}\plug-ins\bifrost\plug-ins;{0}\{3}\plug-ins\fbx\plug-ins;{0}\{3}\plug-ins\substance\plug-ins;{0}\{3}\plug-ins\xgen\plug-ins;" },
-                                                                                                { "PYTHONHOME", @"{0}\{3}\Python" },
-                                                                                                { "XGEN_LOCATION", @"{0}\{3}\plug-ins\xgen\" },
-                                                                                                { "SUBSTANCES_LOCATION", @"{0}\{3}\plug-ins\substance\substances" },
-                                                                                                { "BIFROST_LOCATION", @"{0}\{3}\plug-ins\bifrost\" },
-                                                                                                { "PYTHONPATH", @"{0}\{3}\plug-ins\bifrost\scripts\presets;{0}\{3}\plug-ins\bifrost\scripts;{0}\{3}\plug-ins\fbx\scripts;{0}\{3}\plug-ins\substance\scripts;{0}\{3}\plug-ins\xgen\scripts\cafm;{0}\{3}\plug-ins\xgen\scripts\xgenm;{0}\{3}\plug-ins\xgen\scripts\xgenm\ui;{0}\{3}\plug-ins\xgen\scripts\xgenm\xmaya;{0}\{3}\plug-ins\xgen\scripts\xgenm\ui\brushes;{0}\{3}\plug-ins\xgen\scripts\xgenm\ui\dialogs;{0}\{3}\plug-ins\xgen\scripts\xgenm\ui\fxmodules;{0}\{3}\plug-ins\xgen\scripts\xgenm\ui\tabs;{0}\{3}\plug-ins\xgen\scripts\xgenm\ui\util;{0}\{3}\plug-ins\xgen\scripts\xgenm\ui\widgets;{0}\{3}\plug-ins\xgen\scripts;" },
-                                                                                                { "ILMDIR", @"{0}\Common Files\Autodesk Shared\Materials" },
-                                                                                                { "MAYA_SCRIPT_PATH", @"{0}\{3}\scripts;{0}\{3}\scripts\startup;{0}\{3}\scripts\others;{0}\{3}\scripts\AETemplates;{0}\{3}\scripts\unsupported;{0}\{3}\scripts\paintEffects;{0}\{3}\scripts\fluidEffects;{0}\{3}\scripts\hair;{0}\{3}\scripts\cloth;{0}\{3}\scripts\live;{0}\{3}\scripts\fur;{0}\{3}\scripts\muscle;{0}\{3}\scripts\turtle;{0}\{3}\scripts\FBX;{0}\{3}\scripts\mayaHIK;{0}\{3}\plug-ins\bifrost\scripts\presets;{0}\{3}\plug-ins\bifrost\scripts;{0}\{3}\plug-ins\fbx\scripts;{1}\{4}\scripts;" },
-                                                                                                { "MAYA_PLUGIN_RESOURCE_PATH", @"{0}\{3}\plug-ins\bifrost\resources;{0}\{3}\plug-ins\fbx\resources;{0}\{3}\plug-ins\substance\resources;{0}\{3}\plug-ins\xgen\resources;" },
-                                                                                                { "MAYA_PRESET_PATH", @"{0}\{3}\plug-ins\bifrost\presets;{0}\{3}\plug-ins\fbx\presets;{0}\{3}\plug-ins\substance\presets;{0}\{3}\plug-ins\xgen\presets;{1}\{4}\presets;" },
-                                                                                                { "XBMLANGPATH", @"{0}\{3}\plug-ins\bifrost\" }};
+        private IDictionary<String, String> MayaEnvVariables = new Dictionary<String, String>
+        {
+            { "MAYA_MODULE_PATH", @"{0}\{3}\modules;{1}\{4}\modules;{0}\Common Files\Autodesk Shared\Modules\maya\{5}" },
+            { "FBX_LOCATION", @"{0}\{3}\plug-ing\fbx\" },
+            { "MAYA_SCRIPT_BASE", @"{0}\{3}" },
+            { "TEMP", @"{2}" },
+            { "TMP", @"{2}" },
+            { "MAYA_LOCATION", @"{0}\{3}" },
+            { "TMPDIR", @"{2}" },
+            { "MAYA_PLUG_IN_PATH", @"{0}\{3}\bin\plug-ins;{0}\{3}\plug-ins\bifrost\plug-ins;{0}\{3}\plug-ins\fbx\plug-ins;{0}\{3}\plug-ins\substance\plug-ins;{0}\{3}\plug-ins\xgen\plug-ins;" },
+            { "PYTHONHOME", @"{0}\{3}\Python" },
+            { "XGEN_LOCATION", @"{0}\{3}\plug-ins\xgen\" },
+            { "SUBSTANCES_LOCATION", @"{0}\{3}\plug-ins\substance\substances" },
+            { "BIFROST_LOCATION", @"{0}\{3}\plug-ins\bifrost\" },
+            { "PYTHONPATH", @"{0}\{3}\plug-ins\bifrost\scripts\presets;{0}\{3}\plug-ins\bifrost\scripts;{0}\{3}\plug-ins\fbx\scripts;{0}\{3}\plug-ins\substance\scripts;{0}\{3}\plug-ins\xgen\scripts\cafm;{0}\{3}\plug-ins\xgen\scripts\xgenm;{0}\{3}\plug-ins\xgen\scripts\xgenm\ui;{0}\{3}\plug-ins\xgen\scripts\xgenm\xmaya;{0}\{3}\plug-ins\xgen\scripts\xgenm\ui\brushes;{0}\{3}\plug-ins\xgen\scripts\xgenm\ui\dialogs;{0}\{3}\plug-ins\xgen\scripts\xgenm\ui\fxmodules;{0}\{3}\plug-ins\xgen\scripts\xgenm\ui\tabs;{0}\{3}\plug-ins\xgen\scripts\xgenm\ui\util;{0}\{3}\plug-ins\xgen\scripts\xgenm\ui\widgets;{0}\{3}\plug-ins\xgen\scripts;" },
+            { "ILMDIR", @"{0}\Common Files\Autodesk Shared\Materials" },
+            { "MAYA_SCRIPT_PATH", @"{0}\{3}\scripts;{0}\{3}\scripts\startup;{0}\{3}\scripts\others;{0}\{3}\scripts\AETemplates;{0}\{3}\scripts\unsupported;{0}\{3}\scripts\paintEffects;{0}\{3}\scripts\fluidEffects;{0}\{3}\scripts\hair;{0}\{3}\scripts\cloth;{0}\{3}\scripts\live;{0}\{3}\scripts\fur;{0}\{3}\scripts\muscle;{0}\{3}\scripts\turtle;{0}\{3}\scripts\FBX;{0}\{3}\scripts\mayaHIK;{0}\{3}\plug-ins\bifrost\scripts\presets;{0}\{3}\plug-ins\bifrost\scripts;{0}\{3}\plug-ins\fbx\scripts;{1}\{4}\scripts;" },
+            { "MAYA_PLUGIN_RESOURCE_PATH", @"{0}\{3}\plug-ins\bifrost\resources;{0}\{3}\plug-ins\fbx\resources;{0}\{3}\plug-ins\substance\resources;{0}\{3}\plug-ins\xgen\resources;" },
+            { "MAYA_PRESET_PATH", @"{0}\{3}\plug-ins\bifrost\presets;{0}\{3}\plug-ins\fbx\presets;{0}\{3}\plug-ins\substance\presets;{0}\{3}\plug-ins\xgen\presets;{1}\{4}\presets;" },
+            { "XBMLANGPATH", @"{0}\{3}\plug-ins\bifrost\" }
+        };
 
         public MayaEnvironment(MayaParameters AppParams, string Localpath, string ExeRoot, int TaskID, int FrameNumber, ILog Log)
         {
@@ -82,25 +88,32 @@ namespace Maya.Cloud
             CreatePreRenderScript(AppParams.ApplicationSettings, AppParams.EnvironmentSettings);
 
             foreach (var plugin in _plugins)
+            {
                 _command += plugin.Command;
+            }
 
             _command = String.Format(_command, AppParams.Renderer, TaskID, Localpath, AppParams.OutputName, FrameNumber);
-
         }
 
         public string Command
         {
-            get { return _command; }
+            get
+            {
+                return _command;
+            }
         }
 
         public string Executable
         {
-            get { return _executable; }
+            get
+            {
+                return _executable;
+            }
         }
 
         private void SetLicense(EnvironmentSettings EnvSettings, string Adlm)
         {
-            var license = Path.Combine(_exepath, "bin",  "License.env");
+            var license = Path.Combine(_exepath, "bin", "License.env");
             var license_path = Path.Combine(_exeroot, "Adlm");
             if (!File.Exists(license))
             {
@@ -111,7 +124,6 @@ namespace Maya.Cloud
                 }
             }
 
-            
             if (EnvSettings.LicenseServer != String.Empty && EnvSettings.LicensePort != String.Empty)
             {
                 var license_server = Path.Combine(_localpath, "LICPATH.LIC");
@@ -181,12 +193,11 @@ namespace Maya.Cloud
 
             var SysPath = Environment.GetEnvironmentVariable("PATH");
             log.Info("Setting path to {0}", string.Format(@"{0};{1}", SysPath, PathVar));
-            Environment.SetEnvironmentVariable("PATH", string.Format(@"{0};{1}", SysPath, PathVar)); 
+            Environment.SetEnvironmentVariable("PATH", string.Format(@"{0};{1}", SysPath, PathVar));
         }
 
         private void SetWorkspace(ApplicationSettings app)
         {
-
             var project = Path.Combine(_localpath, "workspace.mel");
             if (!File.Exists(project))
             {
@@ -214,10 +225,11 @@ namespace Maya.Cloud
             }
 
             foreach (var plugin in _plugins)
+            {
                 plugin.CreateModFile(_exeroot, modDir);
+            }
 
             log.Info("Created mod file: {0}", File.Exists(Path.Combine(modDir, "mtoa.mod")));
-                
         }
 
         private void CreateMayaEnv(ApplicationSettings app)
@@ -226,13 +238,22 @@ namespace Maya.Cloud
 
             foreach (var env in MayaEnvVariables)
             {
-                formattedMayaVars[env.Key] = String.Format(env.Value, _exeroot, _localpath, Path.GetTempPath(),
-                    app.Application, app.UserDirectory, app.Version);
+                formattedMayaVars[env.Key] = String.Format(
+                    env.Value,
+                    _exeroot,
+                    _localpath,
+                    Path.GetTempPath(),
+                    app.Application,
+                    app.UserDirectory,
+                    app.Version);
+
                 log.Info("Formatted Maya env var: {0}, {1}", env.Key, formattedMayaVars[env.Key]);
             }
 
             foreach (var plugin in _plugins)
+            {
                 plugin.SetupMayaEnv(formattedMayaVars, _exeroot, _localpath);
+            }
 
             var envPath = Path.Combine(_userdir, "Maya.env");
             if (!File.Exists(envPath))
@@ -246,7 +267,6 @@ namespace Maya.Cloud
                     }
                 }
             }
-
         }
 
         private void CreatePreRenderScript(ApplicationSettings app, EnvironmentSettings env)
@@ -256,30 +276,37 @@ namespace Maya.Cloud
             var pathsScript = "";
 
             if (File.Exists(scriptPath))
+            {
                 return;
+            }
 
             string formattedScript;
 
             if (remappedPaths.Count > 0)
             {
                 foreach (var p in remappedPaths)
+                {
                     pathsScript += string.Format("dirmap -m \"{0}\" \"{1}\";\n", p, _localpath.Replace('\\', '/'));
+                }
 
                 formattedScript = string.Format(MayaScripts.render_prep, "dirmap -en true;", pathsScript);
             }
             else
+            {
                 formattedScript = string.Format(MayaScripts.render_prep, string.Empty, string.Empty);
+            }
 
             using (var scriptFile = new StreamWriter(scriptPath))
             {
                 scriptFile.Write(formattedScript);
 
-                foreach(var plugin in _plugins)
+                foreach (var plugin in _plugins)
+                {
                     plugin.PreRenderScript(scriptFile, _exepath, _localpath);
+                }
 
                 scriptFile.WriteLine("}");
             }
-
         }
 
         private string FormatCustomEnvVar(string EnvVar)
@@ -291,7 +318,5 @@ namespace Maya.Cloud
             formattedvar = formattedvar.Replace("<temp_dir>", Path.GetTempPath());
             return formattedvar;
         }
-
-        
     }
 }

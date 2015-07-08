@@ -42,10 +42,11 @@ namespace Maya.Cloud
         {
             string version;
             if (task.Parameters.TryGetValue("version", out version))
+            {
                 return version;
+            }
 
             return base.GetApplicationVersion(task);
-
         }
 
         /// <summary>
@@ -67,23 +68,31 @@ namespace Maya.Cloud
                 };
             }
 
-
             var env = new MayaEnvironment(taskParameters, LocalStoragePath, ExecutablesPath, task.TaskId, task.TaskIndex, Log);
             var initialFiles = CollectFiles(LocalStoragePath);
             var inputFile = Path.Combine(LocalStoragePath, taskParameters.JobFile);
             var logFile = string.Format("{0}.log", task.TaskId);
 
+            Log.Info(
+                "Calling '{0}' with Args '{1}' for Task '{2}' / Job '{3}' .",
+                env.Executable,
+                env.Command + inputFile,
+                task.TaskId,
+                task.JobId);
 
-            Log.Info("Calling '{0}' with Args '{1}' for Task '{2}' / Job '{3}' .", env.Executable, env.Command + inputFile, task.TaskId, task.JobId);
             var processResult = ExecuteProcess(env.Executable, env.Command + inputFile);
             var newFiles = GetNewFiles(initialFiles, LocalStoragePath);
 
             var result = new TaskProcessResult();
             if (File.Exists(logFile))
+            {
                 result.ProcessorOutput = File.ReadAllText(logFile);
+            }
 
             if (processResult == null)
+            {
                 result.Success = TaskProcessSuccess.PermanentFailure;
+            }
 
             else if (newFiles.Length < 1)
             {
@@ -92,7 +101,9 @@ namespace Maya.Cloud
             }
 
             else
+            {
                 result.Success = TaskProcessSuccess.Succeeded;
+            }
 
             foreach (var output in newFiles)
             {
@@ -271,8 +282,9 @@ namespace Maya.Cloud
             {
                 if (ex.ExitCode == 211)
                 {
-                    Log.Error("Maya failed to load a dependency. This may mean that a required plug-in is not available or has failed to load. "+
-                              "Check the Maya processor log for further details.");
+                    Log.Error(
+                        "Maya failed to load a dependency. This may mean that a required plug-in is not available or has failed to load. " +
+                            "Check the Maya processor log for further details.");
                     return null;
                 }
 

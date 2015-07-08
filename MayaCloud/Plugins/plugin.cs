@@ -17,31 +17,44 @@ namespace Maya.Cloud.Plugins
 
         public abstract IList<string> PathVariables { get; }
 
-        public virtual void CreateModFile(string ExeRoot, string Location) { }
+        public virtual void CreateModFile(string ExeRoot, string Location)
+        {
+        }
 
-        public virtual void SetupEnv(IDictionary<String, String> Env, string ExeRoot, string Localpath) { }
+        public virtual void SetupEnv(IDictionary<String, String> Env, string ExeRoot, string Localpath)
+        {
+        }
 
-        public virtual void SetupMayaEnv(IDictionary<String, String> MayaEnv, string ExeRoot, string Localpath) { }
+        public virtual void SetupMayaEnv(IDictionary<String, String> MayaEnv, string ExeRoot, string Localpath)
+        {
+        }
 
-        public virtual void PreRenderScript(StreamWriter script, string ExeRoot, string Localpath) { }
+        public virtual void PreRenderScript(StreamWriter script, string ExeRoot, string Localpath)
+        {
+        }
 
         public virtual string SetupPath(string ExeRoot, string Localpath)
         {
             return String.Empty;
         }
 
-        protected static IDictionary<String, String> MergeParameters(IDictionary<String, String> basedict, IDictionary<String, String> mergedict)
+        protected static IDictionary<String, String> MergeParameters(
+            IDictionary<String, String> basedict,
+            IDictionary<String, String> mergedict)
         {
             foreach (var item in mergedict)
+            {
                 if (!basedict.ContainsKey(item.Key))
+                {
                     basedict.Add(item.Key, item.Value);
+                }
                 else
+                {
                     basedict[item.Key] = basedict[item.Key] + mergedict[item.Key];
+                }
+            }
 
             return basedict;
         }
-
-
-
     }
 }

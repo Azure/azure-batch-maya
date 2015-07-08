@@ -87,7 +87,7 @@ namespace Maya.Cloud
 
             EnvironmentSettings envsettings = GetSettingsParameter(task.Parameters, "settings", errors);
             ApplicationSettings appsettings = GetApplicationSettings(Path.Combine(applicationpath, "app.config"), errors);
-            
+
             if (errors.Any())
             {
                 return new InvalidMayaParameters(string.Join(Environment.NewLine, errors.Select(e => "* " + e)));
@@ -149,7 +149,6 @@ namespace Maya.Cloud
             var jsonSettings = GetStringParameter(parameters, parameterName, errors);
             var settings = new EnvironmentSettings();
 
-            
             try
             {
                 settings = JsonConvert.DeserializeObject<EnvironmentSettings>(jsonSettings);
@@ -180,7 +179,6 @@ namespace Maya.Cloud
             }
             return settings;
         }
-        
 
         private class ValidMayaParameters : MayaParameters
         {
@@ -200,8 +198,12 @@ namespace Maya.Cloud
                 _renderer = engine;
             }
 
-            public ValidMayaParameters(string jobfile, string engine, string output,
-                EnvironmentSettings envsettings, ApplicationSettings appsettings)
+            public ValidMayaParameters(
+                string jobfile,
+                string engine,
+                string output,
+                EnvironmentSettings envsettings,
+                ApplicationSettings appsettings)
             {
                 _jobfile = jobfile;
                 _renderer = engine;
@@ -252,12 +254,18 @@ namespace Maya.Cloud
 
             public override string OutputName
             {
-                get { return _output; }
+                get
+                {
+                    return _output;
+                }
             }
 
             public override ApplicationSettings ApplicationSettings
             {
-                get { return _app_settings; }
+                get
+                {
+                    return _app_settings;
+                }
             }
 
             public override EnvironmentSettings EnvironmentSettings
@@ -328,12 +336,18 @@ namespace Maya.Cloud
 
             public override string OutputName
             {
-                get { throw new InvalidOperationException("OutputName does not apply to invalid parameters"); }
+                get
+                {
+                    throw new InvalidOperationException("OutputName does not apply to invalid parameters");
+                }
             }
 
             public override EnvironmentSettings EnvironmentSettings
             {
-                get { throw new InvalidOperationException("EnvironmentSettings does not apply to invalid parameters"); }
+                get
+                {
+                    throw new InvalidOperationException("EnvironmentSettings does not apply to invalid parameters");
+                }
             }
 
             public override ApplicationSettings ApplicationSettings

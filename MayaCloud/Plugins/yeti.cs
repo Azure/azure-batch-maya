@@ -5,31 +5,45 @@ using System.Linq;
 
 namespace Maya.Cloud.Plugins
 {
-    class Yeti : MayaPlugin
+    internal class Yeti : MayaPlugin
     {
-        public Yeti(string AppVersion) { }
+        public Yeti(string AppVersion)
+        {
+        }
 
         public override string ExePath
         {
-            get { return @"PeregrineLabs\Yeti"; }
+            get
+            {
+                return @"PeregrineLabs\Yeti";
+            }
         }
 
         public override string Command
         {
-            get { return String.Empty; }
+            get
+            {
+                return String.Empty;
+            }
         }
 
         public override IList<string> PathVariables
         {
-            get { return new List<String> { @"{0}\{1}\bin" }; }
+            get
+            {
+                return new List<String> { @"{0}\{1}\bin" };
+            }
         }
 
         public override IDictionary<String, String> EnvVariables
         {
             get
             {
-                return new Dictionary<String, String> { { "YETI_HOME ", @"{0}\{1}\bin;" }, 
-                                                        { "YETI_INTERACTIVE_LICENSE ", "0" }};
+                return new Dictionary<String, String>
+                {
+                    { "YETI_HOME ", @"{0}\{1}\bin;" },
+                    { "YETI_INTERACTIVE_LICENSE ", "0" }
+                };
             }
         }
 
@@ -37,13 +51,16 @@ namespace Maya.Cloud.Plugins
         {
             get
             {
-                return new Dictionary<String, String> { { "MAYA_PLUG_IN_PATH ", @"{0}\{1}\plug-ins;" },
-                                                        { "MTOA_EXTENSIONS_PATH ", @"{0}\{1}\plug-ins;" },
-                                                        { "MTOA_PROCEDURAL_PATH ", @"{0}\{1}\bin;" },
-                                                        { "PYTHONPATH", @"{0}\{1}\scripts;" },
-                                                        { "PEREGRINE_LOG_FILE", @"{2}\yeti_log.txt" },
-                                                        { "YETI_TMP", @"{3}" },
-                                                        { "MAYA_SCRIPT_PATH", @"{0}\{1}\scripts;" }};
+                return new Dictionary<String, String>
+                {
+                    { "MAYA_PLUG_IN_PATH ", @"{0}\{1}\plug-ins;" },
+                    { "MTOA_EXTENSIONS_PATH ", @"{0}\{1}\plug-ins;" },
+                    { "MTOA_PROCEDURAL_PATH ", @"{0}\{1}\bin;" },
+                    { "PYTHONPATH", @"{0}\{1}\scripts;" },
+                    { "PEREGRINE_LOG_FILE", @"{2}\yeti_log.txt" },
+                    { "YETI_TMP", @"{3}" },
+                    { "MAYA_SCRIPT_PATH", @"{0}\{1}\scripts;" }
+                };
             }
         }
 
@@ -65,7 +82,9 @@ namespace Maya.Cloud.Plugins
         {
             var FormattedPaths = new List<string>();
             foreach (var item in PathVariables)
+            {
                 FormattedPaths.Add(String.Format(item, ExeRoot, ExePath));
+            }
 
             return String.Join(";", FormattedPaths.ToArray());
         }
@@ -74,7 +93,9 @@ namespace Maya.Cloud.Plugins
         {
             var FormattedEnv = new Dictionary<String, String>();
             foreach (var item in EnvVariables)
+            {
                 FormattedEnv[item.Key] = String.Format(item.Value, ExeRoot, ExePath, Localpath);
+            }
 
             MergeParameters(Env, FormattedEnv);
         }
@@ -83,7 +104,9 @@ namespace Maya.Cloud.Plugins
         {
             var FormattedMayaEnv = new Dictionary<String, String>();
             foreach (var item in MayaEnvVariables)
+            {
                 FormattedMayaEnv[item.Key] = String.Format(item.Value, ExeRoot, ExePath, Localpath, Path.GetTempPath());
+            }
 
             MergeParameters(MayaEnv, FormattedMayaEnv);
         }
@@ -92,6 +115,5 @@ namespace Maya.Cloud.Plugins
         {
             script.WriteLine("pgYetiRenderCommand -preRenderCache -fileName \"{0}\\fur.%04d.fur\" pgYetiMaya;");
         }
-
     }
 }
