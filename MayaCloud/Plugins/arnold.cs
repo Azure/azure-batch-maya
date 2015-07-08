@@ -74,7 +74,7 @@ namespace Maya.Cloud.Plugins
             {
                 using (var modFile = new StreamWriter(mtoaMod))
                 {
-                    modFile.WriteLine(string.Format("+ mtoa any {0}\\{1}", exeRoot, ExePath));
+                    modFile.WriteLine("+ mtoa any {0}\\{1}", exeRoot, ExePath);
                     modFile.WriteLine("PATH +:= bin");
                 }
             }

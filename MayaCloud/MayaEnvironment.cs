@@ -263,7 +263,7 @@ namespace Maya.Cloud
                     foreach (var variable in formattedMayaVars)
                     {
                         _log.Info("Writing to env file: {0}", string.Format("{0} = {1}", variable.Key, variable.Value));
-                        envFile.WriteLine(string.Format("{0} = {1}", variable.Key, variable.Value));
+                        envFile.WriteLine("{0} = {1}", variable.Key, variable.Value);
                     }
                 }
             }
