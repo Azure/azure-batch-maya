@@ -28,16 +28,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using System.Globalization;
+using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using Maya.Cloud.Exceptions;
-
 using Microsoft.Azure.Batch.Apps.Cloud;
-using System.Runtime.CompilerServices;
 
 namespace Maya.Cloud
 {

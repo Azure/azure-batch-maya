@@ -26,7 +26,6 @@
 // 
 //--------------------------------------------------------------------------
 
-
 using System;
 using System.Linq;
 using Microsoft.Azure.Batch.Apps.Cloud;

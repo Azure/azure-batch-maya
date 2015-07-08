@@ -29,8 +29,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Maya.Cloud.Exceptions;
 using Microsoft.Azure.Batch.Apps.Cloud;
 
