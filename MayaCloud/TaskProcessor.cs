@@ -1,43 +1,39 @@
-﻿///--------------------------------------------------------------------------
-///
-/// Maya Batch C# Cloud Assemblies 
-/// 
-/// Copyright (c) Microsoft Corporation.  All rights reserved. 
-/// 
-/// MIT License
-/// 
-/// Permission is hereby granted, free of charge, to any person obtaining a copy 
-/// of this software and associated documentation files (the ""Software""), to deal 
-/// in the Software without restriction, including without limitation the rights 
-/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
-/// copies of the Software, and to permit persons to whom the Software is furnished 
-/// to do so, subject to the following conditions:
-/// 
-/// The above copyright notice and this permission notice shall be included in 
-/// all copies or substantial portions of the Software.
-/// 
-/// THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
-/// THE SOFTWARE.
-/// 
-///--------------------------------------------------------------------------
+﻿//--------------------------------------------------------------------------
+//
+// Maya Batch C# Cloud Assemblies 
+// 
+// Copyright (c) Microsoft Corporation.  All rights reserved. 
+// 
+// MIT License
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy 
+// of this software and associated documentation files (the ""Software""), to deal 
+// in the Software without restriction, including without limitation the rights 
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+// copies of the Software, and to permit persons to whom the Software is furnished 
+// to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in 
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+// THE SOFTWARE.
+// 
+//--------------------------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using System.Globalization;
+using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using Maya.Cloud.Exceptions;
-
 using Microsoft.Azure.Batch.Apps.Cloud;
-using System.Runtime.CompilerServices;
 
 namespace Maya.Cloud
 {
@@ -46,18 +42,12 @@ namespace Maya.Cloud
         /// <summary>
         /// Path to the Maya executable
         /// </summary>
-        private string RenderPath
-        {
-            get { return @"Maya2015\bin\render.exe"; }
-        }
+        private const string RenderPath = @"Maya2015\bin\render.exe";
 
         /// <summary>
         /// Args with which to run Maya
         /// </summary>
-        private string RenderArgs
-        {
-            get { return @"-renderer {0} -log ""{1}"" -proj ""{2}"" -preRender ""dirMap"" -rd ""{3}"" -s {4} -e {4} ""{5}"""; }
-        }
+        private const string RenderArgs = @"-renderer {0} -log ""{1}"" -proj ""{2}"" -preRender ""dirMap"" -rd ""{3}"" -s {4} -e {4} ""{5}""";
 
         /// <summary>
         /// Executes the external process for processing the task
@@ -68,7 +58,7 @@ namespace Maya.Cloud
         protected override TaskProcessResult RunExternalTaskProcess(ITask task, TaskExecutionSettings settings)
         {
             var taskParameters = MayaParameters.FromTask(task);
-            var projDir = ConfigureMayaEnv(task, LocalStoragePath, ExecutablesPath);
+            var projDir = ConfigureMayaEnv(LocalStoragePath, ExecutablesPath);
             CreateMappingScript(taskParameters, LocalStoragePath);
 
             var initialFiles = CollectFiles(LocalStoragePath);
@@ -87,29 +77,47 @@ namespace Maya.Cloud
             var logFile = string.Format("{0}.log", task.TaskId);
 
             var externalProcessPath = ExecutablePath(RenderPath);
-            var externalProcessArgs = string.Format(CultureInfo.InvariantCulture, RenderArgs, taskParameters.Renderer,
-                logFile, LocalStoragePath, LocalStoragePath, task.TaskIndex, inputFile);
+            var externalProcessArgs = string.Format(
+                CultureInfo.InvariantCulture,
+                RenderArgs,
+                taskParameters.Renderer,
+                logFile,
+                LocalStoragePath,
+                LocalStoragePath,
+                task.TaskIndex,
+                inputFile);
 
-            Log.Info("Calling '{0}' with Args '{1}' for Task '{2}' / Job '{3}' .", RenderPath, externalProcessArgs, task.TaskId, task.JobId);
+            Log.Info(
+                "Calling '{0}' with Args '{1}' for Task '{2}' / Job '{3}' .",
+                RenderPath,
+                externalProcessArgs,
+                task.TaskId,
+                task.JobId);
+
             var processResult = ExecuteProcess(externalProcessPath, externalProcessArgs);
 
             if (processResult == null)
             {
                 if (File.Exists(logFile))
+                {
                     return new TaskProcessResult
                     {
                         Success = TaskProcessSuccess.PermanentFailure,
                         ProcessorOutput = File.ReadAllText(logFile)
                     };
-
+                }
                 else
+                {
                     return new TaskProcessResult { Success = TaskProcessSuccess.PermanentFailure };
+                }
             }
 
             var newFiles = GetNewFiles(initialFiles, LocalStoragePath);
             var result = TaskProcessResult.FromExternalProcessResult(processResult, newFiles);
             if (File.Exists(logFile))
+            {
                 result.ProcessorOutput = File.ReadAllText(logFile);
+            }
 
             var thumbnail = CreateThumbnail(task, newFiles);
 
@@ -120,6 +128,7 @@ namespace Maya.Cloud
                     FileName = thumbnail,
                     Kind = TaskOutputFileKind.Preview
                 };
+
                 result.OutputFiles.Add(taskPreview);
             }
 
@@ -159,7 +168,7 @@ namespace Maya.Cloud
             }
             catch (Exception ex)
             {
-                var error = string.Format("Failed to zip outputs: {0}", ex.ToString());
+                var error = string.Format("Failed to zip outputs: {0}", ex);
                 throw new ZipException(error, ex);
             }
 
@@ -167,11 +176,13 @@ namespace Maya.Cloud
             return result;
         }
 
-        private static string ConfigureMayaEnv(ITask task, string cwd, string exe)
+        private static string ConfigureMayaEnv(string cwd, string exe)
         {
             Environment.SetEnvironmentVariable("MAYA_APP_DIR", cwd);
             var sysPath = Environment.GetEnvironmentVariable("PATH");
-            Environment.SetEnvironmentVariable("PATH", string.Format(@"{0};{1}\Maya2015\bin;{1}\mentalrayForMaya2015\bin", sysPath, exe));
+            Environment.SetEnvironmentVariable(
+                "PATH",
+                string.Format(@"{0};{1}\Maya2015\bin;{1}\mentalrayForMaya2015\bin", sysPath, exe));
 
             var project = Path.Combine(cwd, "workspace.mel");
             if (!File.Exists(project))
@@ -223,7 +234,7 @@ namespace Maya.Cloud
                     envFile.Write(formattedEnv);
                 }
             }
-                
+
             return project;
         }
 
@@ -245,7 +256,6 @@ namespace Maya.Cloud
                     scriptFile.Write(formattedScript);
                 }
             }
-
         }
 
         /// <summary>
@@ -291,9 +301,9 @@ namespace Maya.Cloud
         /// will be created and no error thrown.
         /// </summary>
         /// <param name="task">The task that needs a thumbnail.</param>
-        /// <param name="inputName">The task output from which to generate the thumbnail.</param>
+        /// <param name="inputs">The task output from which to generate the thumbnail.</param>
         /// <returns>The path to the new thumbnail if created, else an empty string.</returns>
-        protected string CreateThumbnail(ITask task, string[] inputs)
+        private string CreateThumbnail(ITask task, string[] inputs)
         {
             var imagemagick = ExecutablePath(@"ImageMagick\convert.exe");
             if (!File.Exists(imagemagick))
@@ -302,8 +312,8 @@ namespace Maya.Cloud
                 return string.Empty;
             }
 
-            var filtered = inputs.Where(x => MayaParameters.SupportedFormats.Contains(Path.GetExtension(x)));
-            if (filtered.Count() < 1)
+            var filtered = inputs.Where(x => MayaParameters.SupportedFormats.Contains(Path.GetExtension(x))).ToList();
+            if (!filtered.Any())
             {
                 Log.Info("No thumbnail compatible images found.");
                 return string.Empty;
@@ -360,7 +370,13 @@ namespace Maya.Cloud
                     outputInfo = Environment.NewLine + "stderr: " + ex.StandardError + Environment.NewLine + "stdout: " + ex.StandardOutput;
                 }
 
-                Log.Error("Failed to invoke command {0} {1}: exit code was {2}.  {3}", ex.CommandPath, ex.Arguments, ex.ExitCode, outputInfo);
+                Log.Error(
+                    "Failed to invoke command {0} {1}: exit code was {2}.  {3}",
+                    ex.CommandPath,
+                    ex.Arguments,
+                    ex.ExitCode,
+                    outputInfo);
+
                 return null;
             }
             catch (Exception ex)
@@ -368,7 +384,6 @@ namespace Maya.Cloud
                 Log.Error("Error in task processor: {0}", ex.ToString());
                 return null;
             }
-
         }
     }
 }
