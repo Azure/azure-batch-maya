@@ -291,7 +291,7 @@ namespace Maya.Cloud
         /// will be created and no error thrown.
         /// </summary>
         /// <param name="task">The task that needs a thumbnail.</param>
-        /// <param name="inputName">The task output from which to generate the thumbnail.</param>
+        /// <param name="inputs">The task output from which to generate the thumbnail.</param>
         /// <returns>The path to the new thumbnail if created, else an empty string.</returns>
         protected string CreateThumbnail(ITask task, string[] inputs)
         {
