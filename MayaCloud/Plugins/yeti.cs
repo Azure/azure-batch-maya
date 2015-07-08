@@ -23,7 +23,7 @@ namespace Maya.Cloud.Plugins
         {
             get
             {
-                return String.Empty;
+                return string.Empty;
             }
         }
 
@@ -31,15 +31,15 @@ namespace Maya.Cloud.Plugins
         {
             get
             {
-                return new List<String> { @"{0}\{1}\bin" };
+                return new List<string> { @"{0}\{1}\bin" };
             }
         }
 
-        public override IDictionary<String, String> EnvVariables
+        public override IDictionary<string, string> EnvVariables
         {
             get
             {
-                return new Dictionary<String, String>
+                return new Dictionary<string, string>
                 {
                     { "YETI_HOME ", @"{0}\{1}\bin;" },
                     { "YETI_INTERACTIVE_LICENSE ", "0" }
@@ -47,11 +47,11 @@ namespace Maya.Cloud.Plugins
             }
         }
 
-        public override IDictionary<String, String> MayaEnvVariables
+        public override IDictionary<string, string> MayaEnvVariables
         {
             get
             {
-                return new Dictionary<String, String>
+                return new Dictionary<string, string>
                 {
                     { "MAYA_PLUG_IN_PATH ", @"{0}\{1}\plug-ins;" },
                     { "MTOA_EXTENSIONS_PATH ", @"{0}\{1}\plug-ins;" },
@@ -83,29 +83,29 @@ namespace Maya.Cloud.Plugins
             var FormattedPaths = new List<string>();
             foreach (var item in PathVariables)
             {
-                FormattedPaths.Add(String.Format(item, ExeRoot, ExePath));
+                FormattedPaths.Add(string.Format(item, ExeRoot, ExePath));
             }
 
-            return String.Join(";", FormattedPaths.ToArray());
+            return string.Join(";", FormattedPaths.ToArray());
         }
 
-        public override void SetupEnv(IDictionary<String, String> Env, string ExeRoot, string Localpath)
+        public override void SetupEnv(IDictionary<string, string> Env, string ExeRoot, string Localpath)
         {
-            var FormattedEnv = new Dictionary<String, String>();
+            var FormattedEnv = new Dictionary<string, string>();
             foreach (var item in EnvVariables)
             {
-                FormattedEnv[item.Key] = String.Format(item.Value, ExeRoot, ExePath, Localpath);
+                FormattedEnv[item.Key] = string.Format(item.Value, ExeRoot, ExePath, Localpath);
             }
 
             MergeParameters(Env, FormattedEnv);
         }
 
-        public override void SetupMayaEnv(IDictionary<String, String> MayaEnv, string ExeRoot, string Localpath)
+        public override void SetupMayaEnv(IDictionary<string, string> MayaEnv, string ExeRoot, string Localpath)
         {
-            var FormattedMayaEnv = new Dictionary<String, String>();
+            var FormattedMayaEnv = new Dictionary<string, string>();
             foreach (var item in MayaEnvVariables)
             {
-                FormattedMayaEnv[item.Key] = String.Format(item.Value, ExeRoot, ExePath, Localpath, Path.GetTempPath());
+                FormattedMayaEnv[item.Key] = string.Format(item.Value, ExeRoot, ExePath, Localpath, Path.GetTempPath());
             }
 
             MergeParameters(MayaEnv, FormattedMayaEnv);

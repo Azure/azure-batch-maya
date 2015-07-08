@@ -11,7 +11,7 @@ namespace Maya.Cloud.Plugins
 
         public Arnold(string AppVersion)
         {
-            _exepath = String.Format(@"solidangle\mtoadeploy\{0}", AppVersion);
+            _exepath = string.Format(@"solidangle\mtoadeploy\{0}", AppVersion);
         }
 
         public override string ExePath
@@ -34,23 +34,23 @@ namespace Maya.Cloud.Plugins
         {
             get
             {
-                return new List<String> { };
+                return new List<string> { };
             }
         }
 
-        public override IDictionary<String, String> EnvVariables
+        public override IDictionary<string, string> EnvVariables
         {
             get
             {
-                return new Dictionary<String, String> { };
+                return new Dictionary<string, string> { };
             }
         }
 
-        public override IDictionary<String, String> MayaEnvVariables
+        public override IDictionary<string, string> MayaEnvVariables
         {
             get
             {
-                return new Dictionary<String, String>
+                return new Dictionary<string, string>
                 {
                     { "MAYA_PLUG_IN_PATH", @"{0}\{1}\plug-ins;" },
                     { "MAYA_RENDER_DESC_PATH", @"{0}\{1};" },
@@ -80,12 +80,12 @@ namespace Maya.Cloud.Plugins
             }
         }
 
-        public override void SetupMayaEnv(IDictionary<String, String> MayaEnv, string ExeRoot, string Localpath)
+        public override void SetupMayaEnv(IDictionary<string, string> MayaEnv, string ExeRoot, string Localpath)
         {
-            var FormattedMayaEnv = new Dictionary<String, String>();
+            var FormattedMayaEnv = new Dictionary<string, string>();
             foreach (var item in MayaEnvVariables)
             {
-                FormattedMayaEnv[item.Key] = String.Format(item.Value, ExeRoot, ExePath, Localpath);
+                FormattedMayaEnv[item.Key] = string.Format(item.Value, ExeRoot, ExePath, Localpath);
             }
 
             MergeParameters(MayaEnv, FormattedMayaEnv);

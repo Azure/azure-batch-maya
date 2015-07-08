@@ -30,7 +30,7 @@ namespace Maya.Cloud
             { "MentalRay", (_version) => new MentalRay(_version) },
         };
 
-        private IList<String> PathVariables = new List<String>
+        private IList<string> PathVariables = new List<string>
         {
             @"{0}\bin;",
             @"{0}\plug-ins\substance\bin;",
@@ -38,9 +38,9 @@ namespace Maya.Cloud
             @"{0}\plug-ins\bifrost\bin;"
         };
 
-        private IDictionary<String, String> EnvVariables = new Dictionary<String, String> { { "MAYA_APP_DIR", @"{0}" } };
+        private IDictionary<string, string> EnvVariables = new Dictionary<string, string> { { "MAYA_APP_DIR", @"{0}" } };
 
-        private IDictionary<String, String> MayaEnvVariables = new Dictionary<String, String>
+        private IDictionary<string, string> MayaEnvVariables = new Dictionary<string, string>
         {
             { "MAYA_MODULE_PATH", @"{0}\{3}\modules;{1}\{4}\modules;{0}\Common Files\Autodesk Shared\Modules\maya\{5}" },
             { "FBX_LOCATION", @"{0}\{3}\plug-ing\fbx\" },
@@ -67,10 +67,10 @@ namespace Maya.Cloud
             log = Log;
             _localpath = Localpath;
             _exeroot = ExeRoot;
-            _exepath = String.Format(@"{0}\{1}", ExeRoot, AppParams.ApplicationSettings.Application);
+            _exepath = string.Format(@"{0}\{1}", ExeRoot, AppParams.ApplicationSettings.Application);
             _userdir = Path.Combine(_localpath, AppParams.ApplicationSettings.UserDirectory);
 
-            _executable = String.Format(_executable, _exepath);
+            _executable = string.Format(_executable, _exepath);
             _plugins = new List<MayaPlugin>();
 
             foreach (var plugin in AppParams.EnvironmentSettings.Plugins)
@@ -92,7 +92,7 @@ namespace Maya.Cloud
                 _command += plugin.Command;
             }
 
-            _command = String.Format(_command, AppParams.Renderer, TaskID, Localpath, AppParams.OutputName, FrameNumber);
+            _command = string.Format(_command, AppParams.Renderer, TaskID, Localpath, AppParams.OutputName, FrameNumber);
         }
 
         public string Command
@@ -124,7 +124,7 @@ namespace Maya.Cloud
                 }
             }
 
-            if (EnvSettings.LicenseServer != String.Empty && EnvSettings.LicensePort != String.Empty)
+            if (EnvSettings.LicenseServer != string.Empty && EnvSettings.LicensePort != string.Empty)
             {
                 var license_server = Path.Combine(_localpath, "LICPATH.LIC");
                 license_path = _localpath;
@@ -151,14 +151,14 @@ namespace Maya.Cloud
 
         private void SetEnvVariables(EnvironmentSettings EnvSettings)
         {
-            var PathVar = String.Join("", PathVariables.ToArray());
-            PathVar = String.Format(PathVar, _exepath);
+            var PathVar = string.Join("", PathVariables.ToArray());
+            PathVar = string.Format(PathVar, _exepath);
             log.Info("PathVar: {0}", PathVar);
 
             Dictionary<string, string> formattedVars = new Dictionary<string, string>();
             foreach (var env in EnvVariables)
             {
-                formattedVars[env.Key] = String.Format(env.Value, _localpath);
+                formattedVars[env.Key] = string.Format(env.Value, _localpath);
                 log.Info("Formatting env var: {0}, {1}", env.Key, formattedVars[env.Key]);
             }
 
@@ -238,7 +238,7 @@ namespace Maya.Cloud
 
             foreach (var env in MayaEnvVariables)
             {
-                formattedMayaVars[env.Key] = String.Format(
+                formattedMayaVars[env.Key] = string.Format(
                     env.Value,
                     _exeroot,
                     _localpath,
@@ -262,8 +262,8 @@ namespace Maya.Cloud
                 {
                     foreach (var variable in formattedMayaVars)
                     {
-                        log.Info("Writing to env file: {0}", String.Format("{0} = {1}", variable.Key, variable.Value));
-                        envFile.WriteLine(String.Format("{0} = {1}", variable.Key, variable.Value));
+                        log.Info("Writing to env file: {0}", string.Format("{0} = {1}", variable.Key, variable.Value));
+                        envFile.WriteLine(string.Format("{0} = {1}", variable.Key, variable.Value));
                     }
                 }
             }

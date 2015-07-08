@@ -77,7 +77,7 @@ namespace Maya.Cloud
             return new ValidMayaParameters(start, end, jobfile, engine);
         }
 
-        public static MayaParameters FromTask(ITask task, String applicationpath)
+        public static MayaParameters FromTask(ITask task, string applicationpath)
         {
             var errors = new List<string>();
 
@@ -160,7 +160,7 @@ namespace Maya.Cloud
             return settings;
         }
 
-        private static ApplicationSettings GetApplicationSettings(String configfile, List<string> errors)
+        private static ApplicationSettings GetApplicationSettings(string configfile, List<string> errors)
         {
             var settings = new ApplicationSettings();
             if (!(File.Exists(configfile)))

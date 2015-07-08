@@ -11,9 +11,9 @@ namespace Maya.Cloud.Plugins
 
         public abstract string Command { get; }
 
-        public abstract IDictionary<String, String> EnvVariables { get; }
+        public abstract IDictionary<string, string> EnvVariables { get; }
 
-        public abstract IDictionary<String, String> MayaEnvVariables { get; }
+        public abstract IDictionary<string, string> MayaEnvVariables { get; }
 
         public abstract IList<string> PathVariables { get; }
 
@@ -21,11 +21,11 @@ namespace Maya.Cloud.Plugins
         {
         }
 
-        public virtual void SetupEnv(IDictionary<String, String> Env, string ExeRoot, string Localpath)
+        public virtual void SetupEnv(IDictionary<string, string> Env, string ExeRoot, string Localpath)
         {
         }
 
-        public virtual void SetupMayaEnv(IDictionary<String, String> MayaEnv, string ExeRoot, string Localpath)
+        public virtual void SetupMayaEnv(IDictionary<string, string> MayaEnv, string ExeRoot, string Localpath)
         {
         }
 
@@ -35,12 +35,12 @@ namespace Maya.Cloud.Plugins
 
         public virtual string SetupPath(string ExeRoot, string Localpath)
         {
-            return String.Empty;
+            return string.Empty;
         }
 
-        protected static IDictionary<String, String> MergeParameters(
-            IDictionary<String, String> basedict,
-            IDictionary<String, String> mergedict)
+        protected static IDictionary<string, string> MergeParameters(
+            IDictionary<string, string> basedict,
+            IDictionary<string, string> mergedict)
         {
             foreach (var item in mergedict)
             {
