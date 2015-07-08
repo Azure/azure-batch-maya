@@ -60,10 +60,10 @@ namespace Maya.Cloud
 
         private readonly IList<string> _pathVariables = new List<string>
         {
-            @"{0}\bin;",
-            @"{0}\plug-ins\substance\bin;",
-            @"{0}\plug-ins\xgen\bin;",
-            @"{0}\plug-ins\bifrost\bin;"
+            @"{0}\bin",
+            @"{0}\plug-ins\substance\bin",
+            @"{0}\plug-ins\xgen\bin",
+            @"{0}\plug-ins\bifrost\bin"
         };
 
         private readonly IDictionary<string, string> _envVariables = new Dictionary<string, string> { { "MAYA_APP_DIR", @"{0}" } };
@@ -179,7 +179,7 @@ namespace Maya.Cloud
 
         private void SetEnvVariables(EnvironmentSettings envSettings)
         {
-            var pathVar = string.Join("", _pathVariables.ToArray());
+            var pathVar = string.Join(";", _pathVariables);
             pathVar = string.Format(pathVar, _exepath);
             _log.Info("PathVar: {0}", pathVar);
 
@@ -193,7 +193,7 @@ namespace Maya.Cloud
             foreach (var plugin in _plugins)
             {
                 plugin.SetupEnv(formattedVars, _exeroot, _localpath);
-                pathVar += plugin.SetupPath(_exeroot, _localpath);
+                pathVar = string.Join(";", pathVar, plugin.SetupPath(_exeroot, _localpath));
             }
 
             _log.Info("Updated PathVar: {0}", pathVar);
@@ -220,8 +220,9 @@ namespace Maya.Cloud
             }
 
             var sysPath = Environment.GetEnvironmentVariable("PATH");
-            _log.Info("Setting path to {0}", string.Format(@"{0};{1}", sysPath, pathVar));
-            Environment.SetEnvironmentVariable("PATH", string.Format(@"{0};{1}", sysPath, pathVar));
+            var newPath = string.Join(@";", sysPath, pathVar);
+            _log.Info("Setting path to {0}", newPath);
+            Environment.SetEnvironmentVariable("PATH", newPath);
         }
 
         private void SetWorkspace(ApplicationSettings app)
