@@ -153,7 +153,7 @@ namespace Maya.Cloud
             }
             catch (Exception ex)
             {
-                var error = string.Format("Failed to zip outputs: {0}", ex.ToString());
+                var error = string.Format("Failed to zip outputs: {0}", ex);
                 throw new ZipException(error, ex);
             }
 
