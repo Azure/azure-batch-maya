@@ -287,7 +287,7 @@ namespace Maya.Cloud
         /// <param name="task">The task that needs a thumbnail.</param>
         /// <param name="inputs">The task output from which to generate the thumbnail.</param>
         /// <returns>The path to the new thumbnail if created, else an empty string.</returns>
-        protected string CreateThumbnail(ITask task, string[] inputs)
+        private string CreateThumbnail(ITask task, string[] inputs)
         {
             var imagemagick = ExecutablePath(@"ImageMagick\convert.exe");
             if (!File.Exists(imagemagick))
