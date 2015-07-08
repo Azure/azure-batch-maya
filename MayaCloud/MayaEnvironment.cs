@@ -30,6 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Maya.Cloud.Plugins;
 using Maya.Cloud.Settings;
 using Microsoft.Azure.Batch.Apps.Cloud;
@@ -293,28 +294,13 @@ namespace Maya.Cloud
         {
             var scriptPath = Path.Combine(_localpath, app.UserDirectory, "scripts", "renderPrep.mel");
             var remappedPaths = env.PathMaps;
-            var pathsScript = "";
 
             if (File.Exists(scriptPath))
             {
                 return;
             }
 
-            string formattedScript;
-
-            if (remappedPaths.Count > 0)
-            {
-                foreach (var p in remappedPaths)
-                {
-                    pathsScript += string.Format("dirmap -m \"{0}\" \"{1}\";\n", p, _localpath.Replace('\\', '/'));
-                }
-
-                formattedScript = string.Format(MayaScripts.render_prep, "dirmap -en true;", pathsScript);
-            }
-            else
-            {
-                formattedScript = string.Format(MayaScripts.render_prep, string.Empty, string.Empty);
-            }
+            string formattedScript = GetDirmapScript(remappedPaths);
 
             using (var scriptFile = new StreamWriter(scriptPath))
             {
@@ -326,6 +312,25 @@ namespace Maya.Cloud
                 }
 
                 scriptFile.WriteLine("}");
+            }
+        }
+
+        private string GetDirmapScript(List<string> remappedPaths)
+        {
+            var pathsScript = new StringBuilder();
+
+            if (remappedPaths.Count > 0)
+            {
+                foreach (var p in remappedPaths)
+                {
+                    pathsScript.AppendFormat("dirmap -m \"{0}\" \"{1}\";\n", p, _localpath.Replace('\\', '/'));
+                }
+
+                return string.Format(MayaScripts.render_prep, "dirmap -en true;", pathsScript.ToString());
+            }
+            else
+            {
+                return string.Format(MayaScripts.render_prep, string.Empty, string.Empty);
             }
         }
 
