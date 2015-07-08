@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Globalization;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Maya.Cloud.Plugins
 {

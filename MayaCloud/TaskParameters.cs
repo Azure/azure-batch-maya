@@ -31,12 +31,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Json;
-using System.Text;
-using Microsoft.Azure.Batch.Apps.Cloud;
 using Maya.Cloud.Settings;
-using System.IO;
+using Microsoft.Azure.Batch.Apps.Cloud;
 using Newtonsoft.Json;
 
 namespace Maya.Cloud

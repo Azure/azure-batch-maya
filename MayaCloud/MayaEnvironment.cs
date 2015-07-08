@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Globalization;
-using Maya.Cloud.Settings;
 using Maya.Cloud.Plugins;
+using Maya.Cloud.Settings;
 using Microsoft.Azure.Batch.Apps.Cloud;
 
 namespace Maya.Cloud

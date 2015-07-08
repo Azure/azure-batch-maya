@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Globalization;
 
 namespace Maya.Cloud.Plugins
 {
@@ -94,6 +91,7 @@ namespace Maya.Cloud.Plugins
         public override void PreRenderScript(StreamWriter script, string ExeRoot, string LocalPath)
         {
             script.WriteLine("pgYetiRenderCommand -preRenderCache -fileName \"{0}\\fur.%04d.fur\" pgYetiMaya;");
-        }
+        }
+
     }
 }
