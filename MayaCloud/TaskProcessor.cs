@@ -296,8 +296,8 @@ namespace Maya.Cloud
                 return string.Empty;
             }
 
-            var filtered = inputs.Where(x => MayaParameters.SupportedFormats.Contains(Path.GetExtension(x)));
-            if (filtered.Count() < 1)
+            var filtered = inputs.Where(x => MayaParameters.SupportedFormats.Contains(Path.GetExtension(x))).ToList();
+            if (!filtered.Any())
             {
                 Log.Info("No thumbnail compatible images found.");
                 return string.Empty;
