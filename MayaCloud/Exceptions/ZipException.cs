@@ -37,25 +37,21 @@ namespace Maya.Cloud.Exceptions
     {
         public ZipException()
         {
-
         }
 
         public ZipException(string message)
             : base(message)
         {
-
         }
 
         public ZipException(string message, Exception innerException)
             : base(message, innerException)
         {
-
         }
 
         protected ZipException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
         }
     }
 }

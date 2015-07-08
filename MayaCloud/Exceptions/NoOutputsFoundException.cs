@@ -37,19 +37,16 @@ namespace Maya.Cloud.Exceptions
     {
         public NoOutputsFoundException()
         {
-
         }
 
         public NoOutputsFoundException(string message)
             : base(message)
         {
-
         }
 
         protected NoOutputsFoundException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
         }
     }
 }

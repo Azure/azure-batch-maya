@@ -35,22 +35,18 @@ namespace Maya.Cloud.Exceptions
     [Serializable]
     public class InvalidParameterException : Exception
     {
-
         public InvalidParameterException()
         {
-
         }
 
         public InvalidParameterException(string message)
             : base(message)
         {
-
         }
 
         protected InvalidParameterException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-
         }
     }
 }

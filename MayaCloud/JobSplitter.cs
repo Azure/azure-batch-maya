@@ -34,7 +34,7 @@ using Microsoft.Azure.Batch.Apps.Cloud;
 
 namespace Maya.Cloud
 {
-    class MayaJobSplitter : JobSplitter
+    internal class MayaJobSplitter : JobSplitter
     {
         /// <summary>
         /// Splits a job into more granular tasks to be processed in parallel.
@@ -61,9 +61,7 @@ namespace Maya.Cloud
                     Parameters = job.Parameters,
                     RequiredFiles = job.Files,
                 };
-
             }
-
         }
     }
 }

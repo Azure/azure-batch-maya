@@ -42,5 +42,4 @@ namespace Maya.Cloud
             TaskProcessorType = typeof(MayaTaskProcessor)
         };
     }
-
 }

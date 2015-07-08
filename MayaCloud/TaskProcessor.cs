@@ -77,29 +77,47 @@ namespace Maya.Cloud
             var logFile = string.Format("{0}.log", task.TaskId);
 
             var externalProcessPath = ExecutablePath(RenderPath);
-            var externalProcessArgs = string.Format(CultureInfo.InvariantCulture, RenderArgs, taskParameters.Renderer,
-                logFile, LocalStoragePath, LocalStoragePath, task.TaskIndex, inputFile);
+            var externalProcessArgs = string.Format(
+                CultureInfo.InvariantCulture,
+                RenderArgs,
+                taskParameters.Renderer,
+                logFile,
+                LocalStoragePath,
+                LocalStoragePath,
+                task.TaskIndex,
+                inputFile);
 
-            Log.Info("Calling '{0}' with Args '{1}' for Task '{2}' / Job '{3}' .", RenderPath, externalProcessArgs, task.TaskId, task.JobId);
+            Log.Info(
+                "Calling '{0}' with Args '{1}' for Task '{2}' / Job '{3}' .",
+                RenderPath,
+                externalProcessArgs,
+                task.TaskId,
+                task.JobId);
+
             var processResult = ExecuteProcess(externalProcessPath, externalProcessArgs);
 
             if (processResult == null)
             {
                 if (File.Exists(logFile))
+                {
                     return new TaskProcessResult
                     {
                         Success = TaskProcessSuccess.PermanentFailure,
                         ProcessorOutput = File.ReadAllText(logFile)
                     };
-
+                }
                 else
+                {
                     return new TaskProcessResult { Success = TaskProcessSuccess.PermanentFailure };
+                }
             }
 
             var newFiles = GetNewFiles(initialFiles, LocalStoragePath);
             var result = TaskProcessResult.FromExternalProcessResult(processResult, newFiles);
             if (File.Exists(logFile))
+            {
                 result.ProcessorOutput = File.ReadAllText(logFile);
+            }
 
             var thumbnail = CreateThumbnail(task, newFiles);
 
@@ -110,6 +128,7 @@ namespace Maya.Cloud
                     FileName = thumbnail,
                     Kind = TaskOutputFileKind.Preview
                 };
+
                 result.OutputFiles.Add(taskPreview);
             }
 
@@ -161,7 +180,9 @@ namespace Maya.Cloud
         {
             Environment.SetEnvironmentVariable("MAYA_APP_DIR", cwd);
             var sysPath = Environment.GetEnvironmentVariable("PATH");
-            Environment.SetEnvironmentVariable("PATH", string.Format(@"{0};{1}\Maya2015\bin;{1}\mentalrayForMaya2015\bin", sysPath, exe));
+            Environment.SetEnvironmentVariable(
+                "PATH",
+                string.Format(@"{0};{1}\Maya2015\bin;{1}\mentalrayForMaya2015\bin", sysPath, exe));
 
             var project = Path.Combine(cwd, "workspace.mel");
             if (!File.Exists(project))
@@ -213,7 +234,7 @@ namespace Maya.Cloud
                     envFile.Write(formattedEnv);
                 }
             }
-                
+
             return project;
         }
 
@@ -235,7 +256,6 @@ namespace Maya.Cloud
                     scriptFile.Write(formattedScript);
                 }
             }
-
         }
 
         /// <summary>
@@ -350,7 +370,13 @@ namespace Maya.Cloud
                     outputInfo = Environment.NewLine + "stderr: " + ex.StandardError + Environment.NewLine + "stdout: " + ex.StandardOutput;
                 }
 
-                Log.Error("Failed to invoke command {0} {1}: exit code was {2}.  {3}", ex.CommandPath, ex.Arguments, ex.ExitCode, outputInfo);
+                Log.Error(
+                    "Failed to invoke command {0} {1}: exit code was {2}.  {3}",
+                    ex.CommandPath,
+                    ex.Arguments,
+                    ex.ExitCode,
+                    outputInfo);
+
                 return null;
             }
             catch (Exception ex)
@@ -358,7 +384,6 @@ namespace Maya.Cloud
                 Log.Error("Error in task processor: {0}", ex.ToString());
                 return null;
             }
-
         }
     }
 }
