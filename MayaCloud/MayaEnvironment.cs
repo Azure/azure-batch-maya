@@ -59,7 +59,7 @@ namespace Maya.Cloud
             { "MentalRay", version => new MentalRay(version) },
         };
 
-        private readonly IList<string> _pathVariables = new List<string>
+        private readonly string[] _pathVariables =
         {
             @"{0}\bin",
             @"{0}\plug-ins\substance\bin",
