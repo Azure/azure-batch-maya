@@ -14,17 +14,15 @@ namespace Maya.Cloud.Settings
     public class ApplicationSettings
     {
         [DataMember]
-        public String Version { get; set; }
+        public string Version { get; set; }
 
         [DataMember]
-        public String Application { get; set; }
+        public string Application { get; set; }
 
         [DataMember]
-        public String UserDirectory { get; set; }
+        public string UserDirectory { get; set; }
 
         [DataMember]
-        public String Adlm { get; set; }
-
-
+        public string Adlm { get; set; }
     }
 }
