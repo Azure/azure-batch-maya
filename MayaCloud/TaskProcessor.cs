@@ -46,18 +46,12 @@ namespace Maya.Cloud
         /// <summary>
         /// Path to the Maya executable
         /// </summary>
-        private string RenderPath
-        {
-            get { return @"Maya2015\bin\render.exe"; }
-        }
+        private const string RenderPath = @"Maya2015\bin\render.exe";
 
         /// <summary>
         /// Args with which to run Maya
         /// </summary>
-        private string RenderArgs
-        {
-            get { return @"-renderer {0} -log ""{1}"" -proj ""{2}"" -preRender ""dirMap"" -rd ""{3}"" -s {4} -e {4} ""{5}"""; }
-        }
+        private const string RenderArgs = @"-renderer {0} -log ""{1}"" -proj ""{2}"" -preRender ""dirMap"" -rd ""{3}"" -s {4} -e {4} ""{5}""";
 
         /// <summary>
         /// Executes the external process for processing the task
