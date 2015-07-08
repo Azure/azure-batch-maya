@@ -152,7 +152,7 @@ namespace Maya.Cloud
                 }
             }
 
-            if (envSettings.LicenseServer != string.Empty && envSettings.LicensePort != string.Empty)
+            if (!string.IsNullOrEmpty(envSettings.LicenseServer) && !string.IsNullOrEmpty(envSettings.LicensePort))
             {
                 var licenseServer = Path.Combine(_localpath, "LICPATH.LIC");
                 licensePath = _localpath;
