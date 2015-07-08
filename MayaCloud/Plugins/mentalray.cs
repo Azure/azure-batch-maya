@@ -8,9 +8,9 @@ namespace Maya.Cloud.Plugins
     {
         private readonly string _exepath;
 
-        public MentalRay(string AppVersion)
+        public MentalRay(string appVersion)
         {
-            _exepath = string.Format(@"mentalrayForMaya{0}", AppVersion);
+            _exepath = string.Format(@"mentalrayForMaya{0}", appVersion);
         }
 
         public override string ExePath
@@ -67,26 +67,26 @@ namespace Maya.Cloud.Plugins
             }
         }
 
-        public override string SetupPath(string ExeRoot, string Localpath)
+        public override string SetupPath(string exeRoot, string localpath)
         {
-            var FormattedPaths = new List<string>();
+            var formattedPaths = new List<string>();
             foreach (var item in PathVariables)
             {
-                FormattedPaths.Add(string.Format(item, ExeRoot, ExePath));
+                formattedPaths.Add(string.Format(item, exeRoot, ExePath));
             }
 
-            return string.Join(";", FormattedPaths.ToArray());
+            return string.Join(";", formattedPaths.ToArray());
         }
 
-        public override void SetupMayaEnv(IDictionary<string, string> MayaEnv, string ExeRoot, string Localpath)
+        public override void SetupMayaEnv(IDictionary<string, string> mayaEnv, string exeRoot, string localpath)
         {
-            var FormattedMayaEnv = new Dictionary<string, string>();
+            var formattedMayaEnv = new Dictionary<string, string>();
             foreach (var item in MayaEnvVariables)
             {
-                FormattedMayaEnv[item.Key] = string.Format(item.Value, ExeRoot, ExePath);
+                formattedMayaEnv[item.Key] = string.Format(item.Value, exeRoot, ExePath);
             }
 
-            MergeParameters(MayaEnv, FormattedMayaEnv);
+            MergeParameters(mayaEnv, formattedMayaEnv);
         }
     }
 }

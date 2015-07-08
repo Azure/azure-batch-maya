@@ -17,23 +17,23 @@ namespace Maya.Cloud.Plugins
 
         public abstract IList<string> PathVariables { get; }
 
-        public virtual void CreateModFile(string ExeRoot, string Location)
+        public virtual void CreateModFile(string exeRoot, string location)
         {
         }
 
-        public virtual void SetupEnv(IDictionary<string, string> Env, string ExeRoot, string Localpath)
+        public virtual void SetupEnv(IDictionary<string, string> env, string exeRoot, string localpath)
         {
         }
 
-        public virtual void SetupMayaEnv(IDictionary<string, string> MayaEnv, string ExeRoot, string Localpath)
+        public virtual void SetupMayaEnv(IDictionary<string, string> mayaEnv, string exeRoot, string localpath)
         {
         }
 
-        public virtual void PreRenderScript(StreamWriter script, string ExeRoot, string Localpath)
+        public virtual void PreRenderScript(StreamWriter script, string exeRoot, string localPath)
         {
         }
 
-        public virtual string SetupPath(string ExeRoot, string Localpath)
+        public virtual string SetupPath(string exeRoot, string localpath)
         {
             return string.Empty;
         }

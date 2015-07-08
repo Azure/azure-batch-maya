@@ -187,8 +187,8 @@ namespace Maya.Cloud
             private readonly string _jobfile;
             private readonly string _renderer;
             private readonly string _output;
-            private readonly EnvironmentSettings _env_settings;
-            private readonly ApplicationSettings _app_settings;
+            private readonly EnvironmentSettings _envSettings;
+            private readonly ApplicationSettings _appSettings;
 
             public ValidMayaParameters(int start, int end, string jobfile, string engine)
             {
@@ -208,8 +208,8 @@ namespace Maya.Cloud
                 _jobfile = jobfile;
                 _renderer = engine;
                 _output = output;
-                _env_settings = envsettings;
-                _app_settings = appsettings;
+                _envSettings = envsettings;
+                _appSettings = appsettings;
             }
 
             public override bool Valid
@@ -264,7 +264,7 @@ namespace Maya.Cloud
             {
                 get
                 {
-                    return _app_settings;
+                    return _appSettings;
                 }
             }
 
@@ -272,7 +272,7 @@ namespace Maya.Cloud
             {
                 get
                 {
-                    return _env_settings;
+                    return _envSettings;
                 }
             }
 

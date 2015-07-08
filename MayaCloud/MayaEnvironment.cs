@@ -16,21 +16,21 @@ namespace Maya.Cloud
         private string _userdir;
         private IList<MayaPlugin> _plugins;
 
-        public ILog log;
+        public ILog Log;
 
         private string _executable = @"{0}\bin\render.exe";
 
         private string _command =
             @"-renderer {0} -log ""{1}.log"" -proj ""{2}"" -preRender ""renderPrep"" -rd ""{2}"" -im ""{3}"" -s {4} -e {4} ";
 
-        private static IDictionary<string, Func<string, MayaPlugin>> PluginMap = new Dictionary<string, Func<string, MayaPlugin>>
+        private static IDictionary<string, Func<string, MayaPlugin>> _pluginMap = new Dictionary<string, Func<string, MayaPlugin>>
         {
-            { "Arnold", (_version) => new Arnold(_version) },
-            { "Yeti", (_version) => new Yeti(_version) },
-            { "MentalRay", (_version) => new MentalRay(_version) },
+            { "Arnold", (version) => new Arnold(version) },
+            { "Yeti", (version) => new Yeti(version) },
+            { "MentalRay", (version) => new MentalRay(version) },
         };
 
-        private IList<string> PathVariables = new List<string>
+        private IList<string> _pathVariables = new List<string>
         {
             @"{0}\bin;",
             @"{0}\plug-ins\substance\bin;",
@@ -38,9 +38,9 @@ namespace Maya.Cloud
             @"{0}\plug-ins\bifrost\bin;"
         };
 
-        private IDictionary<string, string> EnvVariables = new Dictionary<string, string> { { "MAYA_APP_DIR", @"{0}" } };
+        private IDictionary<string, string> _envVariables = new Dictionary<string, string> { { "MAYA_APP_DIR", @"{0}" } };
 
-        private IDictionary<string, string> MayaEnvVariables = new Dictionary<string, string>
+        private IDictionary<string, string> _mayaEnvVariables = new Dictionary<string, string>
         {
             { "MAYA_MODULE_PATH", @"{0}\{3}\modules;{1}\{4}\modules;{0}\Common Files\Autodesk Shared\Modules\maya\{5}" },
             { "FBX_LOCATION", @"{0}\{3}\plug-ing\fbx\" },
@@ -62,37 +62,37 @@ namespace Maya.Cloud
             { "XBMLANGPATH", @"{0}\{3}\plug-ins\bifrost\" }
         };
 
-        public MayaEnvironment(MayaParameters AppParams, string Localpath, string ExeRoot, int TaskID, int FrameNumber, ILog Log)
+        public MayaEnvironment(MayaParameters appParams, string localpath, string exeRoot, int taskId, int frameNumber, ILog Log)
         {
-            log = Log;
-            _localpath = Localpath;
-            _exeroot = ExeRoot;
-            _exepath = string.Format(@"{0}\{1}", ExeRoot, AppParams.ApplicationSettings.Application);
-            _userdir = Path.Combine(_localpath, AppParams.ApplicationSettings.UserDirectory);
+            this.Log = Log;
+            _localpath = localpath;
+            _exeroot = exeRoot;
+            _exepath = string.Format(@"{0}\{1}", exeRoot, appParams.ApplicationSettings.Application);
+            _userdir = Path.Combine(_localpath, appParams.ApplicationSettings.UserDirectory);
 
             _executable = string.Format(_executable, _exepath);
             _plugins = new List<MayaPlugin>();
 
-            foreach (var plugin in AppParams.EnvironmentSettings.Plugins)
+            foreach (var plugin in appParams.EnvironmentSettings.Plugins)
             {
-                log.Info("Using plugin: {0}", plugin);
-                _plugins.Add(PluginMap[plugin](AppParams.ApplicationSettings.Version));
+                this.Log.Info("Using plugin: {0}", plugin);
+                _plugins.Add(_pluginMap[plugin](appParams.ApplicationSettings.Version));
             }
 
-            log.Info("Env paths: {0}, {1}, {2}, {3}, {4}", _localpath, _exeroot, _exepath, _executable, _plugins.Count);
+            this.Log.Info("Env paths: {0}, {1}, {2}, {3}, {4}", _localpath, _exeroot, _exepath, _executable, _plugins.Count);
 
-            SetLicense(AppParams.EnvironmentSettings, AppParams.ApplicationSettings.Adlm);
-            SetEnvVariables(AppParams.EnvironmentSettings);
-            SetWorkspace(AppParams.ApplicationSettings);
-            CreateMayaEnv(AppParams.ApplicationSettings);
-            CreatePreRenderScript(AppParams.ApplicationSettings, AppParams.EnvironmentSettings);
+            SetLicense(appParams.EnvironmentSettings, appParams.ApplicationSettings.Adlm);
+            SetEnvVariables(appParams.EnvironmentSettings);
+            SetWorkspace(appParams.ApplicationSettings);
+            CreateMayaEnv(appParams.ApplicationSettings);
+            CreatePreRenderScript(appParams.ApplicationSettings, appParams.EnvironmentSettings);
 
             foreach (var plugin in _plugins)
             {
                 _command += plugin.Command;
             }
 
-            _command = string.Format(_command, AppParams.Renderer, TaskID, Localpath, AppParams.OutputName, FrameNumber);
+            _command = string.Format(_command, appParams.Renderer, taskId, localpath, appParams.OutputName, frameNumber);
         }
 
         public string Command
@@ -111,10 +111,10 @@ namespace Maya.Cloud
             }
         }
 
-        private void SetLicense(EnvironmentSettings EnvSettings, string Adlm)
+        private void SetLicense(EnvironmentSettings envSettings, string adlm)
         {
             var license = Path.Combine(_exepath, "bin", "License.env");
-            var license_path = Path.Combine(_exeroot, "Adlm");
+            var licensePath = Path.Combine(_exeroot, "Adlm");
             if (!File.Exists(license))
             {
                 var formattedLicEnv = string.Format(MayaScripts.license_env, _exeroot);
@@ -124,14 +124,14 @@ namespace Maya.Cloud
                 }
             }
 
-            if (EnvSettings.LicenseServer != string.Empty && EnvSettings.LicensePort != string.Empty)
+            if (envSettings.LicenseServer != string.Empty && envSettings.LicensePort != string.Empty)
             {
-                var license_server = Path.Combine(_localpath, "LICPATH.LIC");
-                license_path = _localpath;
-                if (!File.Exists(license_server))
+                var licenseServer = Path.Combine(_localpath, "LICPATH.LIC");
+                licensePath = _localpath;
+                if (!File.Exists(licenseServer))
                 {
-                    var formattedLic = string.Format(MayaScripts.license, EnvSettings.LicenseServer, EnvSettings.LicensePort);
-                    using (var licFile = new StreamWriter(license_server))
+                    var formattedLic = string.Format(MayaScripts.license, envSettings.LicenseServer, envSettings.LicensePort);
+                    using (var licFile = new StreamWriter(licenseServer))
                     {
                         licFile.Write(formattedLic);
                     }
@@ -141,7 +141,7 @@ namespace Maya.Cloud
             var client = Path.Combine(_exeroot, "Adlm", "AdlmThinClientCustomEnv.xml");
             if (!File.Exists(client))
             {
-                var formattedClient = string.Format(MayaScripts.client, _exeroot, Adlm, license_path);
+                var formattedClient = string.Format(MayaScripts.client, _exeroot, adlm, licensePath);
                 using (var clientFile = new StreamWriter(client))
                 {
                     clientFile.Write(formattedClient);
@@ -149,51 +149,51 @@ namespace Maya.Cloud
             }
         }
 
-        private void SetEnvVariables(EnvironmentSettings EnvSettings)
+        private void SetEnvVariables(EnvironmentSettings envSettings)
         {
-            var PathVar = string.Join("", PathVariables.ToArray());
-            PathVar = string.Format(PathVar, _exepath);
-            log.Info("PathVar: {0}", PathVar);
+            var pathVar = string.Join("", _pathVariables.ToArray());
+            pathVar = string.Format(pathVar, _exepath);
+            Log.Info("PathVar: {0}", pathVar);
 
             Dictionary<string, string> formattedVars = new Dictionary<string, string>();
-            foreach (var env in EnvVariables)
+            foreach (var env in _envVariables)
             {
                 formattedVars[env.Key] = string.Format(env.Value, _localpath);
-                log.Info("Formatting env var: {0}, {1}", env.Key, formattedVars[env.Key]);
+                Log.Info("Formatting env var: {0}, {1}", env.Key, formattedVars[env.Key]);
             }
 
             foreach (var plugin in _plugins)
             {
                 plugin.SetupEnv(formattedVars, _exeroot, _localpath);
-                PathVar += plugin.SetupPath(_exeroot, _localpath);
+                pathVar += plugin.SetupPath(_exeroot, _localpath);
             }
 
-            log.Info("Updated PathVar: {0}", PathVar);
-            foreach (var EnvVar in formattedVars)
+            Log.Info("Updated PathVar: {0}", pathVar);
+            foreach (var envVar in formattedVars)
             {
-                log.Info("Checking env var: {0}", EnvVar.Key);
-                var CurrentVar = Environment.GetEnvironmentVariable(EnvVar.Key);
-                if (CurrentVar == null)
+                Log.Info("Checking env var: {0}", envVar.Key);
+                var currentVar = Environment.GetEnvironmentVariable(envVar.Key);
+                if (currentVar == null)
                 {
-                    log.Info("Setting to {0}", EnvVar.Value);
-                    Environment.SetEnvironmentVariable(EnvVar.Key, EnvVar.Value);
+                    Log.Info("Setting to {0}", envVar.Value);
+                    Environment.SetEnvironmentVariable(envVar.Key, envVar.Value);
                 }
             }
 
-            foreach (var CustomEnvVar in EnvSettings.EnvVariables)
+            foreach (var customEnvVar in envSettings.EnvVariables)
             {
-                log.Info("Checking custom env var: {0}", CustomEnvVar.Key);
-                var CurrentVar = Environment.GetEnvironmentVariable(CustomEnvVar.Key);
-                if (CurrentVar == null)
+                Log.Info("Checking custom env var: {0}", customEnvVar.Key);
+                var currentVar = Environment.GetEnvironmentVariable(customEnvVar.Key);
+                if (currentVar == null)
                 {
-                    log.Info("Setting to {0}", FormatCustomEnvVar(CustomEnvVar.Value.ToString()));
-                    Environment.SetEnvironmentVariable(CustomEnvVar.Key, FormatCustomEnvVar(CustomEnvVar.Value.ToString()));
+                    Log.Info("Setting to {0}", FormatCustomEnvVar(customEnvVar.Value.ToString()));
+                    Environment.SetEnvironmentVariable(customEnvVar.Key, FormatCustomEnvVar(customEnvVar.Value.ToString()));
                 }
             }
 
-            var SysPath = Environment.GetEnvironmentVariable("PATH");
-            log.Info("Setting path to {0}", string.Format(@"{0};{1}", SysPath, PathVar));
-            Environment.SetEnvironmentVariable("PATH", string.Format(@"{0};{1}", SysPath, PathVar));
+            var sysPath = Environment.GetEnvironmentVariable("PATH");
+            Log.Info("Setting path to {0}", string.Format(@"{0};{1}", sysPath, pathVar));
+            Environment.SetEnvironmentVariable("PATH", string.Format(@"{0};{1}", sysPath, pathVar));
         }
 
         private void SetWorkspace(ApplicationSettings app)
@@ -229,14 +229,14 @@ namespace Maya.Cloud
                 plugin.CreateModFile(_exeroot, modDir);
             }
 
-            log.Info("Created mod file: {0}", File.Exists(Path.Combine(modDir, "mtoa.mod")));
+            Log.Info("Created mod file: {0}", File.Exists(Path.Combine(modDir, "mtoa.mod")));
         }
 
         private void CreateMayaEnv(ApplicationSettings app)
         {
             Dictionary<string, string> formattedMayaVars = new Dictionary<string, string>();
 
-            foreach (var env in MayaEnvVariables)
+            foreach (var env in _mayaEnvVariables)
             {
                 formattedMayaVars[env.Key] = string.Format(
                     env.Value,
@@ -247,7 +247,7 @@ namespace Maya.Cloud
                     app.UserDirectory,
                     app.Version);
 
-                log.Info("Formatted Maya env var: {0}, {1}", env.Key, formattedMayaVars[env.Key]);
+                Log.Info("Formatted Maya env var: {0}, {1}", env.Key, formattedMayaVars[env.Key]);
             }
 
             foreach (var plugin in _plugins)
@@ -262,7 +262,7 @@ namespace Maya.Cloud
                 {
                     foreach (var variable in formattedMayaVars)
                     {
-                        log.Info("Writing to env file: {0}", string.Format("{0} = {1}", variable.Key, variable.Value));
+                        Log.Info("Writing to env file: {0}", string.Format("{0} = {1}", variable.Key, variable.Value));
                         envFile.WriteLine(string.Format("{0} = {1}", variable.Key, variable.Value));
                     }
                 }
@@ -309,9 +309,9 @@ namespace Maya.Cloud
             }
         }
 
-        private string FormatCustomEnvVar(string EnvVar)
+        private string FormatCustomEnvVar(string envVar)
         {
-            string formattedvar = EnvVar.Replace("<storage>", _localpath);
+            string formattedvar = envVar.Replace("<storage>", _localpath);
             formattedvar = formattedvar.Replace("<maya_root>", _exepath);
             formattedvar = formattedvar.Replace("<user_scripts>", Path.Combine(_userdir, "scripts"));
             formattedvar = formattedvar.Replace("<user_modules>", Path.Combine(_userdir, "modules"));

@@ -7,7 +7,7 @@ namespace Maya.Cloud.Plugins
 {
     internal class Yeti : MayaPlugin
     {
-        public Yeti(string AppVersion)
+        public Yeti(string appVersion)
         {
         }
 
@@ -64,12 +64,12 @@ namespace Maya.Cloud.Plugins
             }
         }
 
-        public override void CreateModFile(string ExeRoot, string Location)
+        public override void CreateModFile(string exeRoot, string location)
         {
-            var mtoaMod = Path.Combine(Location, "mtoa.mod");
+            var mtoaMod = Path.Combine(location, "mtoa.mod");
             if (!File.Exists(mtoaMod))
             {
-                var formattedMod = string.Format("+ mtoa any {0}\\{1}", ExeRoot, ExePath);
+                var formattedMod = string.Format("+ mtoa any {0}\\{1}", exeRoot, ExePath);
                 using (var modFile = new StreamWriter(mtoaMod))
                 {
                     modFile.WriteLine(formattedMod);
@@ -78,40 +78,40 @@ namespace Maya.Cloud.Plugins
             }
         }
 
-        public override string SetupPath(string ExeRoot, string Localpath)
+        public override string SetupPath(string exeRoot, string localpath)
         {
-            var FormattedPaths = new List<string>();
+            var formattedPaths = new List<string>();
             foreach (var item in PathVariables)
             {
-                FormattedPaths.Add(string.Format(item, ExeRoot, ExePath));
+                formattedPaths.Add(string.Format(item, exeRoot, ExePath));
             }
 
-            return string.Join(";", FormattedPaths.ToArray());
+            return string.Join(";", formattedPaths.ToArray());
         }
 
-        public override void SetupEnv(IDictionary<string, string> Env, string ExeRoot, string Localpath)
+        public override void SetupEnv(IDictionary<string, string> env, string exeRoot, string localpath)
         {
-            var FormattedEnv = new Dictionary<string, string>();
+            var formattedEnv = new Dictionary<string, string>();
             foreach (var item in EnvVariables)
             {
-                FormattedEnv[item.Key] = string.Format(item.Value, ExeRoot, ExePath, Localpath);
+                formattedEnv[item.Key] = string.Format(item.Value, exeRoot, ExePath, localpath);
             }
 
-            MergeParameters(Env, FormattedEnv);
+            MergeParameters(env, formattedEnv);
         }
 
-        public override void SetupMayaEnv(IDictionary<string, string> MayaEnv, string ExeRoot, string Localpath)
+        public override void SetupMayaEnv(IDictionary<string, string> mayaEnv, string exeRoot, string localpath)
         {
-            var FormattedMayaEnv = new Dictionary<string, string>();
+            var formattedMayaEnv = new Dictionary<string, string>();
             foreach (var item in MayaEnvVariables)
             {
-                FormattedMayaEnv[item.Key] = string.Format(item.Value, ExeRoot, ExePath, Localpath, Path.GetTempPath());
+                formattedMayaEnv[item.Key] = string.Format(item.Value, exeRoot, ExePath, localpath, Path.GetTempPath());
             }
 
-            MergeParameters(MayaEnv, FormattedMayaEnv);
+            MergeParameters(mayaEnv, formattedMayaEnv);
         }
 
-        public override void PreRenderScript(StreamWriter script, string ExeRoot, string LocalPath)
+        public override void PreRenderScript(StreamWriter script, string exeRoot, string localPath)
         {
             script.WriteLine("pgYetiRenderCommand -preRenderCache -fileName \"{0}\\fur.%04d.fur\" pgYetiMaya;");
         }

@@ -9,9 +9,9 @@ namespace Maya.Cloud.Plugins
     {
         private readonly string _exepath;
 
-        public Arnold(string AppVersion)
+        public Arnold(string appVersion)
         {
-            _exepath = string.Format(@"solidangle\mtoadeploy\{0}", AppVersion);
+            _exepath = string.Format(@"solidangle\mtoadeploy\{0}", appVersion);
         }
 
         public override string ExePath
@@ -67,28 +67,28 @@ namespace Maya.Cloud.Plugins
             }
         }
 
-        public override void CreateModFile(string ExeRoot, string Location)
+        public override void CreateModFile(string exeRoot, string location)
         {
-            var mtoaMod = Path.Combine(Location, "mtoa.mod");
+            var mtoaMod = Path.Combine(location, "mtoa.mod");
             if (!File.Exists(mtoaMod))
             {
                 using (var modFile = new StreamWriter(mtoaMod))
                 {
-                    modFile.WriteLine(string.Format("+ mtoa any {0}\\{1}", ExeRoot, ExePath));
+                    modFile.WriteLine(string.Format("+ mtoa any {0}\\{1}", exeRoot, ExePath));
                     modFile.WriteLine("PATH +:= bin");
                 }
             }
         }
 
-        public override void SetupMayaEnv(IDictionary<string, string> MayaEnv, string ExeRoot, string Localpath)
+        public override void SetupMayaEnv(IDictionary<string, string> mayaEnv, string exeRoot, string localpath)
         {
-            var FormattedMayaEnv = new Dictionary<string, string>();
+            var formattedMayaEnv = new Dictionary<string, string>();
             foreach (var item in MayaEnvVariables)
             {
-                FormattedMayaEnv[item.Key] = string.Format(item.Value, ExeRoot, ExePath, Localpath);
+                formattedMayaEnv[item.Key] = string.Format(item.Value, exeRoot, ExePath, localpath);
             }
 
-            MergeParameters(MayaEnv, FormattedMayaEnv);
+            MergeParameters(mayaEnv, formattedMayaEnv);
         }
     }
 }
