@@ -1,0 +1,33 @@
+python("from shared import AzureBatchSettings");
+
+$batch_path = `getenv "AZBATCH_ICONS"`;
+
+global proc run_guiStarter()
+{
+    python("AzureBatchSettings.starter()");
+}
+
+global proc openMissionControl()
+{
+    python("import webbrowser\nwebbrowser.open(\"https://ms.portal.azure.com\", 2, True)");
+}
+
+
+string $uiButton = `shelfButton
+    -parent "AzureBatch"
+    -enable 1
+    -annotation "Launch Plugin"
+    -label "Launch Plugin"
+    -image1 ($batch_path + "/plugin.png")
+    -style "iconOnly"
+    -command "run_guiStarter()"`;
+
+string $mcButton = `shelfButton
+    -parent "AzureBatch"
+    -enable 1
+    -annotation "Management Portal"
+    -label "Management Portal"
+    -image1 ($batch_path + "/portal.png")
+    -style "iconOnly"
+    -command "openMissionControl()"`;
+;

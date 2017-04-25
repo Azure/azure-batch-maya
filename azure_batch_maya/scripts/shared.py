@@ -1,0 +1,122 @@
+﻿#-------------------------------------------------------------------------
+#
+# Azure Batch Maya Plugin
+#
+# Copyright (c) Microsoft Corporation.  All rights reserved.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the ""Software""), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
+#--------------------------------------------------------------------------
+
+import logging
+import webbrowser
+import os
+import threading
+
+from ui_shared import AzureBatchUI
+from config import AzureBatchConfig
+from submission import AzureBatchSubmission
+from history import AzureBatchHistory
+from assets import AzureBatchAssets
+from pools import AzureBatchPools
+#from environment import AzureBatchEnvironment
+
+from api import MayaAPI as maya
+from azure.batch.models import BatchErrorException
+
+
+ACCEPTED_ERRORS = [
+    "JobNotFound",
+    "PoolNotFound",
+]
+
+
+class AzureBatchSettings(object):
+
+    @staticmethod
+    def starter():
+        """Called by the mel script when the shelf button is clicked."""
+        AzureBatchSettings()
+
+    def __init__(self):
+        """Initialize all the tabs and attempt to authenticate using cached
+        credentials if available.
+        """
+        self._log = logging.getLogger('AzureBatchMaya')
+        try:
+            self.frame = AzureBatchUI(self)
+            self.config = AzureBatchConfig(self.frame, self.start)
+            self.submission = AzureBatchSubmission(self.frame, self.call)
+            self.assets = AzureBatchAssets(self.frame, self.call)
+            self.pools = AzureBatchPools(self.frame, self.call)
+            self.history =  AzureBatchHistory(self.frame, self.call)
+            self.start()
+        except Exception as exp:
+            if (maya.window("AzureBatch", q=1, exists=1)):
+                maya.delete_ui("AzureBatch")
+            message = "Batch Plugin Failed to Start: {0}".format(exp)
+            maya.error(message)
+
+    def start(self):
+        """Start the plugin UI. Depending on whether auto-authentication was
+        successful, the plugin will start by displaying the submission tab.
+        Otherwise the UI will be disables, and the log in tab will be displayed.
+        """
+        try:
+            self._log.debug("Starting AzureBatchShared...")
+            if self.config.auth:
+                self.frame.is_logged_in()
+                self.history.configure(self.config)
+                self.assets.configure(self.config)
+                self.pools.configure(self.config)
+                self.submission.start(self.config, self.assets, self.pools)
+            else:
+                self.frame.is_logged_out()
+        except Exception as exp:
+            self._log.warning(exp)
+            if (maya.window("AzureBatch", q=1, exists=1)):
+                maya.delete_ui("AzureBatch")
+            maya.error("Batch Plugin UI failed to load:\n{0}".format(exp))
+
+    def call(self, command, *args, **kwargs):
+        """Wrap all Batch and Storage API calls in order to handle errors.
+        Some errors we anticipate and raise without a dialog (e.g. PoolNotFound).
+        Others we raise and display to the user.
+        """
+        try:
+            return command(*args, **kwargs)
+        except BatchErrorException as exp:
+            if exp.error.code in ACCEPTED_ERRORS:
+                self._log.info("Call failed: {}".format(exp.error.code))
+                raise
+            else:
+                message = exp.error.message.value
+                if exp.error.values:
+                    message += "Details:\n"
+                    for detail in exp.error.values:
+                        message += "{}: {}".format(details.key, detail.value)
+                maya.error(message)
+                raise
+        except Exception as exp:
+            if (maya.window("AzureBatch", q=1, exists=1)):
+                maya.delete_ui("AzureBatch")
+            maya.error("Error: {0}".format(exp))
+            raise

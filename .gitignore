@@ -7,6 +7,7 @@
 .metadata
 bin/
 tmp/
+env/
 *.tmp
 *.bak
 *.swp
@@ -130,8 +131,7 @@ publish/
 *.publishproj
 
 # NuGet Packages Directory
-## TODO: If you have NuGet Package Restore enabled, uncomment the next line
-#packages/
+packages/
 
 # Windows Azure Build Output
 csx
@@ -218,3 +218,12 @@ packages/Microsoft.Azure.Batch.Apps.Cloud.1.0.1-preview/lib/net40/Microsoft.Azur
 packages/Microsoft.Azure.Batch.Apps.Cloud.1.0.1-preview/lib/net45/Microsoft.Azure.Batch.Apps.Cloud.XML
 *.nupkg
 packages/repositories.config
+src.zip
+
+packages/Newtonsoft.Json.7.0.1/tools/install.ps1
+packages/Newtonsoft.Json.7.0.1/lib/portable-net45+wp80+win8+wpa81+dnxcore50/Newtonsoft.Json.xml
+packages/Newtonsoft.Json.7.0.1/lib/portable-net40+sl5+wp80+win8+wpa81/Newtonsoft.Json.xml
+packages/Newtonsoft.Json.7.0.1/lib/net45/Newtonsoft.Json.xml
+packages/Newtonsoft.Json.7.0.1/lib/net40/Newtonsoft.Json.xml
+packages/Newtonsoft.Json.7.0.1/lib/net35/Newtonsoft.Json.xml
+packages/Newtonsoft.Json.7.0.1/lib/net20/Newtonsoft.Json.xml

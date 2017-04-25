@@ -1,0 +1,3 @@
+azure-batch
+azure-storage
+pathlib
