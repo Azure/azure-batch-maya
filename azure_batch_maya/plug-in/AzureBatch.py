@@ -68,7 +68,7 @@ NAMESPACE_PACAKGES = [
 ]
 
 VERSION = "0.9.0"
-SLA_PREF = "AzureBatch_SLA-3"
+SLA_PREF = "AzureBatch_SLA"
 SHELF_FILE = "shelf_AzureBatch.mel"
 cmd_name = "AzureBatch"
 fMayaExitingCB = None

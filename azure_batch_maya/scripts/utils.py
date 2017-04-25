@@ -73,7 +73,6 @@ def get_remote_file_path(assetpath):
     """
     #TODO: Check the mapping according to pool OS flavor
     def generate_path(os_flavor, fullpath=assetpath):
-        print("generating path: ", fullpath)
         local_sep = os.sep
         remote_sep = '\\' if os_flavor == 'Windows' else '/'
         path = shorten_path(*os.path.split(fullpath))
@@ -81,7 +80,6 @@ def get_remote_file_path(assetpath):
             drive_letter, path = path.split(':', 1)
             path = drive_letter + local_sep + path[1:]
         path = path.replace('/', remote_sep).replace('\\', remote_sep)
-        print("done")
         return path.strip('\\/').replace('\\', '\\\\')
     return generate_path
 
@@ -103,7 +101,7 @@ def get_default_output_path():
 
     :returns: The output directory (str).
     """
-    path = maya.workspace("images", q=True, fre=True)
+    path = maya.workspace(fileRuleEntry="images")
     output_path = maya.workspace(en=path)
     return output_path
 

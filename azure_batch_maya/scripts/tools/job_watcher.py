@@ -159,9 +159,6 @@ def track_job_progress(id, container, dwnld_dir):
 
             time.sleep(10)
             job = batch_client.job.get(id)
-            print(job.job_preparation_task.command_line)
-            for r in job.job_preparation_task.resource_files:
-                print(r.blob_source)
             tasks = [t for t in batch_client.task.list(id)]
 
     except (TypeError, AttributeError) as exp:

@@ -201,14 +201,9 @@ class AzureBatchPools(object):
     def resize_pool(self, new_size):
         """Resize an existing pool."""
         try:
-            self.selected_pool.change_resize_label("Resizing...")
-            maya.refresh()
-
             pool = self.pools[self.selected_pool.index]
             self._log.info("Resizing pool '{}' to {} VMs".format(pool.id, new_size))
             self._call(self.batch.pool.resize, pool.id, {'target_dedicated':int(new_size)})
-            self.selected_pool.change_resize_label("Resize Pool")
-            self.selected_pool.set_target(new_size)
             maya.refresh()
         except Exception as exp:
             self._log.info("Failed to resize pool {0}".format(exp))
