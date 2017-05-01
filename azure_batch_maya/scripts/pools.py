@@ -57,12 +57,17 @@ class AzureBatchPools(object):
         self.pools = []
         self.selected_pool = None
 
-    def configure(self, session):
+    def configure(self, session, env):
         """Populate the Batch client for the current sessions of the pools tab.
         Called on successful authentication.
+        :param session: Authenticated configuration handler.
+        :type session: :class:`.AzureBatchConfig`
+        :param env: Render node environment handler.
+        :type env: :class:`.AzureBatchEnvironment`
         """
         self._session = session
         self.batch = self._session.batch
+        self.environment = env
 
     def list_pools(self, lazy=False):
         """Retrieves the currently running pools. Is called on loading and
@@ -74,7 +79,7 @@ class AzureBatchPools(object):
         self.pools = [p for p in self._call(self.batch.pool.list)]
         self.pools.sort(key=lambda x: x.creation_time, reverse=True)
         self.count = len(self.pools)
-        return [pool.id for pool in self.pools if not pool.id.startswith("Maya_Auto_Pool")]
+        return [pool.id for pool in self.pools if pool.id.startswith("Maya_Pool")]
 
     def get_pools(self):
         """Retrieves the currently running pools and populates the UI
@@ -154,6 +159,20 @@ class AzureBatchPools(object):
             self._log.info("Failed to parse pool target size {0}".format(exp))
             return 0
 
+    def get_pool_os(self, pool_id):
+        """Get the OS flavor of the specified pool ID."""
+        try:
+            pool = self._call(self.batch.pool.get, pool_id)
+            image_publisher = pool.virtual_machine_configuration.image_reference.publisher
+            if 'batch.node.windows' in image_publisher:
+                return 'Windows'
+            elif 'batch.node.linux' in image_publisher:
+                return 'Linux'
+            else:
+                raise ValueError('Selected pool is not using a valid Maya image.')
+        except AttributeError:
+            raise ValueError('Selected pool is not a valid Maya pool.')
+
     def create_pool(self, size, name):
         """Create and deploy a new pool.
         Called on job submission by submission.py.
@@ -161,15 +180,17 @@ class AzureBatchPools(object):
         TODO: Support auto-scale formula.
         TODO: Configure VM size in UI.
         """
+        image = self.environment.get_image()
+        node_agent_sku_id = image.pop('node_sku_id')
         pool_id = 'Maya_Pool_{}'.format(uuid.uuid4())
         pool_config = models.VirtualMachineConfiguration(
-            image_reference=models.ImageReference(**utils.MAYA_IMAGE_WINDOWS),
-            node_agent_sku_id=utils.MAYA_SKU_WINDOWS)
+            image_reference=models.ImageReference(**image),
+            node_agent_sku_id=node_agent_sku_id)
         self._log.info("Creating new pool '{}' with {} VMs.".format(name, size))
         new_pool = models.PoolAddParameter(
             id=pool_id,
             display_name="Maya Pool for {}".format(name),
-            vm_size="Standard_D4_v2",
+            vm_size=self.environment.get_vm_sku(),
             virtual_machine_configuration=pool_config,
             target_dedicated=int(size),
             max_tasks_per_node=1)
@@ -182,11 +203,13 @@ class AzureBatchPools(object):
         Called on job submission by submission.py.
         TODO: Support both Windows and Linux images.
         """
+        image = self.environment.get_image()
+        node_agent_sku_id = image.pop('node_sku_id')
         pool_config = {
-            'imageReference': utils.MAYA_IMAGE_WINDOWS,
-            'nodeAgentSKUId': utils.MAYA_SKU_WINDOWS}
+            'imageReference': image,
+            'nodeAgentSKUId': node_agent_sku_id}
         pool_spec = {
-            'vmSize': 'Standard_D4_v2',
+            'vmSize': self.environment.get_vm_sku(),
             'displayName': "Auto Pool for {}".format(job_name),
             'virtualMachineConfiguration': pool_config,
             'maxTasksPerNode': 1,

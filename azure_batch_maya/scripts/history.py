@@ -101,11 +101,12 @@ class AzureBatchHistory(object):
             self.selected_job.set_thumbnail(thumb, self._get_image_height(thumb))
             maya.refresh()
             return
-        thumb_path = os.path.join(temp_dir, thumbs[-1])
+        thumb_path = os.path.normpath(os.path.join(temp_dir, os.path.basename(thumbs[-1])))
+        self._log.debug("Thumbnail path: {}".format(thumb_path))
         try:
             if not os.path.isfile(thumb_path):
                 self._log.info("Downloading task thumb: {}".format(thumbs[-1]))
-                self.storage.get_blob_to_path(job.id, thumbs[-1], thumb_path)
+                self.storage.get_blob_to_path('fgrp-' + job.id, thumbs[-1], thumb_path)
                 self._log.info("    thumbnail download successful.\n")
         except Exception as exp:
             self._log.warning(exp)
@@ -261,11 +262,12 @@ class AzureBatchHistory(object):
             self.selected_job.set_thumbnail(thumb, 24)
             return
         try:
-            blobs = self.storage.list_blobs(job.id, prefix="framethumb_")
+            blobs = self.storage.list_blobs('fgrp-' + job.id, prefix="thumbs/") # TODO
         except Exception as exp:
             self._log.warning(exp)
             blobs = []
         thumbs = sorted([b.name for b in blobs])
+        print(thumbs)
         self._download_thumbnail(job, thumbs)
 
     def cancel_job(self):

@@ -63,7 +63,7 @@ class AzureBatchSubmission(object):
         self.frame = frame
         self.asset_manager = None
         self.pool_manager = None
-        #self.env_manager = None
+        self.env_manager = None
         self.batch = None
 
         callback.after_new(self.ui.refresh)
@@ -160,6 +160,21 @@ class AzureBatchSubmission(object):
         #return [p for p in loaded_plugins \
         #    if p in supported_plugins and p not in ignored_plugins]
 
+    def _get_os_flavor(self):
+        """Figure out whether the selected pool, or potential pool will use
+        either Windows or Linux.
+        """
+        pool_spec = self.ui.get_pool()
+        if pool_spec.get(1):
+            return self.env_manager.os_flavor()
+        if pool_spec.get(2):
+            pool_id = str(pool_spec[2])
+            if pool_id == "None":
+                raise PoolException("No pool selected.")
+            return self.pool_manager.get_pool_os(pool_id)
+        if pool_spec.get(3):
+            return self.env_manager.os_flavor()
+
     def _configure_pool(self, job_name):
         """Based on the selected pool option for the job, either deploy a new
         pool, create an auto-pool specification, or simply return the ID of the
@@ -177,12 +192,12 @@ class AzureBatchSubmission(object):
             pool_id = str(pool_spec[2])
             if pool_id == "None":
                 raise PoolException("No pool selected.")
-            return {"poolId" : pool_id}
+            return self.env_manager.get_pool_os(pool_id), {"poolId" : pool_id}
         if pool_spec.get(3):
             self._log.info("Creating new pool.")
             return self.pool_manager.create_pool(int(pool_spec[3]), job_name)
 
-    def start(self, session, assets, pools): #, env):
+    def start(self, session, assets, pools, env):
         """Load submission tab after plug-in has been authenticated.
 
         :param session: Authenticated configuration handler.
@@ -191,8 +206,6 @@ class AzureBatchSubmission(object):
         :type assets: :class:`.AzureBatchAssets`
         :param pools: Pool handler.
         :type pools: :class:`.AzureBatchPools`
-
-        TODO:
         :param env: Render node environment handler.
         :type env: :class:`.AzureBatchEnvironment`
         """
@@ -201,7 +214,7 @@ class AzureBatchSubmission(object):
         self.storage = session.storage
         self.asset_manager = assets
         self.pool_manager = pools
-        #self.env_manager = env
+        self.env_manager = env
         self.data_path = session.path
         if self.renderer:
             self.renderer.delete()
@@ -236,7 +249,7 @@ class AzureBatchSubmission(object):
         :param download_dir: If launching the job watcher, a download directory
          must be specified.
         """
-        POOL_OS = 'Windows'  # TODO: Need to configure the VM environment.
+        pool_os = self._get_os_flavor()
         job_id = "maya-render-{}".format(uuid.uuid4())
         self.renderer.disable(False)
         progress = utils.ProgressBar(self._log)
@@ -246,7 +259,7 @@ class AzureBatchSubmission(object):
         batch_parameters['displayName'] = self.renderer.get_title()
         batch_parameters['metadata'] =  [{"name": "JobType", "value": "Maya"}]
         template_file = os.path.join(
-            os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-{}.json'.format(POOL_OS))
+            os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-{}.json'.format(pool_os))
         batch_parameters['applicationTemplateInfo'] = {'filePath': template_file}
         application_params = {}
         batch_parameters['applicationTemplateInfo']['parameters'] = application_params
@@ -257,13 +270,12 @@ class AzureBatchSubmission(object):
 
             self.ui.submit_status("Checking assets...")
             scene_file, renderer_data = self.renderer.get_jobdata()
-            print("a")
-            application_params['sceneFile'] = utils.format_scene_path(scene_file, POOL_OS)
-            print("b")
-            file_group, map_url, progress = self.asset_manager.upload(
-                renderer_data, progress, job_id, plugins, 'Windows')
+            application_params['sceneFile'] = utils.format_scene_path(scene_file, pool_os)
+            file_group, map_url, thumb_url, progress = self.asset_manager.upload(
+                renderer_data, progress, job_id, plugins, pool_os)
             application_params['projectData'] = file_group
             application_params['assetScript'] = map_url
+            application_params['thumbScript'] = thumb_url
             self.frame.select_tab(2)
 
             self.ui.submit_status("Configuring job...")
@@ -289,8 +301,7 @@ class AzureBatchSubmission(object):
         except CancellationException:
             maya.info("Job submission cancelled")
         except Exception as exp:
-            print(exp)
-            maya.error(str(exp))
+            self._log.error(exp)
         finally:
             progress.end()
             self.frame.select_tab(2)

@@ -55,6 +55,9 @@
     <Compile Include="azure_batch_maya\scripts\shared.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="azure_batch_maya\scripts\tools\generate_thumbnails.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="azure_batch_maya\scripts\tools\install_pip.py">
       <SubType>Code</SubType>
     </Compile>
@@ -134,6 +137,9 @@
     <Content Include="azure_batch_maya\mel\create_shelf.mel" />
     <Content Include="azure_batch_maya\plug-in\SLA.html" />
     <Content Include="azure_batch_maya\scripts\tools\ignored_plugins.json">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="azure_batch_maya\scripts\tools\skus.json">
       <SubType>Code</SubType>
     </Content>
     <Content Include="azure_batch_maya\scripts\tools\supported_plugins.json">

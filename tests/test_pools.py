@@ -42,136 +42,114 @@ try:
 except ImportError:
     import mock
 
-from ui_pools import PoolsUI, BatchAppsPoolInfo
-from pools import BatchAppsPools
-from batchapps import PoolManager, Configuration, Credentials
-from batchapps.pool import Pool, PoolSpecifier
+from ui_pools import PoolsUI, AzureBatchPoolInfo
+from pools import AzureBatchPools
+from azure import batch_extensions as batch
+from azure.batch_extensions import models
 
-class TestBatchAppsPools(unittest.TestCase):
+
+class AzureTestBatchPools(unittest.TestCase):
 
     def setUp(self):
-        self.mock_self = mock.create_autospec(BatchAppsPools)
+        self.mock_self = mock.create_autospec(AzureBatchPools)
         self.mock_self._log = logging.getLogger("TestPools")
-
-        return super(TestBatchAppsPools, self).setUp()
+        return super(AzureTestBatchPools, self).setUp()
 
     @mock.patch("pools.PoolsUI")
-    def test_create_batchappspools(self, mock_ui):
-
-        pools = BatchAppsPools("frame", "call")
+    def test_pools_initialize(self, mock_ui):
+        pools = AzureBatchPools("frame", "call")
         mock_ui.assert_called_with(pools, "frame")
 
-    @mock.patch("pools.PoolManager")
-    def test_configure(self, mock_mgr):
+    def test_pools_configure(self):
+        session = mock.Mock(batch="batch")
+        AzureBatchPools.configure(self.mock_self, session)
+        self.assertEqual("batch", self.mock_self.batch)
 
-        session = mock.Mock(credentials="creds", config="conf")
-        BatchAppsPools.configure(self.mock_self, session)
-
-        mock_mgr.assert_called_with("creds", "conf")
-        self.assertEqual(session, self.mock_self._session)
-
-    def test_list_pools(self):
-
-        mgr = mock.create_autospec(PoolManager)
-
-        pool1 = mock.create_autospec(Pool)
-        pool1.auto = False
+    def test_pools_list_pools(self):
+        self.mock_self.batch = mock.create_autospec(batch.BatchExtensionsClient)
+        self.mock_self.batch.pool = mock.create_autospec(batch.operations.ExtendedPoolOperations)
+        pool1 = mock.create_autospec(models.CloudPool)
         pool1.id = "12345"
-
-        pool2 = mock.create_autospec(Pool)
+        pool1.creation_time = datetime.datetime.now()
+        pool2 = mock.create_autospec(models.CloudPool)
         pool2.id = "67890"
-        pool2.auto = True
+        pool2.creation_time = datetime.datetime.now()
+        self.mock_self._call = lambda x: [pool1, pool2]
 
-        mgr.get_pools.return_value = [pool1, pool2]
-        mgr.__len__.return_value = 1
-        self.mock_self.manager = mgr
-
-        def call(func):
-            self.assertEqual(func, mgr.get_pools)
-            return func()
-        
-        self.mock_self._call = call
-        pool_list = BatchAppsPools.list_pools(self.mock_self)
-        self.assertEqual(pool_list, ["12345"])
+        ids = AzureBatchPools.list_pools(self.mock_self)
+        self.assertEqual(ids, ['67890', '12345'])
         self.assertEqual(len(self.mock_self.pools), 2)
 
-    def test_get_pools(self):
-
+    def test_pools_get_pools(self):
         def list_pools():
-            self.mock_self.pools = [mock.Mock(id="1234")]
-            self.mock_self.count = 1
-
+            self.mock_self.pools = [mock.Mock(id="1234", display_name="name")]
         self.mock_self.list_pools = list_pools
         self.mock_self.ui = mock.create_autospec(PoolsUI)
         self.mock_self.ui.create_pool_entry.return_value = "pool_entry"
 
-        displayed = BatchAppsPools.get_pools(self.mock_self)
+        displayed = AzureBatchPools.get_pools(self.mock_self)
         self.assertEqual(displayed, ["pool_entry"])
         self.assertEqual(len(self.mock_self.pools), 1)
+        self.mock_self.ui.create_pool_entry.assert_called_with('name', 0)
+
+    def test_pools_pool_selected(self):
+        pool_ui = mock.create_autospec(AzureBatchPoolInfo)
+        pool_ui.index = 0
+        self.mock_self.selected_pool = None
+
+        AzureBatchPools.pool_selected(self.mock_self, None)
+        self.assertFalse(self.mock_self.update_pool.call_count)
+        AzureBatchPools.pool_selected(self.mock_self, pool_ui)
+        self.mock_self.update_pool.assert_called_with(0)
+        AzureBatchPools.pool_selected(self.mock_self, pool_ui)
+        pool_ui.collapse.assert_called_with()
+
 
     @mock.patch("pools.maya")
-    def test_update_pool(self, mock_maya):
-
-        pool = mock.create_autospec(Pool)
-        pool.current_size = "3"
-        pool.target_size = "5"
-        pool.auto = "False"
-        pool.state = "500"
-        pool.id = "12345"
-        pool.max_tasks = "2"
-        pool.allocation_state = "allocating"
-        pool.created = "Now"
+    def test_pools_update_pool(self, mock_maya):
+        self.mock_self.batch = mock.create_autospec(batch.BatchExtensionsClient)
+        self.mock_self.batch.pool = mock.Mock(get="get")
+        self.mock_self.batch.compute_node = mock.Mock(list="list")
+        pool = mock.create_autospec(models.CloudPool)
+        pool.display_name = "name"
+        pool.current_dedicated = 3
+        pool.target_dedicated = 5
+        pool.state = mock.Mock(value="resizing")
+        pool.id = "Maya_Pool_12345"
+        pool.max_tasks_per_node = 1
+        pool.allocation_state = mock.Mock(value="allocating")
+        pool.creation_time = datetime.datetime.now()
         self.mock_self.pools = [pool]
-
-        pool_ui = mock.create_autospec(BatchAppsPoolInfo)
+        pool_ui = mock.create_autospec(AzureBatchPoolInfo)
         pool_ui.index = 0
 
-        def call(func):
-            self.assertTrue(hasattr(func, '__call__'))
-            return func()
-
+        def call(func, pool_id):
+            self.assertEqual(pool_id, 'Maya_Pool_12345')
+            if func == "get":
+                return pool
+            else:
+                return []
         self.mock_self._call = call
         self.mock_self.selected_pool = pool_ui
         self.mock_self.ui = mock.create_autospec(PoolsUI)
 
-        BatchAppsPools.update_pool(self.mock_self, 0)
-        pool.update.assert_called_with()
+        AzureBatchPools.update_pool(self.mock_self, 0)
         self.assertEqual(self.mock_self.ui.refresh.call_count, 0)
-
-        BatchAppsPools.update_pool(self.mock_self, 1)
+        self.assertEqual(mock_maya.refresh.call_count, 2)
+        AzureBatchPools.update_pool(self.mock_self, 1)
         self.assertEqual(self.mock_self.ui.refresh.call_count, 1)
-
         mock_maya.refresh.side_effect = ValueError("Error")
-        BatchAppsPools.update_pool(self.mock_self, 0)
+        AzureBatchPools.update_pool(self.mock_self, 0)
         self.assertEqual(self.mock_self.ui.refresh.call_count, 2)
 
-    def test_pool_selected(self):
-
-        pool_ui = mock.create_autospec(BatchAppsPoolInfo)
-        pool_ui.index = 0
-
-        self.mock_self.selected_pool = None
-
-        BatchAppsPools.pool_selected(self.mock_self, None)
-        self.assertFalse(self.mock_self.update_pool.call_count)
-
-        BatchAppsPools.pool_selected(self.mock_self, pool_ui)
-        self.mock_self.update_pool.assert_called_with(0)
-
-        BatchAppsPools.pool_selected(self.mock_self, pool_ui)
-        pool_ui.collapse.assert_called_with()
-
-    def test_auto_pool(self):
-
-        self.mock_self.pools = [mock.Mock(auto=True), mock.Mock(auto=False)]
+    def test_pools_auto_pool(self):
+        self.mock_self.pools = [mock.Mock(id='Maya_Pool_123'), mock.Mock(id='Maya_Auto_Pool_123')]
         self.mock_self.selected_pool = mock.Mock(index=0)
-        self.assertTrue(BatchAppsPools.is_auto_pool(self.mock_self))
-
+        self.assertTrue(AzureBatchPools.is_auto_pool(self.mock_self))
         self.mock_self.selected_pool = mock.Mock(index=1)
-        self.assertFalse(BatchAppsPools.is_auto_pool(self.mock_self))
-
+        self.assertFalse(AzureBatchPools.is_auto_pool(self.mock_self))
         self.mock_self.selected_pool = mock.Mock(index=2)
-        self.assertFalse(BatchAppsPools.is_auto_pool(self.mock_self))
+        self.assertFalse(AzureBatchPools.is_auto_pool(self.mock_self))
 
     def test_get_pool_size(self):
 

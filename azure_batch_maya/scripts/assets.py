@@ -310,8 +310,11 @@ class AzureBatchAssets(object):
                 job_assets = [Asset(j, None, self.batch, self._log) for j in job_set]
                 map_file = self._create_path_map(load_plugins, os_flavor)
                 path_map = Asset(map_file, [], self.batch, self._log)
+                thumb_file = os.path.join(os.environ['AZUREBATCh_TOOLS'], 'generate_thumbnails.py')
+                thumb_script = Asset(thumb_file, [], self.batch, self._log)
                 asset_refs.extend(job_assets)
                 asset_refs.append(path_map)
+                asset_refs.append(thumb_script)
 
             progress_bar.is_cancelled()
             progress_bar.status('Uploading files...')
@@ -330,7 +333,10 @@ class AzureBatchAssets(object):
                 asset_map = os.path.basename(path_map.path)
                 map_url = self.batch.file.generate_sas_url(
                     asset_project, asset_map, remote_path=path_map.storage_path)
-            return asset_project, map_url, progress_bar
+                thumb_path = os.path.basename(thumb_script.path)
+                thumb_url = self.batch.file.generate_sas_url(
+                    asset_project, thumb_path, remote_path=thumb_script.storage_path)
+            return asset_project, map_url, thumb_url, progress_bar
 
         except CancellationException as exp:
             if job_set:

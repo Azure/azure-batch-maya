@@ -37,12 +37,6 @@ from exception import CancellationException, FileUploadException
 
 
 MAX_LOCAL_PATH_LENGTH = 150
-MAYA_SKU_WINDOWS = 'batch.node.windows amd64'
-MAYA_IMAGE_WINDOWS = {
-    'publisher': 'batch',
-    'offer': 'mayaimage-preview-preview',
-    'sku': 'mayaimage-preview',
-    'version': 'latest'}
 
 
 def shorten_path(path, filename):

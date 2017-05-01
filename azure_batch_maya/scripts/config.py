@@ -209,3 +209,45 @@ class AzureBatchConfig(object):
         self._auth = self._auto_authentication()
         self.ui.set_authenticate(self._auth)
         self.session()
+
+    def get_cached_vm_sku(self):
+        """Attempt to retrieve a selected VM SKU from a previous session."""
+        try:
+            return self._cfg.get("AzureBatch", "vm_sku")
+        except ConfigParser.NoOptionError:
+            return None
+
+    def store_vm_sku(self, sku):
+        """Cache selected VM SKU for later sessions."""
+        self._cfg.set("AzureBatch", "vm_sku", sku)
+        config_file = os.path.join(self._data_dir, self._ini_file)
+        with open(config_file, 'w') as handle:
+            self._cfg.write(handle)
+
+    def get_cached_image(self):
+        """Attempt to retrieve a selected VM SKU from a previous session."""
+        try:
+            return self._cfg.get("AzureBatch", "image")
+        except ConfigParser.NoOptionError:
+            return None
+
+    def store_image(self, image):
+        """Cache selected VM SKU for later sessions."""
+        self._cfg.set("AzureBatch", "image", image)
+        config_file = os.path.join(self._data_dir, self._ini_file)
+        with open(config_file, 'w') as handle:
+            self._cfg.write(handle)
+
+    def get_cached_autoscale_formula(self):
+        """Attempt to retrieve an autoscale forumla from a previous session."""
+        try:
+            return self._cfg.get("AzureBatch", "autoscale")
+        except ConfigParser.NoOptionError:
+            return None
+
+    def store_autoscale_formula(self, formula):
+        """Cache selected VM SKU for later sessions."""
+        self._cfg.set("AzureBatch", "autoscale", formula)
+        config_file = os.path.join(self._data_dir, self._ini_file)
+        with open(config_file, 'w') as handle:
+            self._cfg.write(handle)

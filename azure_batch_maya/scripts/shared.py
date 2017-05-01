@@ -37,7 +37,7 @@ from submission import AzureBatchSubmission
 from history import AzureBatchHistory
 from assets import AzureBatchAssets
 from pools import AzureBatchPools
-#from environment import AzureBatchEnvironment
+from environment import AzureBatchEnvironment
 
 from api import MayaAPI as maya
 from azure.batch.models import BatchErrorException
@@ -68,6 +68,7 @@ class AzureBatchSettings(object):
             self.assets = AzureBatchAssets(self.frame, self.call)
             self.pools = AzureBatchPools(self.frame, self.call)
             self.history =  AzureBatchHistory(self.frame, self.call)
+            self.env =  AzureBatchEnvironment(self.frame, self.call)
             self.start()
         except Exception as exp:
             if (maya.window("AzureBatch", q=1, exists=1)):
@@ -84,10 +85,11 @@ class AzureBatchSettings(object):
             self._log.debug("Starting AzureBatchShared...")
             if self.config.auth:
                 self.frame.is_logged_in()
+                self.env.configure(self.config)
                 self.history.configure(self.config)
                 self.assets.configure(self.config)
-                self.pools.configure(self.config)
-                self.submission.start(self.config, self.assets, self.pools)
+                self.pools.configure(self.config, self.env)
+                self.submission.start(self.config, self.assets, self.pools, self.env)
             else:
                 self.frame.is_logged_out()
         except Exception as exp:
@@ -112,7 +114,7 @@ class AzureBatchSettings(object):
                 if exp.error.values:
                     message += "Details:\n"
                     for detail in exp.error.values:
-                        message += "{}: {}".format(details.key, detail.value)
+                        message += "{}: {}".format(detail.key, detail.value)
                 maya.error(message)
                 raise
         except Exception as exp:
