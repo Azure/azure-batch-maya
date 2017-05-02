@@ -60,10 +60,10 @@ REQUIREMENTS = [
 
 NAMESPACE_PACAKGES = [
     #"azure-mgmt-nspkg==2.0.0",
-    "azure-mgmt-batch==3.0.0",
+    "azure-mgmt-batch==4.0.0",
     "azure-mgmt-storage==1.0.0rc1",
     "azure-common==1.1.5",
-    "azure-batch==2.0.0",
+    "azure-batch==3.0.0",
     "azure-storage==0.32.0",
 ]
 

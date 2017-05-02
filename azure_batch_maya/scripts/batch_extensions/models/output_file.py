@@ -26,7 +26,7 @@ class OutputFile(Model):
     :type file_pattern: str
     :param destination: The destination for the output file(s).
     :type destination: :class:`ExtendedOutputFileDestination
-     <azure.batch.models.ExtendedOutputFileDestination>`
+     <azure.batch_extensions.models.ExtendedOutputFileDestination>`
     :param upload_options: Additional options for the upload operation,
      including under what conditions to perform the upload.
     :type upload_options: :class:`OutputFileUploadOptions

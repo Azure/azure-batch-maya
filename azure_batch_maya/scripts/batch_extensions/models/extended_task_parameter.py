@@ -88,8 +88,10 @@ class ExtendedTaskParameter(TaskAddParameter):
      the job, or check the status of the job or of other tasks under the job.
     :type authentication_token_settings: :class:`AuthenticationTokenSettings
      <azure.batch.models.AuthenticationTokenSettings>`
-    :param output_files: A list of output file references to up persisted once
-     the task has completed.
+    :param output_files: A list of files that the Batch service will upload
+     from the compute node after running the command line. For multi-instance
+     tasks, the files will only be uploaded from the compute node on which the
+     primary task is executed.
     :type output_files: list of :class:`OutputFile
      <azure.batch_extensions.models.OutputFile>`
     :param package_references: A list of packages to be installed on the compute
@@ -110,6 +112,7 @@ class ExtendedTaskParameter(TaskAddParameter):
         'command_line': {'key': 'commandLine', 'type': 'str'},
         'exit_conditions': {'key': 'exitConditions', 'type': 'ExitConditions'},
         'resource_files': {'key': 'resourceFiles', 'type': '[ExtendedResourceFile]'},
+        'output_files': {'key': 'outputFiles', 'type': '[OutputFile]'},
         'environment_settings': {'key': 'environmentSettings', 'type': '[EnvironmentSetting]'},
         'affinity_info': {'key': 'affinityInfo', 'type': 'AffinityInformation'},
         'constraints': {'key': 'constraints', 'type': 'TaskConstraints'},
@@ -118,20 +121,19 @@ class ExtendedTaskParameter(TaskAddParameter):
         'depends_on': {'key': 'dependsOn', 'type': 'TaskDependencies'},
         'application_package_references': {'key': 'applicationPackageReferences', 'type': '[ApplicationPackageReference]'},
         'authentication_token_settings': {'key': 'authenticationTokenSettings', 'type': 'AuthenticationTokenSettings'},
-        'output_files': {'key': 'outputFiles', 'type': '[OutputFile]'},
         'package_references': {'key': 'packageReferences', 'type': '[PackageReferenceBase]'}
     }
 
-    def __init__(self, id, command_line, display_name=None, exit_conditions=None, resource_files=None, environment_settings=None,
-                 affinity_info=None, constraints=None, user_identity=None, multi_instance_settings=None, depends_on=None,
-                 application_package_references=None, authentication_token_settings=None, output_files=None,
-                 package_references=None):
+    def __init__(self, id, command_line, display_name=None, exit_conditions=None, resource_files=None, output_files=None,
+                 environment_settings=None, affinity_info=None, constraints=None, user_identity=None, multi_instance_settings=None,
+                 depends_on=None, application_package_references=None, authentication_token_settings=None, package_references=None):
         super(ExtendedTaskParameter, self).__init__(
             id=id,
             display_name=display_name,
             command_line=command_line,
             exit_conditions=exit_conditions,
             resource_files=resource_files,
+            output_files = output_files,
             environment_settings=environment_settings,
             affinity_info=affinity_info,
             constraints=constraints,
@@ -140,5 +142,4 @@ class ExtendedTaskParameter(TaskAddParameter):
             depends_on=depends_on,
             application_package_references=application_package_references,
             authentication_token_settings=authentication_token_settings)
-        self.output_files = output_files
         self.package_references = package_references

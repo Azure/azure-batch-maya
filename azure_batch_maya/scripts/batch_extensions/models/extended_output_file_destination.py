@@ -15,7 +15,7 @@ class ExtendedOutputFileDestination(Model):
     :param container: A location in Azure blob storage to which files are
      uploaded. This cannot be combined with auto_storage.
     :type container: :class:`OutputFileBlobContainerDestination
-     <azure.batch_extensions.models.OutputFileBlobContainerDestination>`
+     <azure.batch.models.OutputFileBlobContainerDestination>`
     :param auto_storage: An auto-storage file group reference. This cannot be
      combined with container.
     :type auto_storage: :class:`OutputFileAutoStorageDestination
