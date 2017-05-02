@@ -41,13 +41,13 @@ MAYA_IMAGES = {
         {
             'node_sku_id': 'batch.node.windows amd64',
             'publisher': 'batch',
-            'offer': 'mayaimage-preview-preview',
-            'sku': 'mayaimage-preview',
+            'offer': 'autodesk-maya-arnold-win2016-preview',
+            'sku': 'maya2017',
             'version': 'latest'
         }
 }
 LICENSES = [
-    {'label': 'MayaIO', 'id': 'maya', 'plugin': None },
+    {'label': 'Maya', 'id': 'maya', 'plugin': None },
     {'label': 'Arnold', 'id': 'arnold', 'plugin': 'mtoa' }
 ]
 #
@@ -117,7 +117,7 @@ class AzureBatchEnvironment(object):
 
     def get_image(self):
         selected_image = self.ui.get_image()
-        return MAYA_IMAGES[selected_image]
+        return dict(MAYA_IMAGES[selected_image])
 
     def get_vm_sku(self):
         return self.ui.get_sku()
