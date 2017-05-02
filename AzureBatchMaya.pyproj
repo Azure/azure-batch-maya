@@ -36,6 +36,49 @@
     <Compile Include="azure_batch_maya\scripts\assets.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\batch_auth.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\batch_extensions_client.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\application_template.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\application_template_info.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\application_template_parameter.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\apt_package_reference.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\auto_pool_specification.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\output_file.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\output_file_auto_storage_destination.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\chocolatey_package_reference.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\constants.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\extended_job_parameter.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\extended_pool_parameter.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\extended_pool_specification.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\extended_resource_file.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\extended_task_parameter.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\file_collection_task_factory.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\file_source.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\job_manager_task.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\job_preparation_task.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\job_release_task.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\merge_task.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\extended_output_file_destination.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\package_reference_base.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\parameter_set.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\parametric_sweep_task_factory.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\repeat_task.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\start_task.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\task_collection_task_factory.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\task_factory_base.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\yum_package_reference.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\models\__init__.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\operations\file_operations.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\operations\job_operations.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\operations\pool_operations.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\operations\__init__.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\version.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\_client_factory.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\_file_utils.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\_job_utils.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\_pool_utils.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\_template_utils.py" />
+    <Compile Include="azure_batch_maya\scripts\batch_extensions\__init__.py" />
     <Compile Include="azure_batch_maya\scripts\config.py">
       <SubType>Code</SubType>
     </Compile>
@@ -119,6 +162,9 @@
     <Folder Include="azure_batch_maya\" />
     <Folder Include="azure_batch_maya\scripts\" />
     <Folder Include="azure_batch_maya\plug-in\" />
+    <Folder Include="azure_batch_maya\scripts\batch_extensions\" />
+    <Folder Include="azure_batch_maya\scripts\batch_extensions\models\" />
+    <Folder Include="azure_batch_maya\scripts\batch_extensions\operations\" />
     <Folder Include="azure_batch_maya\scripts\tools\" />
     <Folder Include="azure_batch_maya\scripts\ui\" />
     <Folder Include="azure_batch_maya\templates\" />
