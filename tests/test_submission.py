@@ -45,11 +45,11 @@ from ui_shared import AzureBatchUI
 from submission import AzureBatchSubmission, AzureBatchRenderJob
 from assets import AzureBatchAssets
 from pools import AzureBatchPools
-#from environment import AzureBatchEnvironment
+from environment import AzureBatchEnvironment
 
-from azure.batch_extensions import BatchExtensionsClient
-from azure.batch_extensions import operations
-from azure.batch_extensions import models
+from batch_extensions import BatchExtensionsClient
+from batch_extensions import operations
+from batch_extensions import models
 
 def print_status(status):
     print(status)

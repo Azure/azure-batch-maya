@@ -35,8 +35,8 @@ from ui_config import ConfigUI
 from api import MayaAPI as maya
 
 import azure.storage.blob as storage
-import azure.batch_extensions as batch
-from azure.batch_extensions.batch_auth import SharedKeyCredentials
+import batch_extensions as batch
+from batch_extensions.batch_auth import SharedKeyCredentials
 
 
 LOG_LEVELS = {
@@ -225,14 +225,14 @@ class AzureBatchConfig(object):
             self._cfg.write(handle)
 
     def get_cached_image(self):
-        """Attempt to retrieve a selected VM SKU from a previous session."""
+        """Attempt to retrieve a selected image a previous session."""
         try:
             return self._cfg.get("AzureBatch", "image")
         except ConfigParser.NoOptionError:
             return None
 
     def store_image(self, image):
-        """Cache selected VM SKU for later sessions."""
+        """Cache selected image for later sessions."""
         self._cfg.set("AzureBatch", "image", image)
         config_file = os.path.join(self._data_dir, self._ini_file)
         with open(config_file, 'w') as handle:

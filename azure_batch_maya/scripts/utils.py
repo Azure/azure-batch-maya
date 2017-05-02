@@ -32,7 +32,7 @@ import logging
 import platform
 import pathlib
 
-from azure.batch_extensions import _file_utils as file_utils
+from batch_extensions import _file_utils as file_utils
 from exception import CancellationException, FileUploadException
 
 
@@ -297,7 +297,10 @@ class Dropdown(object):
         """Select a specific option in the menu.
         :param int value: The index of the option to select.
         """
-        maya.menu(self.menu, edit=True, select=int(value))
+        try:
+            maya.menu(self.menu, edit=True, select=int(value))
+        except ValueError:
+            maya.menu(self.menu, edit=True, value=value)
 
 
 class ProgressBar(object):

@@ -116,8 +116,8 @@
               "fileGroup": "[parameters('outputs')]"
             }
           },
-          "uploadDetails": {
-            "taskStatus": "TaskSuccess"
+          "uploadOptions": {
+            "uploadCondition": "taskSuccess"
           }
         },
         {
@@ -128,8 +128,8 @@
               "path": "thumbs"
             }
           },
-          "uploadDetails": {
-            "taskStatus": "TaskSuccess"
+          "uploadOptions": {
+            "uploadCondition": "taskSuccess"
           }
         },
         {
@@ -140,8 +140,8 @@
               "path": "logs/frame_{0}.log"
             }
           },
-          "uploadDetails": {
-            "taskStatus": "TaskCompletion"
+          "uploadOptions": {
+            "uploadCondition": "taskCompletion"
           }
         },
         {
@@ -152,8 +152,8 @@
               "path": "logs/frame_{0}_error.log"
             }
           },
-          "uploadDetails": {
-            "taskStatus": "TaskCompletion"
+          "uploadOptions": {
+            "uploadCondition": "taskCompletion"
           }
         }
       ]

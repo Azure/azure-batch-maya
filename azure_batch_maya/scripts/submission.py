@@ -249,21 +249,22 @@ class AzureBatchSubmission(object):
         :param download_dir: If launching the job watcher, a download directory
          must be specified.
         """
-        pool_os = self._get_os_flavor()
-        job_id = "maya-render-{}".format(uuid.uuid4())
-        self.renderer.disable(False)
-        progress = utils.ProgressBar(self._log)
-        maya.refresh()
-
-        batch_parameters = {'id': job_id}
-        batch_parameters['displayName'] = self.renderer.get_title()
-        batch_parameters['metadata'] =  [{"name": "JobType", "value": "Maya"}]
-        template_file = os.path.join(
-            os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-{}.json'.format(pool_os))
-        batch_parameters['applicationTemplateInfo'] = {'filePath': template_file}
-        application_params = {}
-        batch_parameters['applicationTemplateInfo']['parameters'] = application_params
         try:
+            pool_os = self._get_os_flavor()
+            job_id = "maya-render-{}".format(uuid.uuid4())
+            self.renderer.disable(False)
+            progress = utils.ProgressBar(self._log)
+            maya.refresh()
+
+            batch_parameters = {'id': job_id}
+            batch_parameters['displayName'] = self.renderer.get_title()
+            batch_parameters['metadata'] =  [{"name": "JobType", "value": "Maya"}]
+            template_file = os.path.join(
+                os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-{}.json'.format(pool_os))
+            batch_parameters['applicationTemplateInfo'] = {'filePath': template_file}
+            application_params = {}
+            batch_parameters['applicationTemplateInfo']['parameters'] = application_params
+
             self._check_outputs()
             plugins = self._check_plugins()
             application_params['outputs'] = job_id
