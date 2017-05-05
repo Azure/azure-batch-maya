@@ -112,8 +112,8 @@ class AzureTestBatchPools(unittest.TestCase):
         self.mock_self.batch.compute_node = mock.Mock(list="list")
         pool = mock.create_autospec(models.CloudPool)
         pool.display_name = "name"
-        pool.current_dedicated = 3
-        pool.target_dedicated = 5
+        pool.current_dedicated_nodes = 3
+        pool.target_dedicated_nodes = 5
         pool.state = mock.Mock(value="resizing")
         pool.id = "Maya_Pool_12345"
         pool.max_tasks_per_node = 1

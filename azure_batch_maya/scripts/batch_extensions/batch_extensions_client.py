@@ -12,6 +12,12 @@ from .version import VERSION
 from .operations.pool_operations import ExtendedPoolOperations
 from .operations.job_operations import ExtendedJobOperations
 from .operations.file_operations import ExtendedFileOperations
+from azure.batch.operations.application_operations import ApplicationOperations
+from azure.batch.operations.account_operations import AccountOperations
+from azure.batch.operations.certificate_operations import CertificateOperations
+from azure.batch.operations.job_schedule_operations import JobScheduleOperations
+from azure.batch.operations.task_operations import TaskOperations
+from azure.batch.operations.compute_node_operations import ComputeNodeOperations
 from . import models
 
 from azure.batch import BatchServiceClient
@@ -64,6 +70,18 @@ class BatchExtensionsClient(BatchServiceClient):
             self, self._client, self.config, self._serialize, self._deserialize, self._storage_account)
         self.file = ExtendedFileOperations(
             self, self._client, self.config, self._serialize, self._deserialize, self._storage_account)
+        self.application = ApplicationOperations(
+            self._client, self.config, self._serialize, self._deserialize)
+        self.account = AccountOperations(
+            self._client, self.config, self._serialize, self._deserialize)
+        self.certificate = CertificateOperations(
+            self._client, self.config, self._serialize, self._deserialize)
+        self.job_schedule = JobScheduleOperations(
+            self._client, self.config, self._serialize, self._deserialize)
+        self.task = TaskOperations(
+            self._client, self.config, self._serialize, self._deserialize)
+        self.compute_node = ComputeNodeOperations(
+            self._client, self.config, self._serialize, self._deserialize)
 
     def _storage_account(self):
         """Resolve Auto-Storage account from supplied Batch Account"""
@@ -72,7 +90,7 @@ class BatchExtensionsClient(BatchServiceClient):
         if not self._subscription:
             raise ValueError("Unable to resolve auto-storage account without subscription ID.")
 
-        client = self.mgmt_client if self.mgmt_client else BatchManagementClient(
+        client = self._mgmt_client if self._mgmt_client else BatchManagementClient(
             self.config._creds, self._subscription)
 
         if self._resource_group:

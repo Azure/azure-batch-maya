@@ -238,7 +238,6 @@ class AzureBatchAssets(object):
         """
         self._session = session
         self.batch = self._session.batch
-        self.storage = self._session.storage
         self._set_searchpaths()
         self._assets = Assets(self.batch)
 

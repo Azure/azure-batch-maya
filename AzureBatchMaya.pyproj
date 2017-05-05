@@ -73,7 +73,6 @@
     <Compile Include="azure_batch_maya\scripts\batch_extensions\operations\pool_operations.py" />
     <Compile Include="azure_batch_maya\scripts\batch_extensions\operations\__init__.py" />
     <Compile Include="azure_batch_maya\scripts\batch_extensions\version.py" />
-    <Compile Include="azure_batch_maya\scripts\batch_extensions\_client_factory.py" />
     <Compile Include="azure_batch_maya\scripts\batch_extensions\_file_utils.py" />
     <Compile Include="azure_batch_maya\scripts\batch_extensions\_job_utils.py" />
     <Compile Include="azure_batch_maya\scripts\batch_extensions\_pool_utils.py" />

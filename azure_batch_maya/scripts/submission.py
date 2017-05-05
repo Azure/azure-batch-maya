@@ -34,6 +34,7 @@ import importlib
 import logging
 import json
 import uuid
+import traceback
 
 from api import MayaAPI as maya
 from api import MayaCallbacks as callback
@@ -192,7 +193,7 @@ class AzureBatchSubmission(object):
             pool_id = str(pool_spec[2])
             if pool_id == "None":
                 raise PoolException("No pool selected.")
-            return self.env_manager.get_pool_os(pool_id), {"poolId" : pool_id}
+            return {"poolId" : pool_id}
         if pool_spec.get(3):
             self._log.info("Creating new pool.")
             return self.pool_manager.create_pool(int(pool_spec[3]), job_name)
@@ -211,7 +212,6 @@ class AzureBatchSubmission(object):
         """
         self._log.debug("Starting AzureBatchSubmission...")
         self.batch = session.batch
-        self.storage = session.storage
         self.asset_manager = assets
         self.pool_manager = pools
         self.env_manager = env
@@ -249,6 +249,7 @@ class AzureBatchSubmission(object):
         :param download_dir: If launching the job watcher, a download directory
          must be specified.
         """
+        progress = None
         try:
             pool_os = self._get_os_flavor()
             job_id = "maya-render-{}".format(uuid.uuid4())
@@ -301,9 +302,18 @@ class AzureBatchSubmission(object):
                 utils.JobWatcher(new_job.id, self.data_path, download_dir)
         except CancellationException:
             maya.info("Job submission cancelled")
+        except ValueError as exp:
+            self._log.error(exp)
+            maya.error(str(exp))
         except Exception as exp:
             self._log.error(exp)
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print "*** print_tb:"
+            traceback.print_tb(exc_traceback)
+            print "*** print_exception:"
+            traceback.print_exception(exc_type, exc_value, exc_traceback)
         finally:
-            progress.end()
+            if progress:
+                progress.end()
             self.frame.select_tab(2)
             self.renderer.disable(True)

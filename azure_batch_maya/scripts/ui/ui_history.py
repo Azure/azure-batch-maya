@@ -356,7 +356,7 @@ class AzureBatchJobInfo(object):
             self.content.append(self._thumbnail)
         self._status, st_row = self.display_info("Status:   ")
         self._progress, pr_row = self.display_info("Progress:   ")
-        self._submission, sb_row = self.display_info("Submission time:   ")
+        self._submission, sb_row = self.display_info("Submitted:   ")
         self._tasks, tk_row = self.display_info("Task Count:   ")
         self._job, jb_row = self.display_data("Job ID:   ")
         self._pool, pl_row = self.display_data("Pool:   ")

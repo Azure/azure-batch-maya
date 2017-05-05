@@ -16,11 +16,13 @@ class PoolOperatingSystemFlavor(Enum):
 def get_pool_target_os_type(pool):
     try:
         image_publisher = pool.virtual_machine_configuration.image_reference.publisher
+        sku_id = pool.virtual_machine_configuration.node_agent_sku_id
     except AttributeError:
         image_publisher = None
+        sku_id = None
 
     return PoolOperatingSystemFlavor.WINDOWS \
         if not image_publisher \
-        or (image_publisher and image_publisher.find('MicrosoftWindowsServer') >= 0) \
-        or (image_publisher and image_publisher.find('batch') >= 0) \
+        or (image_publisher and image_publisher.lower().find('windows') >= 0) \
+        or (sku_id and sku_id.lower().find('windows') >= 0) \
         else PoolOperatingSystemFlavor.LINUX

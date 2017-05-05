@@ -142,7 +142,7 @@ class ExtendedJobOperations(JobOperations):
                 auto_complete = job.on_all_tasks_complete
                 job.on_all_tasks_complete = 'noaction'
 
-        should_get_pool = job.job_preparation_task or templates.should_get_pool(task_collection)
+        should_get_pool = templates.should_get_pool(job, task_collection)
         pool_os_flavor = None
         if should_get_pool:
             pool = job_utils.get_target_pool(self._parent.pool, job)
@@ -163,17 +163,15 @@ class ExtendedJobOperations(JobOperations):
         # Handle package management on tasks.
         commands.append(templates.process_task_package_references(
             task_collection, pool_os_flavor))
-
-        # Handle any extended resource file references.
-        templates.post_processing(job, file_utils)
-        if task_collection:
-            templates.post_processing(task_collection, file_utils)
-
-        commands.append(templates.process_job_for_output_files(
-            job, task_collection, pool_os_flavor, file_utils, self._serialize))
         job.job_preparation_task = models.JobPreparationTask(
             **templates.construct_setup_task(job.job_preparation_task,
                                              commands, pool_os_flavor))
+
+        # Handle any extended resource file references.
+        templates.post_processing(job, file_utils, pool_os_flavor)
+        if task_collection:
+            templates.post_processing(task_collection, file_utils, pool_os_flavor)
+        templates.process_job_for_output_files(job, task_collection, pool_os_flavor, file_utils)
 
         # Begin original job add process
         result = super(ExtendedJobOperations, self).add(job, job_add_options, custom_headers, raw, **operation_config)

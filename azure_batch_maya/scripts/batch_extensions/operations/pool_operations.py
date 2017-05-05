@@ -112,6 +112,7 @@ class ExtendedPoolOperations(PoolOperations):
         :raises:
          :class:`BatchErrorException<azure.batch.models.BatchErrorException>`
         """
+        pool_os_flavor=None
         # Handle package manangement
         if hasattr(pool, 'package_references') and pool.package_references:
             pool_os_flavor = pool_utils.get_pool_target_os_type(pool)
@@ -122,6 +123,6 @@ class ExtendedPoolOperations(PoolOperations):
 
         # Handle any extended resource file references.
         fileutils = file_utils.FileUtils(self.get_storage_client)
-        templates.post_processing(pool, fileutils)
+        templates.post_processing(pool, fileutils, pool_os_flavor)
 
         return super(ExtendedPoolOperations, self).add(pool, pool_add_options, custom_headers, raw, **operation_config)

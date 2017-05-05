@@ -111,3 +111,30 @@ class ExtendedFileOperations(FileOperations):
         else:
             raise ValueError('No files found in file group {} matching remote path {}'.format(
                 file_group, remote_path))
+
+    def list_groups(self, num_results=None, include_metadata=False):
+        """List the file group names in the storage account."""
+        storage_client = self.get_storage_client()
+        prefix = file_utils.FileUtils.GROUP_PREFIX
+        return storage_client.list_containers(prefix=prefix, num_results=num_results, include_metadata=include_metadata)
+
+    def list_from_group(self, file_group, remote_path=None, num_results=None):
+        """List the files in the file group."""
+        storage_client = self.get_storage_client()
+        container = file_utils._get_container_name(file_group)
+        return storage_client.list_blobs(container, prefix=remote_path, num_results=num_results)
+
+    def delete_group(self, file_group):
+        """Attempt to delete the file group and all of it's contents.
+        Will do nothing if the group does not exist.
+        """
+        storage_client = self.get_storage_client()
+        container = file_utils._get_container_name(file_group)
+        return storage_client.delete_container(container, fail_not_exist=False)
+
+    def delete_from_group(self, file_group, remote_path):
+        """Delete one of more files from within a group."""
+        storage_client = self.get_storage_client()
+        container = file_utils._get_container_name(file_group)
+        blobs_to_delete = self.list_from_group(file_group)
+        

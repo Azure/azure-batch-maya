@@ -187,6 +187,17 @@ def _strip_prefix(cmd_line):
     else:
         return cmd_line
 
+def _add_cmd_prefix(task, os_flavor):
+    """Add OS-specific command prefix to command line."""
+    if os_flavor == pool_utils.PoolOperatingSystemFlavor.WINDOWS:
+        # TODO: Do we need windows shell escaping?
+        print("Escape command line: ", task.command_line)
+        task.command_line = 'cmd /c "{}"'.format(task.command_line) #.replace('\"','\\\\\"')
+        print("Done: ", task.command_line)
+    elif os_flavor == pool_utils.PoolOperatingSystemFlavor.LINUX:
+        task.command_line = '/bin/bash -c {}'.format(task.command_line)
+    else:
+        raise ValueError("Unknown pool OS flavor: " + os_flavor)
 
 def _get_installation_cmdline(references, os_flavor):
     """Build the installation command line for package reference collection.
@@ -588,8 +599,9 @@ def _process_resource_files(request, fileutils):
     :returns: The updated job or task specification.
     """
     if isinstance(request, list):
-        return [_process_resource_files(r, fileutils) for r in request]
+        return [_process_resource_files(r, fileutils) for r in request if isinstance(r, Model)]
     for attr, value in request.__dict__.items():
+        print("checking attrs: ", attr, value)
         if attr in ['resource_files', 'common_resource_files']:
             if value and isinstance(value, list):
                 new_resources = []
@@ -601,25 +613,12 @@ def _process_resource_files(request, fileutils):
     return request
 
 
-def _parse_task_output_files(task, os_flavor, file_utils, serializer):
+def _parse_task_output_files(task, os_flavor, file_utils):
     """Process a task's outputFiles section and update the task accordingly.
     :param dict task: A task specification.
     :param str os_flavor: The OS flavor of the pool.
     :returns: A new task specification with modifications.
     """
-    if not hasattr(task, 'output_files') or not task.output_files:
-        if _is_prefixed(task.command_line):
-            # In case the command line is already prefixed
-            return task
-        if os_flavor == pool_utils.PoolOperatingSystemFlavor.WINDOWS:
-            # TODO: Do we need windows shell escaping?
-            task.command_line = 'cmd /c "{}"'.format(task.command_line)
-        elif os_flavor == pool_utils.PoolOperatingSystemFlavor.LINUX:
-            task.command_line = '/bin/bash -c {}'.format(task.command_line)
-        else:
-            raise ValueError("Unknown pool OS flavor: " + os_flavor)
-        return task
-
     # Validate the output file configuration
     for output_file in task.output_files:
         for prop in ['file_pattern', 'destination', 'upload_options']:
@@ -635,37 +634,15 @@ def _parse_task_output_files(task, os_flavor, file_utils, serializer):
             if not destination.auto_storage.file_group:
                 raise ValueError("'auto_storage' of 'destination' must have 'file_group' property.")
             destination.container = models.OutputFileBlobContainerDestination(
-                container_sas=file_utils.get_container_sas(destination.auto_storage.file_group))
+                container_url=file_utils.get_container_sas(destination.auto_storage.file_group))
             if destination.auto_storage.path:
                 destination.container.path = destination.auto_storage.path
             destination.auto_storage = None
         if not output_file.upload_options.upload_condition:
             raise ValueError("outputFile.upload_options must include upload_condition.")
+    for output_file in task.output_files:
+        print(output_file.file_pattern)
 
-    # If command has already been prefixed, we need to strip it out.
-    task.command_line = _strip_prefix(task.command_line)
-
-    # Edit the command line to run the upload
-    if os_flavor == pool_utils.PoolOperatingSystemFlavor.WINDOWS:
-        # TODO: Do we need windows shell escaping?
-        upload_cmd = '%AZ_BATCH_JOB_PREP_WORKING_DIR%\\uploadfiles.py'
-        full_upload_cmd = "{} & set ERR=%errorlevel% & echo %ERR% & {} %ERR%".format(task.command_line, upload_cmd)
-        task.command_line = 'cmd /c "{}"'.format(full_upload_cmd)
-
-    elif os_flavor == pool_utils.PoolOperatingSystemFlavor.LINUX:
-        upload_cmd = '$AZ_BATCH_JOB_PREP_WORKING_DIR/uploadfiles.py'
-        full_upload_cmd = shell_escape(
-            '{};err=$?;{} $err;exit $err'.format(task.command_line, upload_cmd))
-        task.command_line = '/bin/bash -c {}'.format(full_upload_cmd)
-
-    else:
-        raise ValueError("Unknown pool OS flavor: " + os_flavor)
-    config = {'outputFiles': serializer.body(task.output_files, '[OutputFile]')}
-    config_str = json.dumps(config)
-    if not task.environment_settings:
-        task.environment_settings = []
-    task.environment_settings.append(models.EnvironmentSetting(models.FILE_EGRESS_ENV_NAME, config_str))
-    task.output_files = None
 
 def _transform_sweep_str(data, parameters):
     """Replace string placeholders with parametric sweep values.
@@ -960,7 +937,7 @@ def construct_setup_task(existing_task, command_info, os_flavor):
     return result
 
 
-def process_job_for_output_files(job, tasks, os_flavor, file_utils, serializer):
+def process_job_for_output_files(job, tasks, os_flavor, file_utils):
     """Process a job and its collection of tasks for any tasks which use outputFiles.
     If a task does use outputFiles, we add to the jobs jobPrepTask for the install step.
     NOTE: This edits the task collection and job in-line!
@@ -969,34 +946,11 @@ def process_job_for_output_files(job, tasks, os_flavor, file_utils, serializer):
     :param string os_flavor: The OS flavor of the pool.
     :returns: A dictionary with 'cmdLine' and 'resourceFiles'.
     """
-    must_edit_job = False
-    is_windows = True
     if job.job_manager_task:
-        if hasattr(job.job_manager_task, 'output_files') and job.job_manager_task.output_files:
-            must_edit_job = True
-        _parse_task_output_files(job.job_manager_task, os_flavor, file_utils, serializer)
+        _parse_task_output_files(job.job_manager_task, os_flavor, file_utils)
     if tasks:
         for index, task in enumerate(tasks):
-            if hasattr(task, 'output_files') and task.output_files:
-                must_edit_job = True
-            _parse_task_output_files(tasks[index], os_flavor, file_utils, serializer)
-    if must_edit_job:
-        resource_files = list(models.FILE_EGRESS_RESOURCES)
-        if os_flavor == pool_utils.PoolOperatingSystemFlavor.WINDOWS:
-            setup_cmd = '(bootstrap.cmd && setup_uploader.py) > setuplog.txt 2>&1'
-            resource_files.append(
-                models.FILE_EGRESS_PREFIX + 'bootstrap.cmd')
-        elif os_flavor == pool_utils.PoolOperatingSystemFlavor.LINUX:
-            setup_cmd = 'setup_uploader.py > setuplog.txt 2>&1'
-            is_windows = False
-        else:
-            raise ValueError("Unknown pool OS flavor: " + os_flavor)
-        # TODO: If we have any issues with this being hosted in GITHUB we'll have to
-        # move it elsewhere (local and then upload to their storage?)
-        resources = [models.ExtendedResourceFile(_get_output_source_url(f), os.path.split(f)[1])
-                     for f in resource_files]
-        return {'cmdLine': setup_cmd, 'resourceFiles': resources, 'isWindows': is_windows}
-    return None
+            _parse_task_output_files(tasks[index], os_flavor, file_utils)
 
 
 def process_pool_package_references(pool):
@@ -1032,18 +986,33 @@ def process_task_package_references(tasks, os_flavor):
     return _get_installation_cmdline(packages, os_flavor)
 
 
-def post_processing(request, fileutils):
+def post_processing(request, fileutils, os_flavor):
     """Parse job or task to process new resource file references.
     :param dict request: A job or task specification (or list thereof).
     """
     # Reform all new resource file references in standard ResourceFiles
     if isinstance(request, list):
+        for task in request:
+            if not _is_prefixed(task.command_line):
+                _add_cmd_prefix(task, os_flavor)
         return [_process_resource_files(i, fileutils) for i in request]
     else:
+        if hasattr(request, 'job_preparation_task') and request.job_preparation_task:
+            if not _is_prefixed(request.job_preparation_task.command_line):
+                _add_cmd_prefix(request.job_preparation_task, os_flavor)
+        if hasattr(request, 'job_release_task') and request.job_release_task:
+            if not _is_prefixed(request.job_release_task.command_line):
+                _add_cmd_prefix(request.job_release_task, os_flavor)
+        if hasattr(request, 'job_manager_task') and request.job_manager_task:
+            if not _is_prefixed(request.job_manager_task.command_line):
+                _add_cmd_prefix(request.job_manager_task, os_flavor)
+        if hasattr(request, 'start_task') and request.start_task:
+            if not _is_prefixed(request.start_task.command_line):
+                _add_cmd_prefix(request.start_task, os_flavor)
         return _process_resource_files(request, fileutils)
 
 
-def should_get_pool(tasks):
+def should_get_pool(job, tasks):
     """Determines if the pool (or auto pool specification) needs to be
     reviewed to determine the target operating system.
     This is required for some features which craft command lines and the
@@ -1059,6 +1028,13 @@ def should_get_pool(tasks):
             return True
         if task.package_references:
             return True
-        if task.output_files:
+    if job.job_preparation_task:
+        if not _is_prefixed(job.job_preparation_task.command_line):
+            return True
+    if job.job_release_task:
+        if not _is_prefixed(job.job_release_task.command_line):
+            return True
+    if job.job_manager_task:
+        if not _is_prefixed(job.job_manager_task.command_line):
             return True
     return False

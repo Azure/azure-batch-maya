@@ -1,6 +1,6 @@
 python("from shared import AzureBatchSettings");
 
-$batch_path = `getenv "AZBATCH_ICONS"`;
+$batch_path = `getenv "AZUREBATCH_ICONS"`;
 
 global proc run_guiStarter()
 {

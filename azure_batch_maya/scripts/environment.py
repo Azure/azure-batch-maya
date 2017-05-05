@@ -86,7 +86,6 @@ class AzureBatchEnvironment(object):
         """
         used_plugins = maya.plugins(query=True, pluginsInUse=True)
         used_plugins = used_plugins if used_plugins else []
-        print(used_plugins)
         for license in LICENSES:
             if not license['plugin']:
                 self.licenses[license['label']] = True
@@ -109,6 +108,14 @@ class AzureBatchEnvironment(object):
             self.ui.select_image(self._session.get_cached_image())
             self.ui.select_sku(self._session.get_cached_vm_sku())
 
+    def get_application_licenses(self):
+        license_servers = []
+        for name, selected in self.licenses.items():
+            if selected:
+                license_servers.extend([v['id'] for v in LICENSES if v['label'] == name])
+        return license_servers
+
+
     def set_image(self, image):
         self._session.store_image(image)
 
@@ -122,7 +129,17 @@ class AzureBatchEnvironment(object):
     def get_vm_sku(self):
         return self.ui.get_sku()
 
-    def os_flavor(self):
+    def os_flavor(self, pool_image=None):
+        if pool_image:
+            windows_offers = [value['offer'] for value in MAYA_IMAGES.values() if 'windows' in value['node_sku_id']]
+            linux_offers = [value['offer'] for value in MAYA_IMAGES.values() if value['offer'] not in windows_offers]
+            if pool_image.offer in windows_offers:
+                return 'Windows'
+            elif pool_image.offer in linux_offers:
+                return 'Linux'
+            else:
+                raise ValueError('Selected pool is not using a valid Maya image.')
+
         if 'Windows' in self.ui.get_image():
             return 'Windows'
         else:

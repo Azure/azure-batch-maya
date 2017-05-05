@@ -58,10 +58,10 @@ def _track_completed_tasks(container, dwnld_dir):
     try:
         job_outputs = storage_client.list_blobs(container)
         for output in job_outputs:
-            if is_log.match(output.name):
-                output_file = os.path.join(dwnld_dir, "logs", output.name)
-            elif is_thumnail.match(output.name) or output.name == "Parameters.json":
+            if output.name.startswith('thumbs/'):
                 continue
+            elif is_log.match(output.name):
+                output_file = os.path.join(dwnld_dir, "logs", output.name)
             else:
                 output_file = os.path.join(dwnld_dir, output.name)
         
@@ -131,7 +131,6 @@ def track_job_progress(id, container, dwnld_dir):
                 print("    - Warning: some tasks have completed with a non-zero exit code.")
 
             _track_completed_tasks(container, dwnld_dir)
-
             if _check_job_stopped(job):
                 return # Job complete
 
@@ -141,7 +140,6 @@ def track_job_progress(id, container, dwnld_dir):
 
     except (TypeError, AttributeError) as exp:
         raise RuntimeError("Error occured: {0}".format(exp))
-
     except KeyboardInterrupt:
         raise RuntimeError("Monitoring aborted.")
 
