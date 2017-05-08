@@ -188,6 +188,15 @@
     </Content>
     <Content Include="azure_batch_maya\templates\arnold-basic-windows.json" />
     <Content Include="azure_batch_maya\templates\arnold-basic-linux.json" />
+    <Content Include="CHANGES.txt" />
+    <Content Include="CONTRIBUTING.md">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="LICENSE.txt" />
+    <Content Include="README.md">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="README.rst" />
     <Content Include="requirements.txt">
       <SubType>Code</SubType>
     </Content>
