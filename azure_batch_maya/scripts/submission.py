@@ -261,7 +261,7 @@ class AzureBatchSubmission(object):
             batch_parameters['displayName'] = self.renderer.get_title()
             batch_parameters['metadata'] =  [{"name": "JobType", "value": "Maya"}]
             template_file = os.path.join(
-                os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-{}.json'.format(pool_os))
+                os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-{}.json'.format(pool_os.lower()))
             batch_parameters['applicationTemplateInfo'] = {'filePath': template_file}
             application_params = {}
             batch_parameters['applicationTemplateInfo']['parameters'] = application_params
@@ -308,10 +308,7 @@ class AzureBatchSubmission(object):
         except Exception as exp:
             self._log.error(exp)
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            print "*** print_tb:"
-            traceback.print_tb(exc_traceback)
-            print "*** print_exception:"
-            traceback.print_exception(exc_type, exc_value, exc_traceback)
+            self._log.debug("".join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
         finally:
             if progress:
                 progress.end()

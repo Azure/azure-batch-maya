@@ -180,7 +180,6 @@ class ConfigUI(object):
         """Called when the plug-in is authenticated. Sets heading text."""
         maya.text(
             self.heading, edit=True, label="Authentication Configuration")
-        print("x")
         maya.form_layout(self.page, edit=True, enable=True)
 
     def is_logged_out(self):

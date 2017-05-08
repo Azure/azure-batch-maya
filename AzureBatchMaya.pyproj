@@ -5,13 +5,15 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>f585989b-2df8-4241-8d02-948958187914</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>tests\__init__.py</StartupFile>
+    <StartupFile>package.py</StartupFile>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>Maya.Client</Name>
     <RootNamespace>Maya.Client</RootNamespace>
-    <InterpreterId>{288d073e-7bc9-4fc6-9095-44d701572fd4}</InterpreterId>
-    <InterpreterVersion>2.7</InterpreterVersion>
+    <InterpreterId>
+    </InterpreterId>
+    <InterpreterVersion>
+    </InterpreterVersion>
     <SearchPath>azure_batch_maya\scripts\;azure_batch_maya\scripts\ui\;tests\data\;tests\data\modules\</SearchPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -129,9 +131,6 @@
     <Compile Include="tests\test_assets.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="tests\test_config.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="tests\test_environment.py">
       <SubType>Code</SubType>
     </Compile>
@@ -142,9 +141,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tests\test_pools.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="tests\test_shared.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tests\test_submission.py">
@@ -195,19 +191,6 @@
     <Content Include="requirements.txt">
       <SubType>Code</SubType>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Interpreter Include="env\">
-      <Id>{288d073e-7bc9-4fc6-9095-44d701572fd4}</Id>
-      <BaseInterpreter>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</BaseInterpreter>
-      <Version>2.7</Version>
-      <Description>env (Python 64-bit 2.7)</Description>
-      <InterpreterPath>Scripts\python.exe</InterpreterPath>
-      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
-      <LibraryPath>Lib\</LibraryPath>
-      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
-      <Architecture>Amd64</Architecture>
-    </Interpreter>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

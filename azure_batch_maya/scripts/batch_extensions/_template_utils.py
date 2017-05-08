@@ -191,9 +191,7 @@ def _add_cmd_prefix(task, os_flavor):
     """Add OS-specific command prefix to command line."""
     if os_flavor == pool_utils.PoolOperatingSystemFlavor.WINDOWS:
         # TODO: Do we need windows shell escaping?
-        print("Escape command line: ", task.command_line)
         task.command_line = 'cmd /c "{}"'.format(task.command_line) #.replace('\"','\\\\\"')
-        print("Done: ", task.command_line)
     elif os_flavor == pool_utils.PoolOperatingSystemFlavor.LINUX:
         task.command_line = '/bin/bash -c {}'.format(task.command_line)
     else:
@@ -601,7 +599,6 @@ def _process_resource_files(request, fileutils):
     if isinstance(request, list):
         return [_process_resource_files(r, fileutils) for r in request if isinstance(r, Model)]
     for attr, value in request.__dict__.items():
-        print("checking attrs: ", attr, value)
         if attr in ['resource_files', 'common_resource_files']:
             if value and isinstance(value, list):
                 new_resources = []
@@ -640,8 +637,6 @@ def _parse_task_output_files(task, os_flavor, file_utils):
             destination.auto_storage = None
         if not output_file.upload_options.upload_condition:
             raise ValueError("outputFile.upload_options must include upload_condition.")
-    for output_file in task.output_files:
-        print(output_file.file_pattern)
 
 
 def _transform_sweep_str(data, parameters):

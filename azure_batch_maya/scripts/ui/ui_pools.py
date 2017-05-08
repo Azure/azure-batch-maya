@@ -186,15 +186,23 @@ class AzureBatchPoolInfo(object):
         """Set the date/time the pool was created.
         :param str value: The datetime string of the pool creation.
         """
-        #datetime = value.split('T')
-        #datetime[1] = datetime[1].split('.')[0]
-        label = str(value)#' '.join(datetime)
-        maya.text(self._created, edit=True, label=" {0}".format(label))
+        datetime = str(value).split('.')[0]
+        maya.text(self._created, edit=True, label=" {0}".format(datetime))
 
-    def set_state(self, value):
+    def set_state(self, value, nodes):
         """Set the state of the pool.
         :param str value: The pool state.
         """
+        node_states = {}
+        for node in nodes:
+            if node.state in node_states:
+                node_states[node.state] += 1
+            else:
+                node_states[node.state] = 1
+        if node_states:
+            value += " : "
+            for state in node_states:
+                value += "{} nodes {} ".format(node_states[state], state.value)
         maya.text(self._state, edit=True, label=" {0}".format(value))
 
     def set_tasks(self, value):
@@ -209,6 +217,19 @@ class AzureBatchPoolInfo(object):
         """
         maya.text(self._allocation, edit=True, label=" {0}".format(value))
 
+    def set_licenses(self, value):
+        """Set the licenses available on the pool.
+        :param list value: The available application licenses.
+        """
+        licenses = ', '.join([l.title() for l in value]) if value else ""
+        maya.text(self._licenses, edit=True, label=" {0}".format(licenses))
+
+    def set_vm_sku(self, value):
+        """Set the VM instance type of the pool.
+        :param str value: The VM type.
+        """
+        maya.text(self._vm_sku, edit=True, label=" {0}".format(value))
+
     def on_expand(self):
         """Command for the expanding of the pool reference frame layout.
         Loads latest details for the specified pool and populates UI.
@@ -220,6 +241,8 @@ class AzureBatchPoolInfo(object):
         self._state = self.display_info("State:   ")
         self._tasks = self.display_info("Tasks per VM:   ")
         self._allocation = self.display_info("Allocation State:   ")
+        self._licenses = self.display_info("Licenses:   ")
+        self._vm_sku = self.display_info("VM type:   ")
         self.base.pool_selected(self)
         auto = self.base.is_auto_pool()
         if not auto:

@@ -32,7 +32,7 @@ import subprocess
 import shutil
 import zipfile
 
-VERSION = "0.8.1"
+VERSION = "0.9.0"
 
 def main():
     """Build Maya Plug-in package"""
@@ -48,7 +48,7 @@ def main():
             return
 
     package = os.path.join(package_dir, "AzureBatch_Maya_Plugin-v{0}.zip".format(VERSION))
-    source = os.path.abspath("batchapps_maya")
+    source = os.path.abspath("azure_batch_maya")
 
     with zipfile.ZipFile(package, mode='w') as maya_zip:
         for root, dirs, files in os.walk(source):
@@ -56,7 +56,7 @@ def main():
                 continue
 
             for file in files:
-                if os.path.splitext(file)[1] in ['.png', '.mel', '.py', '.html']:
+                if os.path.splitext(file)[1] in ['.png', '.mel', '.py', '.html', '.json']:
                     maya_zip.write(os.path.relpath(os.path.join(root, file)))
 
     print("Package complete!")

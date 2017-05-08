@@ -119,10 +119,12 @@ class AzureBatchPools(object):
             self.selected_pool.set_target(pool.target_dedicated_nodes)
             self.selected_pool.set_type(
                 "Auto" if pool.id.startswith("Maya_Auto_Pool") else "Provisioned")
-            self.selected_pool.set_state(pool.state.value)
+            self.selected_pool.set_state(pool.state.value, nodes)
             self.selected_pool.set_tasks(pool.max_tasks_per_node)
             self.selected_pool.set_allocation(pool.allocation_state.value)
             self.selected_pool.set_created(pool.creation_time)
+            self.selected_pool.set_licenses(pool.application_licenses)
+            self.selected_pool.set_vm_sku(pool.vm_size)
             maya.refresh()
         except Exception as exp:
             self._log.warning(str(exp))
