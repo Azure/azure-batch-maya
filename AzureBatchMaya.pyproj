@@ -196,7 +196,6 @@
     <Content Include="README.md">
       <SubType>Code</SubType>
     </Content>
-    <Content Include="README.rst" />
     <Content Include="requirements.txt">
       <SubType>Code</SubType>
     </Content>

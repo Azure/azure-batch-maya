@@ -10,7 +10,7 @@ You will also need a storage account. You will have the option to create a stora
 You can use this, or you can [set up a storage account independently](https://docs.microsoft.com/azure/storage/storage-create-storage-account).
 
 
-## Loading the Plug-in in Maya and Installing dependencies
+## Loading the plug-in in Maya and installing dependencies
 
 Download the latest plug-in release and extract the azure_batch_maya directory to a location of your choice.
 The plug-in can be run directly from the azure_batch_maya directory.
