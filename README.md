@@ -46,7 +46,7 @@ In order to retrieve this information:
 ## License
 
 This project is licensed under the MIT License.
-For details see LICENSE.txt or visit `opensource.org/licenses/MIT <http://opensource.org/licenses/MIT>`_.
+For details see LICENSE.txt or visit [opensource.org/licenses/MIT](http://opensource.org/licenses/MIT).
 
 
 ## Contributing
