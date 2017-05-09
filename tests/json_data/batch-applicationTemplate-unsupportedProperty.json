@@ -1,0 +1,9 @@
+{
+  "templateInfo": {
+    "description": "A test application template that specifies the unsupported properties'fluxCapacitorModel' and 'vehicleMarque'."
+  },
+  "fluxCapacitorModel": "DocBrown55",
+  "vehicleMarque": "deLorean"
+}
+
+

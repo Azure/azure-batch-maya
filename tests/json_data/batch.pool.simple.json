@@ -1,0 +1,57 @@
+{
+    "parameters": {
+        "vmSize": {
+            "type": "string",
+            "metadata": {
+                "description": "The size of the virtual machines that runs the application"
+            },
+            "defaultValue": "STANDARD_D1",
+            "allowedValues": [
+                "STANDARD_A1",
+                "STANDARD_A2",
+                "STANDARD_A3",
+                "STANDARD_A4",
+                "STANDARD_D1",
+                "STANDARD_D2",
+                "STANDARD_D3",
+                "STANDARD_D4"
+            ]
+        },
+        "vmCount": {
+            "type": "int",
+            "defaultValue": 3,
+            "metadata": {
+                "description": "The number of the virtual machines"
+            }
+        },
+        "poolName": {
+            "type": "string",
+            "defaultValue": "ffmpegpool",
+            "metadata": {
+                "description": "The name of Azure Batch pool"
+            }
+        }
+    },
+    "variables": {
+        "osType": {
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "15.10",
+            "version": "latest"
+        }
+    }, 
+    "pool": {
+        "type": "Microsoft.Batch/batchAccounts/pools",
+        "apiVersion": "2016-12-01",
+        "properties": {
+            "id": "[parameters('poolName')]",
+            "virtualMachineConfiguration": {
+                "imageReference": "[variables('osType')]",
+                "nodeAgentSKUId": "batch.node.debian 8"
+            },
+            "vmSize": "[parameters('vmSize')]",
+            "vmCount": "[parameters('vmCount')]",
+            "enableAutoScale": false
+        }
+    }
+}

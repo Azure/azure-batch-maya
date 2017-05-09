@@ -193,7 +193,7 @@ def _add_cmd_prefix(task, os_flavor):
         # TODO: Do we need windows shell escaping?
         task.command_line = 'cmd /c "{}"'.format(task.command_line) #.replace('\"','\\\\\"')
     elif os_flavor == pool_utils.PoolOperatingSystemFlavor.LINUX:
-        task.command_line = '/bin/bash -c {}'.format(task.command_line)
+        task.command_line = '/bin/bash -c \'set -e; set -o pipefail; {}; wait\''.format(task.command_line)
     else:
         raise ValueError("Unknown pool OS flavor: " + os_flavor)
 
@@ -584,10 +584,13 @@ def _parse_template(template_str, template_obj, parameters):
         current_index = string_end + 1
     updated_json += template_str[current_index:]
     try:
-        updated_json = updated_json.encode('string_escape').replace('\\\\','\\')
-    except LookupError:
-        pass
-    return json.loads(updated_json)
+        return json.loads(updated_json)
+    except ValueError as exp:
+        try:
+            return json.loads(updated_json.encode('string_escape').replace('\\\\','\\'))
+        except LookupError:
+            raise ValueError("Unable to load JSON template {}, error: {}".format(
+                updated_json, str(exp)))
 
 
 def _process_resource_files(request, fileutils):

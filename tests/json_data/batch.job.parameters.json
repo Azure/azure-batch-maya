@@ -1,0 +1,17 @@
+{
+  "jobId": {
+    "value": "helloworld"
+  },
+  "poolId": {
+    "value": "xplatTestPool"
+  },
+  "outputFileStorageUrl": {
+    "value": "<blob url with sas>"
+  },
+  "taskStart": {
+    "value": 1
+  },
+  "taskEnd": {
+    "value": 3
+  }    
+}

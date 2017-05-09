@@ -1,0 +1,10 @@
+{
+  "templateInfo": {
+    "description": "A test application template that specifies prohibited property 'poolInfo'."
+  },
+  "poolInfo": {
+      "poolId" : "swimming"
+  }  
+}
+
+

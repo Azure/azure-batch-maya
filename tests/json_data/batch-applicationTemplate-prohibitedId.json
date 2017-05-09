@@ -1,0 +1,8 @@
+{
+  "templateInfo": {
+    "description": "A test application template that specifies prohibited property 'id'."
+  },
+  "id" : "jobid"
+}
+
+

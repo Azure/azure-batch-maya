@@ -127,14 +127,17 @@
     </Compile>
     <Compile Include="azure_batch_maya\plug-in\AzureBatch.py" />
     <Compile Include="azure_batch_maya\scripts\ui\ui_shared.py" />
+    <Compile Include="docs\submitting_jobs.md">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="package.py" />
     <Compile Include="tests\test_assets.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="tests\test_environment.py">
+    <Compile Include="tests\test_extensions.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="tests\test_history.py">
+    <Compile Include="tests\test_integration.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tests\test_jobwatcher.py">
@@ -163,7 +166,10 @@
     <Folder Include="azure_batch_maya\scripts\tools\" />
     <Folder Include="azure_batch_maya\scripts\ui\" />
     <Folder Include="azure_batch_maya\templates\" />
+    <Folder Include="docs\" />
+    <Folder Include="docs\images\" />
     <Folder Include="tests\" />
+    <Folder Include="tests\test_scene\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="azure_batch_maya\icons\btn_background.png" />

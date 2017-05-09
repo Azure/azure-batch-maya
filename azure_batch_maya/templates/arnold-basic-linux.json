@@ -97,15 +97,25 @@
     ],
     "repeatTask": {
       "displayName": "Frame {0}",
-      "commandLine": "mkdir /X;mount -rbind $AZ_BATCH_JOB_PREP_WORKING_DIR/assets /X;render -renderer [parameters('renderer')] -verb -preRender renderPrep -rd \"$AZ_BATCH_TASK_WORKING_DIR/images\" -s {0} -e {0} \"[parameters('sceneFile')]\";err=$?;$AZ_BATCH_JOB_PREP_WORKING_DIR/thumbnail.py $err;exit $err",
+      "userIdentity": {
+        "autoUser": {
+          "scope": "task",
+          "elevationLevel": "admin"
+        }
+      },
+      "commandLine": "sudo mkdir -m a=rwx -p \"/X\";sudo mount --rbind $AZ_BATCH_JOB_PREP_WORKING_DIR/assets /X;Render -renderer [parameters('renderer')] -verb -preRender renderPrep -rd \"$AZ_BATCH_TASK_WORKING_DIR/images\" -s {0} -e {0} \"[parameters('sceneFile')]\";err=$?;python /mnt/resource/batch/tasks/workitems/[parameters('outputs')]/job-1/jobpreparation/wd/thumbnail.py $err;sudo umount \"/X\";exit $err",
       "environmentSettings": [
         {
           "name": "MAYA_SCRIPT_PATH",
-          "value": "$AZ_BATCH_JOB_PREP_WORKING_DIR/scripts"
+          "value": "/mnt/resource/batch/tasks/workitems/[parameters('outputs')]/job-1/jobpreparation/wd/scripts"
         },
         {
           "name": "FLEXLM_TIMEOUT",
           "value": "5000000"
+        },
+        {
+          "name": "MAYA_RENDER_DESC_PATH",
+          "value": "/opt/solidangle/mtoa/2017/"
         }
       ],
       "outputFiles": [

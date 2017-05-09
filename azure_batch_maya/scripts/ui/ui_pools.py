@@ -230,6 +230,12 @@ class AzureBatchPoolInfo(object):
         """
         maya.text(self._vm_sku, edit=True, label=" {0}".format(value))
 
+    def set_image(self, value):
+        """Set the image name running on the VM.
+        :param str value: The VM image.
+        """
+        maya.text(self._image, edit=True, label=" {0}".format(value))
+
     def on_expand(self):
         """Command for the expanding of the pool reference frame layout.
         Loads latest details for the specified pool and populates UI.
@@ -240,6 +246,7 @@ class AzureBatchPoolInfo(object):
         self._created = self.display_info("Created:   ")
         self._state = self.display_info("State:   ")
         self._tasks = self.display_info("Tasks per VM:   ")
+        self._image = self.display_info("Image:   ")
         self._allocation = self.display_info("Allocation State:   ")
         self._licenses = self.display_info("Licenses:   ")
         self._vm_sku = self.display_info("VM type:   ")

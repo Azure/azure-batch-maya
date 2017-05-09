@@ -125,6 +125,7 @@ class AzureBatchPools(object):
             self.selected_pool.set_created(pool.creation_time)
             self.selected_pool.set_licenses(pool.application_licenses)
             self.selected_pool.set_vm_sku(pool.vm_size)
+            self.selected_pool.set_image(self.environment.get_image_label(pool.virtual_machine_configuration.image_reference))
             maya.refresh()
         except Exception as exp:
             self._log.warning(str(exp))

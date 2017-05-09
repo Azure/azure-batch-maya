@@ -186,7 +186,10 @@ class AzureBatchAssets(object):
                     handle.write("loadPlugin \"{}\";\n".format(plugin))
             handle.write("dirmap -en true;\n")
             for local, remote in pathmap.items():
-                full_remote_path = "X:\\\\" + remote(os_flavor)
+                if os_flavor == 'Windows':
+                    full_remote_path = "X:\\\\" + remote(os_flavor)
+                else:
+                    full_remote_path = "/X/" + remote(os_flavor)
                 parsed_local = local.replace('\\', '\\\\')
                 handle.write("dirmap -m \"{}\" \"{}\";\n".format(parsed_local, full_remote_path))
             handle.write("}")
@@ -376,13 +379,14 @@ class Assets(object):
         ref_file = os.path.basename(ref_path)
         ref_dir = os.path.dirname(ref_path)
         pattern = ('*' in ref_path or '[0-9]' in ref_path)
-        self._log.debug("Checking pattern asset: {0}".format(pattern))
+        self._log.debug("Searching for asset path: {}".format(ref_path))
+        self._log.debug("Checking pattern asset: {}".format(pattern))
         if pattern:
             path_matches = glob.glob(ref_path)
             if path_matches:
                 self.pathmaps[ref_dir] = utils.get_remote_file_path(ref_path)
                 self._log.debug("Mapping this path {} to {}".format(ref_path, self.pathmaps[ref_dir]))
-                self._log.debug("Found matches: {0}".format(path_matches))
+                self._log.debug("Found matches: {}".format(path_matches))
                 return path_matches
         elif os.path.exists(ref_path):
             self.pathmaps[ref_dir] = utils.get_remote_file_path(ref_path)
@@ -396,7 +400,7 @@ class Assets(object):
                 if path_matches:
                     self.pathmaps[ref_dir] = utils.get_remote_file_path(alt_path)
                     self._log.debug("Mapping this path {} to {}".format(ref_path, self.pathmaps[ref_dir]))
-                    self._log.debug("Found matches: {0}".format(path_matches))
+                    self._log.debug("Found matches: {}".format(path_matches))
                     return path_matches
             elif os.path.exists(alt_path):
                 self.pathmaps[ref_dir] = utils.get_remote_file_path(alt_path)
@@ -408,7 +412,7 @@ class Assets(object):
                 alt_path = os.path.join(_root, ref_file)
                 if pattern:
                     path_matches = glob.glob(alt_path)
-                    self._log.debug("Found matches: {0}".format(path_matches))
+                    self._log.debug("Found matches: {}".format(path_matches))
                     if path_matches:
                         self.pathmaps[ref_dir] = utils.get_remote_file_path(alt_path)
                         self._log.debug("Mapping this path {} to {}".format(ref_path, self.pathmaps[ref_dir]))

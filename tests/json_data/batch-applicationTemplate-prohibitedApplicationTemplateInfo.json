@@ -1,0 +1,10 @@
+{
+  "templateInfo": {
+    "description": "A test application template that specifies the prohibited property 'applicationTemplate'."
+  },
+  "applicationTemplateInfo": {
+    "filePath" : "sample\\path"
+  }
+}
+
+

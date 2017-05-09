@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # --------------------------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See License.txt in the project root for license information.
@@ -44,7 +42,10 @@ if __name__ == '__main__':
 
         task_id = os.environ['AZ_BATCH_TASK_ID']
         output_file = os.path.join(thumb_dir, task_id + '_thumb.png')
-        commands = ['magick', 'convert', input_file, '-thumbnail', '200x150', output_file]
+        commands = ['convert', input_file, '-thumbnail', '200x150', output_file]
+        if os.name == 'nt':
+            commands.insert(0, 'magick')
+        print("Running imagemagick: {}".format(commands))
         conversion = subprocess.Popen(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         conversion.wait()
         if conversion.returncode != 0:

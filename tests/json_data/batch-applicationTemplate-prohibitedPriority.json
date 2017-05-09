@@ -1,0 +1,9 @@
+{
+  "templateInfo": {
+    "description": "A test application template that specifies the prohibited property 'priority'."
+  },
+  "displayName": "Static Application Template",
+  "priority": 100
+}
+
+

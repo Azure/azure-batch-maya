@@ -1,0 +1,8 @@
+global proc renderPrep()
+{
+dirmap -en true;
+dirmap -m "C:\\Users\\antisch\\Documents\\maya\\projects\\juggernaut\\sourceimages" "X:\\C\\Users\\antisch\\Documents\\maya\\projects\\juggernaut\\sourceimages";
+dirmap -m "C:\\Users\\antisch\\Documents\\maya\\projects\\juggernaut\\scenes" "X:\\C\\Users\\antisch\\Documents\\maya\\projects\\juggernaut\\scenes";
+dirmap -m "H:/hsm/vault/hdr" "X:\\C\\Users\\antisch\\Documents\\maya\\projects\\juggernaut\\sourceimages";
+dirmap -m "P:/hsm/asset/character/juggernaut/lookdev/sourceimages" "X:\\C\\Users\\antisch\\Documents\\maya\\projects\\juggernaut\\sourceimages";
+}

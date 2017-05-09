@@ -123,7 +123,6 @@ class AzureBatchEnvironment(object):
                 license_servers.extend([v['id'] for v in LICENSES if v['label'] == name])
         return license_servers
 
-
     def set_image(self, image):
         self._session.store_image(image)
 
@@ -133,6 +132,17 @@ class AzureBatchEnvironment(object):
     def get_image(self):
         selected_image = self.ui.get_image()
         return dict(MAYA_IMAGES[selected_image])
+
+    def get_image_label(self, image_ref):
+        """Retrieve the image label from the data in a pool image
+        reference object.
+        """
+        pool_image = [k for k,v in MAYA_IMAGES.items() if v['offer'] == image_ref.offer]
+        if pool_image:
+            return pool_image[0]
+        else:
+            self._log.debug("Pool using unknown image reference: {}".format(image_ref['offer']))
+            return ""
 
     def get_vm_sku(self):
         return self.ui.get_sku()

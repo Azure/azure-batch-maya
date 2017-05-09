@@ -212,6 +212,7 @@ class AzureTestBatchPools(unittest.TestCase):
     def test_pools_create(self):
         pool_obj = None
         def call(func, new_pool):
+            global pool_obj
             self.assertTrue(callable(func))
             pool_obj = new_pool
             self.assertEqual(new_pool.target_dedicated_nodes, 5)
@@ -226,7 +227,7 @@ class AzureTestBatchPools(unittest.TestCase):
         self.mock_self.environment.get_image.return_value = {
             'publisher': 'foo', 'sku': 'bar', 'offer': 'baz', 'node_sku_id':'sku_id'}
         AzureBatchPools.create_pool(self.mock_self, 5, "test job")
-        self.mock_self.batch.pool.add.assert_called_with(pool_obj)
+        self.mock_self.batch.pool.add.assert_called_with(mock.ANY)
 
     @mock.patch("pools.maya")
     def test_pools_resize(self, mock_maya):

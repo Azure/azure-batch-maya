@@ -1,0 +1,104 @@
+{
+    "parameters": {
+        "inputFileGroup": {
+            "type": "string",
+            "defaultValue": "convert_data",
+            "metadata": {
+                "description": "The auto-storage group where the input data is stored"
+            }
+        },
+        "outputFileStorageUrl": {
+            "type": "string",
+            "metadata": {
+                "description": "The SAS URL for a container where outputs will be stored"
+            }
+        },
+        "inputType": {
+            "type": "string",
+            "defaultValue": "wav",
+            "metadata": {
+                "description": "The extension of the input data"
+            }
+        },
+        "poolId": {
+            "type": "string",
+            "defaultValue": "ffmpeg-pool",
+            "metadata": {
+                "description": "The id of Azure Batch pool which runs the job"
+            }
+        },
+        "jobId": {
+            "type": "string",
+            "metadata": {
+                "description": "The id of Azure Batch job"
+            }
+        },
+        "taskStart": {
+            "type": "int",
+            "metadata": {
+                "description": "The sweep start parameter"
+            }
+        },
+        "taskEnd": {
+            "type": "int",
+            "metadata": {
+                "description": "The sweep end parameter"
+            }
+        }
+    },
+    "job": {
+        "type": "Microsoft.Batch/batchAccounts/jobs",
+        "apiVersion": "2016-12-01",
+        "properties": {
+            "id": "[parameters('jobId')]",
+            "constraints": {
+                "maxWallClockTime": "PT5H",
+                "maxTaskRetryCount": 1
+            },
+            "poolInfo": {
+                "poolId": "[parameters('poolId')]"
+            },
+            "taskFactory": {
+                "type": "parametricSweep",
+                "parameterSets": [
+                    {
+                        "start": "[parameters('taskStart')]",
+                        "end": "[parameters('taskEnd')]",
+                        "step": 1
+                    }
+                ],
+                "repeatTask": {
+                    "commandLine": "ffmpeg -y -i sample{0}.[parameters('inputType')] -acodec libmp3lame output.mp3",
+                    "resourceFiles": [
+                        {
+                            "source": { 
+                                "fileGroup": "[parameters('inputFileGroup')]",
+                                "prefix": "sample{0}.[parameters('inputType')]"
+                            }
+                        }
+                    ],
+                    "outputFiles": [
+                        {
+                            "filePattern": "output.mp3",
+                            "destination": {
+                                "container": {
+                                    "path": "audio{0}.mp3",
+                                    "containerSas": "[parameters('outputFileStorageUrl')]"
+                                }
+                            },
+                            "uploadDetails": {
+                                "taskStatus": "TaskSuccess"
+                            }
+                        }
+                    ],
+                    "packageReferences": [
+                        {
+                            "type": "aptPackage",
+                            "id": "ffmpeg"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}
