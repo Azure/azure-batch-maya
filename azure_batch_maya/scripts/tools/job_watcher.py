@@ -15,8 +15,6 @@ import re
 
 batch_client = None
 storage_client = None
-is_thumnail = re.compile("framethumb_[\d\-]+.png")
-is_log = re.compile("frame_[\d\-]+.log")
 
 
 def header(header):
@@ -40,6 +38,7 @@ def _check_valid_dir(directory):
     except (TypeError, EnvironmentError) as exp:
         raise RuntimeError(exp)
 
+
 def _download_output(container, blob_name, output_path, size):
     def progress(data, total):
         try:
@@ -54,73 +53,61 @@ def _download_output(container, blob_name, output_path, size):
     storage_client.get_blob_to_path(container, blob_name, output_path, progress_callback=progress)
     print("    Output download successful.\n")
 
-def _track_completed_tasks(container, dwnld_dir):
-    try:
-        job_outputs = storage_client.list_blobs(container)
-        for output in job_outputs:
-            if output.name.startswith('thumbs/'):
-                continue
-            elif is_log.match(output.name):
-                output_file = os.path.join(dwnld_dir, "logs", output.name)
-            else:
-                output_file = os.path.join(dwnld_dir, output.name)
-        
-            if not os.path.isfile(output_file):
-                _download_output(container, output.name, output_file, output.properties.content_length)
 
-    except (TypeError, AttributeError, KeyError) as exp:
-        raise RuntimeError("Failed {0}".format(exp))
+def _track_completed_outputs(container, dwnld_dir):
+    job_outputs = storage_client.list_blobs(container)
+    for output in job_outputs:
+        if output.name.startswith('thumbs/'):
+            continue
+        else:
+            output_file = os.path.normpath(os.path.join(dwnld_dir, output.name))
+        if not os.path.isfile(output_file):
+            if not os.path.isdir(os.path.dirname(output_file)):
+                os.makedirs(os.path.dirname(output_file))
+            _download_output(container, output.name, output_file, output.properties.content_length)
 
 
 def _check_job_stopped(job):
+    """Checks job for failure or completion.
+    :returns: A boolean indicating True if the job completed, or False if still in
+     progress.
+    :raises: RuntimeError if the job has failed, or been cancelled.
     """
-    Checks job for failure or completion.
-
-    :Args:
-        - job (:class:`batchapps.SubmittedJob`): an instance of the current
-            SubmittedJob object.
-
-    :Returns:
-        - A boolean indicating True if the job completed, or False if still in
-            progress.
-    :Raises:
-        - RuntimeError if the job has failed, or been cancelled.
-    """
-
+    from azure.batch.models import JobState
     stopped_status = [
-        batch.models.JobState.disabling,
-        batch.models.JobState.disabled,
-        batch.models.JobState.terminating,
-        batch.models.JobState.deleting
-        ]
+        JobState.disabling,
+        JobState.disabled,
+        JobState.terminating,
+        JobState.deleting
+    ]
     running_status = [
-        batch.models.JobState.active,
-        batch.models.JobState.enabling
-        ]
-
+        JobState.active,
+        JobState.enabling
+    ]
     try:
         if job.state in stopped_status:
             print(header("Job has stopped"))
             print("Job status: {0}".format(job.state))
             raise RuntimeError("Job is no longer running. Status: {0}".format(job.state))
-
-        elif job.state == batch.models.JobState.completed:
+        elif job.state == JobState.completed:
             print(header("Job has completed"))
             return True
-
         elif job.state in running_status:
             return False
-
+        else:
+            raise RuntimeError("Job state invalid: {}".format(job.state))
     except AttributeError as exp:
         raise RuntimeError(exp)
 
+
 def track_job_progress(id, container, dwnld_dir):
+    from azure.batch.models import TaskState
     print("Tracking job with ID: {0}".format(id))
     try:
         job = batch_client.job.get(id)
         tasks = [t for t in batch_client.task.list(id)]
         while True:
-            completed_tasks = [t for t in tasks if t.state == batch.models.TaskState.completed]
+            completed_tasks = [t for t in tasks if t.state == TaskState.completed]
             errored_tasks = [t for t in completed_tasks if t.execution_info.exit_code != 0]
             if len(tasks) == 0:
                 percentage = 0
@@ -130,18 +117,16 @@ def track_job_progress(id, container, dwnld_dir):
             if errored_tasks:
                 print("    - Warning: some tasks have completed with a non-zero exit code.")
 
-            _track_completed_tasks(container, dwnld_dir)
+            _track_completed_outputs(container, dwnld_dir)
             if _check_job_stopped(job):
                 return # Job complete
 
             time.sleep(10)
             job = batch_client.job.get(id)
             tasks = [t for t in batch_client.task.list(id)]
-
-    except (TypeError, AttributeError) as exp:
-        raise RuntimeError("Error occured: {0}".format(exp))
     except KeyboardInterrupt:
         raise RuntimeError("Monitoring aborted.")
+
 
 def _authenticate(cfg_path):
     global batch_client, storage_client
@@ -159,6 +144,7 @@ def _authenticate(cfg_path):
             endpoint_suffix="core.windows.net")
     except (EnvironmentError, ConfigParser.NoOptionError, ConfigParser.NoSectionError) as exp:
         raise ValueError("Failed to authenticate using Maya configuration {0}".format(cfg_path))
+
 
 if __name__ == "__main__":
     try:

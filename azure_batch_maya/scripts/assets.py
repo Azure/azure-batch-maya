@@ -36,6 +36,7 @@ import pkgutil
 import inspect
 import importlib
 import tempfile
+import pathlib
 from Queue import Queue
 
 from api import MayaAPI as maya
@@ -74,8 +75,8 @@ class AzureBatchAssets(object):
         self.ui = AssetsUI(self, frame)
         self.frame = frame
 
-        callback.after_new(self._callback_refresh)
-        callback.after_read(self._callback_refresh)
+        #callback.after_new(self._callback_refresh)
+        #callback.after_read(self._callback_refresh)
 
     def _callback_refresh(self, *args):
         """Called by Maya when a new scene file is loaded, so we reset
@@ -131,6 +132,7 @@ class AzureBatchAssets(object):
         SYS_SEARCHPATHS.append(maya.workspace(query=True, directory=True))
         SYS_SEARCHPATHS.append(os.getcwd())
         SYS_SEARCHPATHS = list(set(SYS_SEARCHPATHS))
+        return SYS_SEARCHPATHS
 
     def _configure_renderer(self):
         """Configure the renderer-specific asset collection according
@@ -624,7 +626,7 @@ class Asset(object):
         """Check whether this file is already represented in the current
         asset list.
         """
-        return any(f.path == self.path for f in files) #TODO: Check if this is accurate
+        return any(pathlib.Path(f.path) == pathlib.Path(self.path) for f in files)
 
     def restore_label(self):
         """Restore the original UI display label after the file has been

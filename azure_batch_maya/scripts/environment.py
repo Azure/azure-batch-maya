@@ -44,7 +44,15 @@ MAYA_IMAGES = {
             'offer': 'autodesk-maya-arnold-win2016-preview',
             'sku': 'maya2017',
             'version': 'latest'
-        }
+        },
+    'Batch CentOS Preview':
+        {
+            'node_sku_id': 'batch.node.centos 7',
+            'publisher': 'batch',
+            'offer': 'autodesk-maya-arnold-centos73-preview',
+            'sku': 'maya2017',
+            'version': 'latest'
+        },
 }
 LICENSES = [
     {'label': 'Maya', 'id': 'maya', 'plugin': None },
@@ -71,8 +79,8 @@ class AzureBatchEnvironment(object):
         self.skus = self._load_skus()
         self.ui = EnvironmentUI(self, frame, MAYA_IMAGES.keys(), self.skus, self.licenses)
         self.refresh()
-        callback.after_new(self.ui.refresh)
-        callback.after_read(self.ui.refresh)
+        #callback.after_new(self.ui.refresh)
+        #callback.after_read(self.ui.refresh)
 
     def _load_skus(self):
         """Populate the list of availablke hardware SKUs."""

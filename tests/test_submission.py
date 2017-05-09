@@ -46,10 +46,17 @@ from submission import AzureBatchSubmission, AzureBatchRenderJob
 from assets import AzureBatchAssets
 from pools import AzureBatchPools
 from environment import AzureBatchEnvironment
+from shared import AzureBatchSettings
+from exception import CancellationException
 
 from batch_extensions import BatchExtensionsClient
+from batch_extensions.batch_auth import SharedKeyCredentials
 from batch_extensions import operations
 from batch_extensions import models
+
+from azure.storage.blob import BlockBlobService
+
+LIVE = True
 
 def print_status(status):
     print(status)
@@ -88,8 +95,8 @@ class TestBatchSubmission(unittest.TestCase):
         submission = AzureBatchSubmission("frame", "call")
         mock_mods.assert_called_with()
         mock_ui.assert_called_with(submission, "frame")
-        mock_call.after_new.assert_called_with(mock.ANY)
-        mock_call.after_open.assert_called_with(mock.ANY)
+        #mock_call.after_new.assert_called_with(mock.ANY)
+        #mock_call.after_open.assert_called_with(mock.ANY)
 
     @mock.patch("submission.maya")
     def test_submission_start(self, mock_maya):
@@ -97,7 +104,7 @@ class TestBatchSubmission(unittest.TestCase):
         self.mock_self.ui = mock.create_autospec(SubmissionUI)
         self.mock_self.ui.render_module = "module"
         self.mock_self.renderer = mock.Mock()
-        AzureBatchSubmission.start(self.mock_self, session, "assets", "pools")
+        AzureBatchSubmission.start(self.mock_self, session, "assets", "pools", "env")
         self.mock_self.renderer.delete.assert_called_with()
         self.mock_self._configure_renderer.assert_called_with()
         self.mock_self.renderer.display.assert_called_with("module")
@@ -143,17 +150,17 @@ class TestBatchSubmission(unittest.TestCase):
     @mock.patch("submission.utils")
     @mock.patch("submission.maya")
     def test_submission_submit(self, mock_maya, mock_utils):
-        def call(func):
-            self.assertTrue(hasattr(func, '__call__'))
-            return func()
+        def call(func, *args, **kwargs):
+            self.assertTrue(callable(func))
+            return func(*args, **kwargs)
 
         mock_prog = mock.create_autospec(ProgressBar)
         mock_prog.is_cancelled.return_value = False
         mock_utils.ProgressBar.return_value = mock_prog
-        self.mock_self._configure_pool = AzureBatchSubmission._configure_pool
-        self.mock_self._check_outputs = AzureBatchSubmission._check_outputs
+        mock_utils.format_scene_path.return_value = "test_file_path"
+        self.mock_self._configure_pool = lambda t: AzureBatchSubmission._configure_pool(self.mock_self, t)
         self.mock_self._check_plugins.return_value = []
-        self.mock_self.asset_manager.upload.return_value = ("a", "b", mock_prog)
+        self.mock_self._get_os_flavor.return_value = 'Windows'
         self.mock_self.pool_manager.create_auto_pool.return_value = {'autoPool': 'auto-pool'}
         self.mock_self.pool_manager.create_pool.return_value = {'poolId': 'new-pool'}
         self.mock_self.renderer = mock.Mock()
@@ -161,154 +168,76 @@ class TestBatchSubmission(unittest.TestCase):
         self.mock_self.renderer.get_params.return_value = {"foo": "bar"}
         self.mock_self.renderer.get_title.return_value = "job name"
         self.mock_self._call = call
+        mock_job = mock.create_autospec(models.ExtendedJobParameter)
+        self.mock_self.batch.job.jobparameter_from_json.return_value = mock_job
 
         self.mock_self.ui.get_pool.return_value = {1:"pool"}
-        self.mock_self.asset_manager.upload.return_value = ("files", "maps", mock_prog)
+        self.mock_self.asset_manager.upload.return_value = ("files", "maps", "thumbs", mock_prog)
 
         AzureBatchSubmission.submit(self.mock_self)
         self.assertEqual(mock_maya.error.call_count, 1)
         self.mock_self.renderer.disable.assert_called_with(True)
 
         self.mock_self.ui.get_pool.return_value = {1:4}
-
         AzureBatchSubmission.submit(self.mock_self)
         self.assertEqual(mock_maya.error.call_count, 1)
         self.mock_self.renderer.disable.assert_called_with(True)
+        self.mock_self.pool_manager.create_auto_pool.assert_called_with(4, "job name")
+        self.mock_self.batch.job.add.assert_called_with(mock_job)
+        self.mock_self.batch.job.jobparameter_from_json.assert_called_with(
+            {'poolInfo': {'autoPool': 'auto-pool'},
+             'displayName': 'job name',
+             'id': mock.ANY,
+             'applicationTemplateInfo': {
+                 'parameters': {'sceneFile': 'test_file_path', 'outputs': mock.ANY, 'assetScript': 'maps', 'foo': 'bar', 'projectData': 'files', 'thumbScript': 'thumbs'},
+                 'filePath': os.path.join(os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-windows.json')},
+             'metadata': [{'name': 'JobType', 'value': 'Maya'}]})
 
-        job.submit.assert_called_with()
-        self.assertEqual(job.instances, 4)
 
         self.mock_self.ui.get_pool.return_value = {2:4}
         AzureBatchSubmission.submit(self.mock_self)
         self.assertEqual(mock_maya.error.call_count, 1)
         self.mock_self.renderer.disable.assert_called_with(True)
+        self.mock_self.batch.job.add.assert_called_with(mock_job)
+        self.mock_self.batch.job.jobparameter_from_json.assert_called_with(
+            {'poolInfo': {'poolId': '4'},
+             'displayName': 'job name',
+             'id': mock.ANY,
+             'applicationTemplateInfo': {
+                 'parameters': {'sceneFile': 'test_file_path', 'outputs': mock.ANY, 'assetScript': 'maps', 'foo': 'bar', 'projectData': 'files', 'thumbScript': 'thumbs'},
+                 'filePath': os.path.join(os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-windows.json')},
+             'metadata': [{'name': 'JobType', 'value': 'Maya'}]})
 
-        job.submit.assert_called_with()
-        self.assertEqual(job.pool, '4')
 
-        self.mock_self.check_outputs.side_effect = ValueError("No camera")
+        self.mock_self._check_outputs.side_effect = ValueError("No camera")
         AzureBatchSubmission.submit(self.mock_self)
         self.assertEqual(mock_maya.error.call_count, 2)
-        self.mock_self.check_outputs.side_effect = None
+        self.mock_self._check_outputs.side_effect = None
 
         self.mock_self.ui.get_pool.return_value = {3: 4}
         AzureBatchSubmission.submit(self.mock_self)
         self.assertEqual(mock_maya.error.call_count, 2)
         self.mock_self.renderer.disable.assert_called_with(True)
 
-        job.submit.assert_called_with()
-        job.submit.call_count = 0
-        self.mock_self.pool_manager.create_pool.assert_called_with(4)
+        self.mock_self.batch.job.add.assert_called_with(mock_job)
+        self.mock_self.batch.job.add.call_count = 0
+        self.mock_self.pool_manager.create_pool.assert_called_with(4, 'job name')
 
-        mock_prog.is_cancelled.return_value = True
+        mock_prog.is_cancelled.side_effect = CancellationException("cancelled")
         AzureBatchSubmission.submit(self.mock_self)
         self.assertEqual(mock_maya.info.call_count, 4)
-
         self.mock_self.renderer.disable.assert_called_with(True)
-        self.assertEqual(job.submit.call_count, 0)
+        self.assertEqual(self.mock_self.batch.job.add.call_count, 0)
 
-        mock_prog.is_cancelled.return_value = False
+        mock_prog.is_cancelled.side_effect = None
         self.mock_self.pool_manager.create_pool.side_effect = Exception("Logged out!")
+        AzureBatchSubmission.submit(self.mock_self)
+        self.assertEqual(mock_maya.error.call_count, 2)
+        self.mock_self.renderer.disable.assert_called_with(True)
+        self.assertEqual(self.mock_self.batch.job.add.call_count, 0)
+
+        self.mock_self.pool_manager.create_pool.side_effect = ValueError("Bad data")
         AzureBatchSubmission.submit(self.mock_self)
         self.assertEqual(mock_maya.error.call_count, 3)
         self.mock_self.renderer.disable.assert_called_with(True)
-        self.assertEqual(job.submit.call_count, 0)
-
-
-class TestSubmissionCombined(unittest.TestCase):
-
-    @mock.patch("submission.utils")
-    @mock.patch("ui_submission.utils")
-    @mock.patch("ui_submission.maya")
-    @mock.patch("submission.callback")
-    @mock.patch("submission.maya")
-    def test_submission(self, *args):
-
-        mock_callback = args[1]
-        mock_maya = args[0]
-        mock_maya.mel.return_value = "Renderer"
-        mock_maya.get_list.return_value = ["1","2","3"]
-        mock_maya.get_attr.return_value = True
-
-        ui_maya = args[2]
-        ui_maya.radio_group.return_value = 2
-        ui_maya.menu.return_value = "12345"
-        ui_maya.int_slider.return_value = 6
-
-        def add_tab(tab):
-            pass
-
-        def call(func, *args, **kwargs):
-            self.assertTrue(hasattr(func, '__call__'))
-            return func()
-        
-        mock_utils = args[4]
-        mock_prog = mock.create_autospec(ProgressBar)
-        mock_prog.is_cancelled.return_value = False
-        mock_utils.ProgressBar.return_value = mock_prog
-
-        layout = mock.Mock(add_tab=add_tab)
-        sub = AzureBatchSubmission(layout, call)
-        self.assertEqual(len(sub.modules), 4)
-        self.assertTrue(mock_callback.after_new.called)
-        self.assertTrue(mock_callback.after_open.called)
-
-        creds = mock.create_autospec(Credentials)
-        conf = mock.create_autospec(Configuration)
-        session = mock.Mock(credentials=creds, config=conf)
-        assets = mock.create_autospec(BatchAppsAssets)
-        pools = mock.create_autospec(BatchAppsPools)
-        env = mock.create_autospec(BatchAppsEnvironment)
-        env.license = {"license":"test"}
-        env.environment_variables = {"env":"val"}
-        env.plugins = {"plugins":"test"}
-
-        sub.start(session, assets, pools, env)
-        
-        mock_maya.mel.return_value = "Renderer_A"
-        sub.ui.refresh()
-
-        sub.asset_manager.upload.return_value = (["abc"], {}, mock_prog)
-        sub.asset_manager.collect_assets.return_value = {'assets':['abc'],
-                                                         'pathmaps':'mapping'}
-        sub.job_manager = mock.create_autospec(JobManager)
-        job = mock.create_autospec(JobSubmission)
-        job.required_files = mock.Mock()
-        job.required_files.upload.return_value = []
-        sub.job_manager.create_job.return_value = job
-
-        sub.submit()
-        self.assertEqual(mock_maya.error.call_count, 0)
-        self.assertEqual(sub.pool_manager.create_pool.call_count, 0)
-        job.submit.assert_called_with()
-        self.assertEqual(job.params, {"setting_A":1, "setting_B":2})
-        job.add_file_collection.assert_called_with(["abc"])
-        self.assertEqual(job.pool, "12345")
-
-        mock_maya.get_attr.return_value = False
-        sub.submit()
-        mock_maya.error.assert_called_with(mock.ANY)
-        mock_maya.error.call_count = 0
-        mock_maya.get_attr.return_value = True
-
-        ui_maya.menu.return_value = None
-        sub.submit()
-        mock_maya.error.assert_called_with("No pool selected.")
-        mock_maya.error.call_count = 0
-
-        ui_maya.radio_group.return_value = 1
-        sub.submit()
-        self.assertEqual(mock_maya.error.call_count, 0)
-        self.assertEqual(sub.pool_manager.create_pool.call_count, 0)
-        job.submit.assert_called_with()
-        self.assertEqual(job.instances, 6)
-
-        ui_maya.radio_group.return_value = 3
-        sub.submit()
-        self.assertEqual(mock_maya.error.call_count, 0)
-        sub.pool_manager.create_pool.assert_called_with(6)
-        job.submit.assert_called_with()
-
-        sub.asset_manager.upload.return_value = [("failed", Exception("boom"))]
-        sub.submit()
-        self.assertEqual(mock_maya.error.call_count, 1)
+        self.assertEqual(self.mock_self.batch.job.add.call_count, 0)

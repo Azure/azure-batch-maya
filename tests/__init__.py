@@ -1,6 +1,6 @@
 ﻿#-------------------------------------------------------------------------
 #
-# Batch Apps Maya Plugin
+# Azure Batch Maya Plugin
 #
 # Copyright (c) Microsoft Corporation.  All rights reserved.
 #
