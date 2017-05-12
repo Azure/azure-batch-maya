@@ -162,3 +162,9 @@ class AzureBatchEnvironment(object):
             return 'Windows'
         else:
             return 'Linux'
+
+    def get_environment_settings(self):
+        env_vars = self.ui.get_env_vars()
+        vars = [{'name': k, 'value': v} for k, v in env_vars.items()]
+        self._log.debug("Adding custom env vars: {}".format(vars))
+        return vars

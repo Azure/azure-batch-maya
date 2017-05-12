@@ -83,6 +83,7 @@ class TestBatchSubmission(unittest.TestCase):
         self.mock_self.ui.submit_status = print_status
         self.mock_self.pool_manager = mock.create_autospec(AzureBatchPools)
         self.mock_self.asset_manager = mock.create_autospec(AzureBatchAssets)
+        self.mock_self.env_manager = mock.create_autospec(AzureBatchEnvironment)
         self.mock_self._log = logging.getLogger("TestSubmission")
         self.mock_self.renderer = None
         self.mock_self.frame = mock.create_autospec(AzureBatchUI)
@@ -163,6 +164,7 @@ class TestBatchSubmission(unittest.TestCase):
         self.mock_self._get_os_flavor.return_value = 'Windows'
         self.mock_self.pool_manager.create_auto_pool.return_value = {'autoPool': 'auto-pool'}
         self.mock_self.pool_manager.create_pool.return_value = {'poolId': 'new-pool'}
+        self.mock_self.env_manager.get_environment_settings.return_value = [{'name':'foo', 'value':'bar'}]
         self.mock_self.renderer = mock.Mock()
         self.mock_self.renderer.get_jobdata.return_value = ("a", "b")
         self.mock_self.renderer.get_params.return_value = {"foo": "bar"}
@@ -172,7 +174,7 @@ class TestBatchSubmission(unittest.TestCase):
         self.mock_self.batch.job.jobparameter_from_json.return_value = mock_job
 
         self.mock_self.ui.get_pool.return_value = {1:"pool"}
-        self.mock_self.asset_manager.upload.return_value = ("files", "maps", "thumbs", mock_prog)
+        self.mock_self.asset_manager.upload.return_value = ("files", "maps", "thumbs", "workspace", mock_prog)
 
         AzureBatchSubmission.submit(self.mock_self)
         self.assertEqual(mock_maya.error.call_count, 1)
@@ -185,11 +187,13 @@ class TestBatchSubmission(unittest.TestCase):
         self.mock_self.pool_manager.create_auto_pool.assert_called_with(4, "job name")
         self.mock_self.batch.job.add.assert_called_with(mock_job)
         self.mock_self.batch.job.jobparameter_from_json.assert_called_with(
-            {'poolInfo': {'autoPool': 'auto-pool'},
+            {'commonEnvironmentSettings': [{'name': 'foo', 'value':'bar'}],
+             'poolInfo': {'autoPool': 'auto-pool'},
              'displayName': 'job name',
              'id': mock.ANY,
              'applicationTemplateInfo': {
-                 'parameters': {'sceneFile': 'test_file_path', 'outputs': mock.ANY, 'assetScript': 'maps', 'foo': 'bar', 'projectData': 'files', 'thumbScript': 'thumbs'},
+                 'parameters': {'sceneFile': 'test_file_path', 'outputs': mock.ANY, 'assetScript': 'maps', 'foo': 'bar',
+                                'projectData': 'files', 'thumbScript': 'thumbs', 'workspace': 'workspace'},
                  'filePath': os.path.join(os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-windows.json')},
              'metadata': [{'name': 'JobType', 'value': 'Maya'}]})
 
@@ -200,11 +204,13 @@ class TestBatchSubmission(unittest.TestCase):
         self.mock_self.renderer.disable.assert_called_with(True)
         self.mock_self.batch.job.add.assert_called_with(mock_job)
         self.mock_self.batch.job.jobparameter_from_json.assert_called_with(
-            {'poolInfo': {'poolId': '4'},
+            {'commonEnvironmentSettings': [{'name': 'foo', 'value':'bar'}],
+             'poolInfo': {'poolId': '4'},
              'displayName': 'job name',
              'id': mock.ANY,
              'applicationTemplateInfo': {
-                 'parameters': {'sceneFile': 'test_file_path', 'outputs': mock.ANY, 'assetScript': 'maps', 'foo': 'bar', 'projectData': 'files', 'thumbScript': 'thumbs'},
+                 'parameters': {'sceneFile': 'test_file_path', 'outputs': mock.ANY, 'assetScript': 'maps', 'foo': 'bar',
+                                'projectData': 'files', 'thumbScript': 'thumbs', 'workspace': 'workspace'},
                  'filePath': os.path.join(os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-windows.json')},
              'metadata': [{'name': 'JobType', 'value': 'Maya'}]})
 
@@ -230,12 +236,6 @@ class TestBatchSubmission(unittest.TestCase):
         self.assertEqual(self.mock_self.batch.job.add.call_count, 0)
 
         mock_prog.is_cancelled.side_effect = None
-        self.mock_self.pool_manager.create_pool.side_effect = Exception("Logged out!")
-        AzureBatchSubmission.submit(self.mock_self)
-        self.assertEqual(mock_maya.error.call_count, 2)
-        self.mock_self.renderer.disable.assert_called_with(True)
-        self.assertEqual(self.mock_self.batch.job.add.call_count, 0)
-
         self.mock_self.pool_manager.create_pool.side_effect = ValueError("Bad data")
         AzureBatchSubmission.submit(self.mock_self)
         self.assertEqual(mock_maya.error.call_count, 3)

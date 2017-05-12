@@ -166,6 +166,25 @@ def _merge_metadata(base_metadata, more_metadata):
     return result
 
 
+def _merge_environment_settings(base_env_settings, more_env_settings):
+    """Merge environment settings from two different sources.
+    :param list base_env_settings: A (possibly undefined) set of metadata.
+    :param list more_env_settings: Metadata to add (also possible undefined).
+    """
+    result = []
+    if base_env_settings:
+        result.extend(base_env_settings)
+    if more_env_settings:
+        conflicts = [k for k in [m.name for m in more_env_settings]
+                     if k in [m['name'] for m in result]]
+        if conflicts:
+            raise ValueError("May not have multiple definitions for environment settings "
+                             "value(s) '{}'".format(', '.join(conflicts)))
+        else:
+            result.extend([{'name': m.name, 'value': m.value} for m in more_env_settings])
+    return result
+
+
 def _is_prefixed(cmd_line):
     """Whether the supplied command line has already been prefixed
     with an OS specific operation.
@@ -841,9 +860,11 @@ def expand_application_template(job, deserialize):
                                         job.application_template_info.parameters)
     _validate_generated_job(job_from_template)
     metadata = _merge_metadata(job_from_template.get('metadata'), job.metadata)
+    env_settings = _merge_environment_settings(job_from_template.get('commonEnvironmentSettings'), job.common_environment_settings)
     _validate_metadata(metadata)
     metadata.append({'name': 'az_batch:template_filepath', 'value': job.application_template_info.file_path})
     job_from_template['metadata'] = metadata
+    job_from_template['commonEnvironmentSettings'] = env_settings
     
     job_patch = deserialize('ApplicationTemplate', job_from_template)
     # Merge the job as defined by the application template with the original job we were given

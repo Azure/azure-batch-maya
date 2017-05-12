@@ -48,6 +48,12 @@
         "description": "Index of the first frame to render"
       }
     },
+    "workspace": {
+      "type": "string",
+      "metadata": {
+        "description": "The SAS URL to the project workspace"
+      }
+    },
     "frameStep": {
       "type": "int",
       "metadata": {
@@ -82,6 +88,10 @@
       {
         "blobSource": "[parameters('thumbScript')]",
         "filePath": "thumbnail.py"
+      },
+      {
+        "blobSource": "[parameters('workspace')]",
+        "filePath": "workspace.mel"
       }
     ],
     "commandLine": "dir"
@@ -103,7 +113,7 @@
           "elevationLevel": "admin"
         }
       },
-      "commandLine": "sudo mkdir -m a=rwx -p \"/X\";sudo mount --rbind $AZ_BATCH_JOB_PREP_WORKING_DIR/assets /X;Render -renderer [parameters('renderer')] -verb -preRender renderPrep -rd \"$AZ_BATCH_TASK_WORKING_DIR/images\" -s {0} -e {0} \"[parameters('sceneFile')]\";err=$?;python /mnt/resource/batch/tasks/workitems/[parameters('outputs')]/job-1/jobpreparation/wd/thumbnail.py $err;sudo umount \"/X\";exit $err",
+      "commandLine": "sudo mkdir -m a=rwx -p \"/X\";sudo mount --rbind $AZ_BATCH_JOB_PREP_WORKING_DIR/assets /X;Render -renderer [parameters('renderer')] -proj \"$AZ_BATCH_JOB_PREP_WORKING_DIR\" -verb -preRender renderPrep -rd \"$AZ_BATCH_TASK_WORKING_DIR/images\" -s {0} -e {0} \"[parameters('sceneFile')]\";err=$?;python /mnt/resource/batch/tasks/workitems/[parameters('outputs')]/job-1/jobpreparation/wd/thumbnail.py $err;sudo umount \"/X\";exit $err",
       "environmentSettings": [
         {
           "name": "MAYA_SCRIPT_PATH",

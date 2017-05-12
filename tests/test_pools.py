@@ -131,6 +131,9 @@ class AzureTestBatchPools(unittest.TestCase):
         pool.allocation_state = mock.Mock(value="allocating")
         pool.creation_time = datetime.datetime.now()
         pool.vm_size = "Standard_A1"
+        pool.virtual_machine_configuration = mock.create_autospec(batch.models.VirtualMachineConfiguration)
+        pool.virtual_machine_configuration.image_reference = "image"
+        self.mock_self.environment.get_image_label.return_value = "Batch Windows Image"
         self.mock_self.pools = [pool]
         pool_ui = mock.create_autospec(AzureBatchPoolInfo)
         pool_ui.index = 0

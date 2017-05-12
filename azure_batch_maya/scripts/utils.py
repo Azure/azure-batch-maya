@@ -65,7 +65,6 @@ def get_remote_file_path(assetpath):
     to allow for delayed generation based on the selected
     pool os flavor at job submission time.
     """
-    #TODO: Check the mapping according to pool OS flavor
     def generate_path(os_flavor, fullpath=assetpath):
         local_sep = os.sep
         remote_sep = '\\' if os_flavor == 'Windows' else '/'
@@ -76,6 +75,19 @@ def get_remote_file_path(assetpath):
         path = path.replace('/', remote_sep).replace('\\', remote_sep)
         return path.strip('\\/').replace('\\', '\\\\')
     return generate_path
+
+
+def get_remote_directory(dir_path, os_flavor):
+    """Convert a local directory path to a remote directory
+    path according to the remote OS.
+    """
+    local_sep = os.sep
+    remote_sep = '\\' if os_flavor == 'Windows' else '/'
+    if ':' in dir_path:
+        drive_letter, dir_path = dir_path.split(':', 1)
+        dir_path = drive_letter + local_sep + dir_path[1:]
+    dir_path = dir_path.replace('/', remote_sep).replace('\\', remote_sep)
+    return dir_path.strip('\\/').replace('\\', '\\\\')
 
 
 def format_scene_path(scene_file, os_flavor):

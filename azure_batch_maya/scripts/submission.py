@@ -36,6 +36,7 @@ import json
 import uuid
 import traceback
 
+from batch_extensions import models
 from api import MayaAPI as maya
 from api import MayaCallbacks as callback
 
@@ -273,11 +274,12 @@ class AzureBatchSubmission(object):
             self.ui.submit_status("Checking assets...")
             scene_file, renderer_data = self.renderer.get_jobdata()
             application_params['sceneFile'] = utils.format_scene_path(scene_file, pool_os)
-            file_group, map_url, thumb_url, progress = self.asset_manager.upload(
+            file_group, map_url, thumb_url, workspace_url, progress = self.asset_manager.upload(
                 renderer_data, progress, job_id, plugins, pool_os)
             application_params['projectData'] = file_group
             application_params['assetScript'] = map_url
             application_params['thumbScript'] = thumb_url
+            application_params['workspace'] = workspace_url
             self.frame.select_tab(2)
 
             self.ui.submit_status("Configuring job...")
@@ -289,6 +291,7 @@ class AzureBatchSubmission(object):
             progress.status("Setting pool...")
             pool = self._configure_pool(self.renderer.get_title())
             batch_parameters['poolInfo'] = pool
+            batch_parameters['commonEnvironmentSettings'] = self.env_manager.get_environment_settings()
             
             self._log.debug(json.dumps(batch_parameters))
             new_job = self.batch.job.jobparameter_from_json(batch_parameters)
@@ -302,13 +305,11 @@ class AzureBatchSubmission(object):
                 utils.JobWatcher(new_job.id, self.data_path, download_dir)
         except CancellationException:
             maya.info("Job submission cancelled")
-        except ValueError as exp:
-            self._log.error(exp)
-            maya.error(str(exp))
         except Exception as exp:
-            self._log.error(exp)
+            self._log.error(str(exp))
             exc_type, exc_value, exc_traceback = sys.exc_info()
             self._log.debug("".join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+            maya.error(str(exp))
         finally:
             if progress:
                 progress.end()

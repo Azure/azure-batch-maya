@@ -164,6 +164,23 @@ class AzureBatchAssets(object):
             self.ui.prepare()
         return self._assets.collect()
 
+    def _create_remote_workspace(self, os_flavor):
+        """Create a custom workspace file to set as the remote rendering project.
+        :param str os_flavor: The chosen operating system of the render nodes, used
+         to determine the formatting of the path remapping.
+        """
+        proj_file = os.path.join(tempfile.gettempdir(), "workspace.mel")
+        with open(proj_file, 'w') as handle:
+            for rule in maya.workspace(fileRuleList=True):
+                project_dir = maya.workspace(fileRuleEntry=rule)
+                remote_path = utils.get_remote_directory(maya.workspace(en=project_dir), os_flavor)
+                if os_flavor == 'Windows':
+                    full_remote_path = "X:\\\\" + remote_path
+                else:
+                    full_remote_path = "/X/" + remote_path
+                handle.write("workspace -fr \"{}\" \"{}\";\n".format(rule, full_remote_path))
+        return Asset(proj_file, [], self.batch, self._log)
+
     def _create_path_map(self, plugins, os_flavor):
         """Create the pre-render mel script to redirect all the asset reference
         directories for this render. Called on job submission, and the resulting
@@ -193,7 +210,7 @@ class AzureBatchAssets(object):
                 parsed_local = local.replace('\\', '\\\\')
                 handle.write("dirmap -m \"{}\" \"{}\";\n".format(parsed_local, full_remote_path))
             handle.write("}")
-        return map_file
+        return Asset(map_file, [], self.batch, self._log)
 
     def _upload_all(self, to_upload, progress, total, project):
         """Upload all selected assets in 10 threads."""
@@ -312,13 +329,12 @@ class AzureBatchAssets(object):
             if job_set:
                 self._log.debug("Preparing job specific assets")
                 job_assets = [Asset(j, None, self.batch, self._log) for j in job_set]
-                map_file = self._create_path_map(load_plugins, os_flavor)
-                path_map = Asset(map_file, [], self.batch, self._log)
-                thumb_file = os.path.join(os.environ['AZUREBATCh_TOOLS'], 'generate_thumbnails.py')
-                thumb_script = Asset(thumb_file, [], self.batch, self._log)
+                path_map = self._create_path_map(load_plugins, os_flavor)
+                thumb_script = Asset(os.path.join(os.environ['AZUREBATCH_TOOLS'], 'generate_thumbnails.py'),
+                                     [], self.batch, self._log)
+                workspace = self._create_remote_workspace(os_flavor)
                 asset_refs.extend(job_assets)
-                asset_refs.append(path_map)
-                asset_refs.append(thumb_script)
+                asset_refs.extend([path_map, thumb_script, workspace])
 
             progress_bar.is_cancelled()
             progress_bar.status('Uploading files...')
@@ -329,18 +345,13 @@ class AzureBatchAssets(object):
             payload = self._total_data(asset_refs)
             self.ui.upload_status("Uploading {0}...".format(self._format_size(payload)))
             maya.refresh()
-
-            self._upload_all(asset_refs, progress_bar, payload, self.ui.get_project())
-            map_url = None
             asset_project = self.ui.get_project()
+            self._upload_all(asset_refs, progress_bar, payload, asset_project)
             if job_set:
-                asset_map = os.path.basename(path_map.path)
-                map_url = self.batch.file.generate_sas_url(
-                    asset_project, asset_map, remote_path=path_map.storage_path)
-                thumb_path = os.path.basename(thumb_script.path)
-                thumb_url = self.batch.file.generate_sas_url(
-                    asset_project, thumb_path, remote_path=thumb_script.storage_path)
-            return asset_project, map_url, thumb_url, progress_bar
+                return asset_project, path_map.get_url(asset_project), thumb_script.get_url(asset_project), \
+                    workspace.get_url(asset_project), progress_bar
+            else:
+                return None
 
         except CancellationException as exp:
             if job_set:
@@ -650,6 +661,11 @@ class Asset(object):
             scroll_height = maya.text(self.display_text, query=True, height=True)
             maya.scroll_layout(self.scroll_layout, edit=True, scrollByPixel=("down", scroll_height))
         maya.refresh()
+
+    def get_url(self, project):
+        file_name = os.path.basename(self.path)
+        return self.batch.file.generate_sas_url(
+            project, file_name, remote_path=self.storage_path)
 
     def upload(self, index, progress_bar, queue, project):
         """Upload this asset file. This is performed outside of Maya's

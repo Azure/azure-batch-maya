@@ -115,10 +115,8 @@ class AzureBatchSettings(object):
                     message += "Details:\n"
                     for detail in exp.error.values:
                         message += "{}: {}".format(detail.key, detail.value)
-                maya.error(message)
-                raise
+                raise ValueError(message)
         except Exception as exp:
             if (maya.window("AzureBatch", q=1, exists=1)):
                 maya.delete_ui("AzureBatch")
-            maya.error("Error: {0}".format(exp))
-            raise
+            raise ValueError("Error: {0}".format(exp))
