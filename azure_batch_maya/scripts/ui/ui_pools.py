@@ -170,17 +170,12 @@ class AzureBatchPoolInfo(object):
         """
         maya.text(self._type, edit=True, label=" {0}".format(value))
 
-    def set_size(self, value):
-        """Set the number of instances in the pool.
+    def set_size(self, pool):
+        """Set the number of instances in the pool, both current and target.
         :param int value: Size of the pool.
         """
-        maya.text(self._size, edit=True, label=" {0}".format(value))
-
-    def set_target(self, value):
-        """Set the target number of instances in the pool.
-        :param int value: The target size of the pool.
-        """
-        maya.text(self._target, edit=True, label=" {0}".format(value))
+        maya.text(self._size, edit=True, label=" target: {} current: {}".format(
+            pool.target_dedicated_nodes, pool.current_dedicated_nodes))
 
     def set_created(self, value):
         """Set the date/time the pool was created.
@@ -205,11 +200,11 @@ class AzureBatchPoolInfo(object):
                 value += "{} nodes {} ".format(node_states[state], state.value)
         maya.text(self._state, edit=True, label=" {0}".format(value))
 
-    def set_tasks(self, value):
-        """Set the tasks per TVM allowed in the pool.
-        :param int value: Tasks per TVM.
+    def set_id(self, value):
+        """Set the pool ID field.
+        :param str value: Pool ID.
         """
-        maya.text(self._tasks, edit=True, label=" {0}".format(value))
+        maya.text_field(self._id, edit=True, text=value)
 
     def set_allocation(self, value):
         """Set the allocation state of the pool.
@@ -240,12 +235,11 @@ class AzureBatchPoolInfo(object):
         """Command for the expanding of the pool reference frame layout.
         Loads latest details for the specified pool and populates UI.
         """
+        self._id = self.display_data("ID:   ")
         self._type = self.display_info("Type:   ")
-        self._size = self.display_info("Current Size:   ")
-        self._target = self.display_info("Target Size:   ")
+        self._size = self.display_info("Size:   ")
         self._created = self.display_info("Created:   ")
         self._state = self.display_info("State:   ")
-        self._tasks = self.display_info("Tasks per VM:   ")
         self._image = self.display_info("Image:   ")
         self._allocation = self.display_info("Allocation State:   ")
         self._licenses = self.display_info("Licenses:   ")
@@ -302,6 +296,16 @@ class AzureBatchPoolInfo(object):
         self.content.append(
             maya.text(label=label, parent=self.listbox, align="right"))
         input = maya.text(align="left", label="", parent=self.listbox)
+        self.content.append(input)
+        return input
+
+    def display_data(self, label):
+        """Display text data as a non-editable text field with heading.
+        :param str label: The text for the data heading.
+        """
+        self.content.append(
+            maya.text(label=label, parent=self.listbox, align="right"))
+        input = maya.text_field(text="", parent=self.listbox, editable=False)
         self.content.append(input)
         return input
 

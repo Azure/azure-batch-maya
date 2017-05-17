@@ -114,13 +114,12 @@ class AzureBatchPools(object):
             pool = self._call(self.batch.pool.get, pool.id)
             _nodes = self._call(self.batch.compute_node.list, pool.id)
             nodes = [n for n in _nodes]
+            self.selected_pool.set_id(pool.id)
             self.selected_pool.set_label(pool.display_name if pool.display_name else pool.id)
-            self.selected_pool.set_size(pool.current_dedicated_nodes)
-            self.selected_pool.set_target(pool.target_dedicated_nodes)
+            self.selected_pool.set_size(pool)
             self.selected_pool.set_type(
                 "Auto" if pool.id.startswith("Maya_Auto_Pool") else "Provisioned")
             self.selected_pool.set_state(pool.state.value, nodes)
-            self.selected_pool.set_tasks(pool.max_tasks_per_node)
             self.selected_pool.set_allocation(pool.allocation_state.value)
             self.selected_pool.set_created(pool.creation_time)
             self.selected_pool.set_licenses(pool.application_licenses)
