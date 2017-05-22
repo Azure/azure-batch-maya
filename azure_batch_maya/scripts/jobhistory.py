@@ -37,12 +37,12 @@ import shutil
 import re
 
 from api import MayaAPI as maya
-from ui_history import HistoryUI
+from ui_jobhistory import JobHistoryUI
 
 import azure.batch as batch
 
 
-class AzureBatchHistory(object):
+class AzureBatchJobHistory(object):
     """Handler for job display functionality."""
     
     def __init__(self, index, frame, call):
@@ -63,7 +63,7 @@ class AzureBatchHistory(object):
         self.count = 0
         self.min = True
         self.max = False
-        self.ui = HistoryUI(self, frame)
+        self.ui = JobHistoryUI(self, frame)
         self.all_jobs = []
         self.jobs = []
         self.selected_job = None

@@ -10,14 +10,14 @@ from api import MayaAPI as maya
 import utils
 
 
-class HistoryUI(object):
+class JobHistoryUI(object):
     """Class to create the 'Jobs' tab in the plug-in UI"""
 
     def __init__(self, base, frame):
         """Create 'Jobs' tab and add to UI frame.
 
         :param base: The base class for handling jobs monitoring functionality.
-        :type base: :class:`.AzureBatchHistory`
+        :type base: :class:`.AzureBatchJobHistory`
         :param frame: The shared plug-in UI frame.
         :type frame: :class:`.AzureBatchUI`
         """
@@ -237,7 +237,7 @@ class AzureBatchJobInfo(object):
         """Create a new job reference.
 
         :param base: The base class for handling jobs monitoring functionality.
-        :type base: :class:`.AzureBatchHistory`
+        :type base: :class:`.AzureBatchJobHistory`
         :param int index: The index of where this reference is displayed on
          the current page.
         :param layout: The layout on which the job details will be displayed.

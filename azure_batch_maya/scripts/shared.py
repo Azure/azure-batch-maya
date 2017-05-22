@@ -34,7 +34,7 @@ import traceback
 from ui_shared import AzureBatchUI
 from config import AzureBatchConfig
 from submission import AzureBatchSubmission
-from history import AzureBatchHistory
+from jobhistory import AzureBatchJobHistory
 from assets import AzureBatchAssets
 from pools import AzureBatchPools
 from environment import AzureBatchEnvironment
@@ -76,7 +76,7 @@ class AzureBatchSettings(object):
             self.submission = AzureBatchSubmission(self.tab_index['SUBMIT'], self.frame, self.call)
             self.assets = AzureBatchAssets(self.tab_index['ASSETS'], self.frame, self.call)
             self.pools = AzureBatchPools(self.tab_index['POOLS'], self.frame, self.call)
-            self.history =  AzureBatchHistory(self.tab_index['JOBHISTORY'], self.frame, self.call)
+            self.jobhistory =  AzureBatchJobHistory(self.tab_index['JOBHISTORY'], self.frame, self.call)
             self.env =  AzureBatchEnvironment(self.tab_index['ENV'], self.frame, self.call)
             self.start()
         except Exception as exp:
@@ -95,7 +95,7 @@ class AzureBatchSettings(object):
             if self.config.auth:
                 self.frame.is_logged_in()
                 self.env.configure(self.config)
-                self.history.configure(self.config)
+                self.jobhistory.configure(self.config)
                 self.assets.configure(self.config)
                 self.pools.configure(self.config, self.env)
                 self.submission.start(self.config, self.assets, self.pools, self.env)
