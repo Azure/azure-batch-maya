@@ -41,9 +41,11 @@ from default import AzureBatchRenderJob, AzureBatchRenderAssets
 
 class ArnoldRenderJob(AzureBatchRenderJob):
 
+    render_engine = 'arnold'
+
     def __init__(self):
-        self._renderer = "arnold"
-        self.label = "Arnold"
+        self._renderer = 'arnold'
+        self.label = 'Arnold'
         self.log_levels = [
             "0 - Errors",
             "1 - Warnings + Info",
@@ -51,7 +53,7 @@ class ArnoldRenderJob(AzureBatchRenderJob):
         ]
 
     def settings(self):
-        if self.scene_name == "":
+        if self.scene_name == '':
             job_name = "Untitled"
         else:
             job_name = str(os.path.splitext(os.path.basename(self.scene_name))[0])
@@ -76,7 +78,7 @@ class ArnoldRenderJob(AzureBatchRenderJob):
         return True
 
     def get_jobdata(self):
-        if self.scene_name == "":
+        if self.scene_name == '':
             raise ValueError("Current Maya scene has not been saved to disk.")
         
         pending_changes = cmds.file(query=True, modified=True)
@@ -87,8 +89,8 @@ class ArnoldRenderJob(AzureBatchRenderJob):
             'nosave': "Continue without saving",
             'cancel': "Cancel"
         }
-        answer = cmds.confirmDialog(title='Unsaved Changes',
-                                    message='There are unsaved changes. Continue?',
+        answer = cmds.confirmDialog(title="Unsaved Changes",
+                                    message="There are unsaved changes. Continue?",
                                     button=options.values(),
                                     defaultButton=options['save'],
                                     cancelButton=options['cancel'],
@@ -101,23 +103,23 @@ class ArnoldRenderJob(AzureBatchRenderJob):
 
     def get_params(self):
         params = {}
-        params["frameStart"] = cmds.intField(self.start, query=True, value=True)
-        params["frameEnd"] = cmds.intField(self.end, query=True, value=True)
-        params["frameStep"] = cmds.intField(self.step, query=True, value=True)
-        params["renderer"] = "arnold"
-        params["logLevel"] = int(cmds.optionMenu(self.logging, query=True, select=True)) - 1
+        params['frameStart'] = cmds.intField(self.start, query=True, value=True)
+        params['frameEnd'] = cmds.intField(self.end, query=True, value=True)
+        params['frameStep'] = cmds.intField(self.step, query=True, value=True)
+        params['renderer'] = self._renderer
+        params['logLevel'] = int(cmds.optionMenu(self.logging, query=True, select=True)) - 1
         return params
 
 
 class ArnoldRenderAssets(AzureBatchRenderAssets):
 
     assets = []
-    render_engine = "arnold"
+    render_engine = 'arnold'
     file_nodes = {
-        "aiStandIn": ["dso"],
-        "aiPhotometricLight": ["aiFilename"],
-        "aiVolume": ["dso", "filename"],
-        "aiImage": ["filename"]
+        'aiStandIn': ['dso'],
+        'aiPhotometricLight': ['aiFilename'],
+        'aiVolume': ['dso', 'filename'],
+        'aiImage': ['filename']
     }
 
     def check_path(self, path):
@@ -137,7 +139,7 @@ class ArnoldRenderAssets(AzureBatchRenderAssets):
             nodes = cmds.ls(type=node_type)
             for node in nodes:
                 for attr in attributes:
-                    collected.append(cmds.getAttr(node + "." + attr))
+                    collected.append(cmds.getAttr(node + '.' + attr))
         for path in collected:
             self.assets.append(self.check_path(path))
         return self.assets

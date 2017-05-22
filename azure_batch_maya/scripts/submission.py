@@ -146,10 +146,10 @@ class AzureBatchSubmission(object):
         culprits to the ignore list if necessary.
         """
         try:
-            with open(os.path.join(os.environ["AZUREBATCH_TOOLS"],
+            with open(os.path.join(os.environ['AZUREBATCH_TOOLS'],
                     "supported_plugins.json"), 'r') as plugins:
                 supported_plugins = json.load(plugins)
-            with open(os.path.join(os.environ["AZUREBATCH_TOOLS"],
+            with open(os.path.join(os.environ['AZUREBATCH_TOOLS'],
                     "ignored_plugins.json"), 'r') as plugins:
                 ignored_plugins = json.load(plugins)
         except EnvironmentError:
@@ -163,7 +163,7 @@ class AzureBatchSubmission(object):
                        "yet supported.\nRendering may be affected.\n")
             for plugin in unsupported_plugins:
                 warning += plugin + "\n"
-            options = ["Continue", "Cancel"]
+            options = ['Continue', 'Cancel']
             answer = maya.confirm(warning, options)
             if answer == options[-1]:
                 raise CancellationException("Submission Aborted")
@@ -203,7 +203,7 @@ class AzureBatchSubmission(object):
             pool_id = str(pool_spec[2])
             if pool_id == "None":
                 raise PoolException("No pool selected.")
-            return {"poolId" : pool_id}
+            return {'poolId' : pool_id}
         if pool_spec.get(3):
             self._log.info("Creating new pool.")
             return self.pool_manager.create_pool(int(pool_spec[3]), job_name)
@@ -271,7 +271,8 @@ class AzureBatchSubmission(object):
             batch_parameters['displayName'] = self.renderer.get_title()
             batch_parameters['metadata'] =  [{"name": "JobType", "value": "Maya"}]
             template_file = os.path.join(
-                os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-{}.json'.format(pool_os.lower()))
+                os.environ['AZUREBATCH_TEMPLATES'],
+                "{}-basic-{}.json".format(self.renderer.render_engine, pool_os.lower()))
             batch_parameters['applicationTemplateInfo'] = {'filePath': template_file}
             application_params = {}
             batch_parameters['applicationTemplateInfo']['parameters'] = application_params
@@ -317,7 +318,7 @@ class AzureBatchSubmission(object):
         except Exception as exp:
             self._log.error(str(exp))
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            self._log.debug("".join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+            self._log.debug(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
             maya.error(str(exp))
         finally:
             if progress:

@@ -38,8 +38,10 @@ from default import AzureBatchRenderJob, AzureBatchRenderAssets
 
 class AzureBatchMayaJob(AzureBatchRenderJob):
 
+    render_engine = "mayaSoftware"
+
     def __init__(self):
-        self._renderer = "mayaSoftware"
+        self._renderer = "sw"
         self.label = "Maya Software"
 
     def settings(self):
@@ -66,8 +68,9 @@ class AzureBatchMayaJob(AzureBatchRenderJob):
         return True
 
     def get_jobdata(self):
-        if self.scene_name == "":
+        if self.scene_name == '':
             raise ValueError("Current Maya scene has not been saved to disk.")
+        
         pending_changes = cmds.file(query=True, modified=True)
         if not pending_changes:
             return self.scene_name, [self.scene_name]
@@ -76,8 +79,8 @@ class AzureBatchMayaJob(AzureBatchRenderJob):
             'nosave': "Continue without saving",
             'cancel': "Cancel"
         }
-        answer = cmds.confirmDialog(title='Unsaved Changes',
-                                    message='There are unsaved changes. Continue?',
+        answer = cmds.confirmDialog(title="Unsaved Changes",
+                                    message="There are unsaved changes. Continue?",
                                     button=options.values(),
                                     defaultButton=options['save'],
                                     cancelButton=options['cancel'],
@@ -90,14 +93,10 @@ class AzureBatchMayaJob(AzureBatchRenderJob):
 
     def get_params(self):
         params = {}
-        params["StartFrame"] = cmds.intField(self.start, query=True, value=True)
-        params["EndFrame"] = cmds.intField(self.end, query=True, value=True)
-        params["Renderer"] = "sw"
-        params["JobFile"] = os.path.basename(self.scene_name)
-        filename = str(cmds.textField(self.output_name, query=True, text=True))
-        if '/' in filename or '\\' in filename:
-            raise ValueError("Subfolders not supported in output filename.")
-        params["OutputName"] = filename
+        params["frameStart"] = cmds.intField(self.start, query=True, value=True)
+        params["frameEnd"] = cmds.intField(self.end, query=True, value=True)
+        params["frameStep"] = cmds.intField(self.step, query=True, value=True)
+        params["renderer"] = self._renderer
         return params
 
 

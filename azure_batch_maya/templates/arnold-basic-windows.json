@@ -11,17 +11,12 @@
     },
     "renderer": {
       "type": "string",
-      "defaultValue": "file",
+      "defaultValue": "arnold",
       "metadata": {
         "description": "The Maya renderer to be used for the render"
       },
       "allowedValues": [
-        "arnold",
-        "default",
-        "sw",
-        "turtlebake",
-        "turtle",
-        "vr"
+        "arnold"
       ]
     },
     "projectData": {
