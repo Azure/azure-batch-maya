@@ -44,6 +44,11 @@ class ArnoldRenderJob(AzureBatchRenderJob):
     def __init__(self):
         self._renderer = "arnold"
         self.label = "Arnold"
+        self.log_levels = [
+            "0 - Errors",
+            "1 - Warnings + Info",
+            "2 - Debug"
+        ]
 
     def settings(self):
         if self.scene_name == "":
@@ -60,6 +65,9 @@ class ArnoldRenderJob(AzureBatchRenderJob):
         self.start = self.display_int("Start frame:   ", self.start_frame, edit=True)
         self.end = self.display_int("End frame:   ", self.end_frame, edit=True)
         self.step = self.display_int("Frame step:   ", self.frame_step, edit=True)
+
+        log_level = mel.eval("getAttr defaultArnoldRenderOptions.log_verbosity")
+        self.logging = self.display_menu("Logging:   ", self.log_levels, log_level+1)
 
     def get_title(self):
         return str(cmds.textField(self.job_name, query=True, text=True))
@@ -95,6 +103,7 @@ class ArnoldRenderJob(AzureBatchRenderJob):
         params["frameEnd"] = cmds.intField(self.end, query=True, value=True)
         params["frameStep"] = cmds.intField(self.step, query=True, value=True)
         params["renderer"] = "arnold"
+        params["logLevel"] = int(cmds.optionMenu(self.logging, query=True, select=True)) - 1
         return params
 
 

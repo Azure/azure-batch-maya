@@ -94,12 +94,13 @@ class AzureBatchRenderJob(object):
         else:
             return cmds.text(label=value, align='left')
 
-    def display_menu(self, label, options):
+    def display_menu(self, label, options, selected):
         cmds.text(label=label, align='right')
         menu = cmds.optionMenu()
         for opt in options:
             cmds.menuItem(label=opt)
         cmds.setParent('..')
+        cmds.optionMenu(menu, edit=True, select=selected)
         return menu
 
     def display_button(self, label, cmd):
