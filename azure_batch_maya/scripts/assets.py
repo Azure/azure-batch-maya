@@ -182,7 +182,7 @@ class AzureBatchAssets(object):
             for rule in maya.workspace(fileRuleList=True):
                 project_dir = maya.workspace(fileRuleEntry=rule)
                 remote_path = utils.get_remote_directory(maya.workspace(en=project_dir), os_flavor)
-                if os_flavor == 'Windows':
+                if os_flavor == utils.OperatingSystem.windows:
                     full_remote_path = "X:\\\\" + remote_path
                 else:
                     full_remote_path = "/X/" + remote_path
@@ -211,7 +211,7 @@ class AzureBatchAssets(object):
                     handle.write("loadPlugin \"{}\";\n".format(plugin))
             handle.write("dirmap -en true;\n")
             for local, remote in pathmap.items():
-                if os_flavor == 'Windows':
+                if os_flavor == utils.OperatingSystem.windows:
                     full_remote_path = "X:\\\\" + remote(os_flavor)
                 else:
                     full_remote_path = "/X/" + remote(os_flavor)

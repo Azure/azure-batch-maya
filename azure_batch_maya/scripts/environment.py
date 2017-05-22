@@ -32,7 +32,7 @@ import json
 
 from api import MayaAPI as maya
 from api import MayaCallbacks as callback
-
+import utils
 from ui_environment import EnvironmentUI
 
 
@@ -154,16 +154,16 @@ class AzureBatchEnvironment(object):
             windows_offers = [value['offer'] for value in MAYA_IMAGES.values() if 'windows' in value['node_sku_id']]
             linux_offers = [value['offer'] for value in MAYA_IMAGES.values() if value['offer'] not in windows_offers]
             if pool_image.offer in windows_offers:
-                return 'Windows'
+                return utils.OperatingSystem.windows
             elif pool_image.offer in linux_offers:
-                return 'Linux'
+                return utils.OperatingSystem.linux
             else:
                 raise ValueError('Selected pool is not using a valid Maya image.')
 
-        if 'Windows' in self.ui.get_image():
-            return 'Windows'
+        if utils.OperatingSystem.windows.value in self.ui.get_image():
+            return utils.OperatingSystem.windows
         else:
-            return 'Linux'
+            return utils.OperatingSystem.linux
 
     def get_environment_settings(self):
         env_vars = self.ui.get_env_vars()

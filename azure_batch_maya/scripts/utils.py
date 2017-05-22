@@ -26,11 +26,13 @@
 #
 #--------------------------------------------------------------------------
 
-from api import MayaAPI as maya
+from enum import Enum
 import os
 import logging
 import platform
 import pathlib
+
+from api import MayaAPI as maya
 
 from batch_extensions import _file_utils as file_utils
 from exception import CancellationException, FileUploadException
@@ -67,7 +69,7 @@ def get_remote_file_path(assetpath):
     """
     def generate_path(os_flavor, fullpath=assetpath):
         local_sep = os.sep
-        remote_sep = '\\' if os_flavor == 'Windows' else '/'
+        remote_sep = '\\' if os_flavor == OperatingSystem.windows else '/'
         path = shorten_path(*os.path.split(fullpath))
         if ':' in path:
             drive_letter, path = path.split(':', 1)
@@ -82,7 +84,7 @@ def get_remote_directory(dir_path, os_flavor):
     path according to the remote OS.
     """
     local_sep = os.sep
-    remote_sep = '\\' if os_flavor == 'Windows' else '/'
+    remote_sep = '\\' if os_flavor == OperatingSystem.windows else '/'
     if ':' in dir_path:
         drive_letter, dir_path = dir_path.split(':', 1)
         dir_path = drive_letter + local_sep + dir_path[1:]
@@ -95,7 +97,7 @@ def format_scene_path(scene_file, os_flavor):
     be on the render node.
     """
     scene_path = get_remote_file_path(scene_file)(os_flavor)
-    if os_flavor == 'Windows':
+    if os_flavor == OperatingSystem.windows:
         return "X:\\\\" + scene_path + '\\\\' + os.path.basename(scene_file)
     else:
         return "/X/" + scene_path + '/' + os.path.basename(scene_file)
@@ -117,6 +119,12 @@ def get_os():
     :returns: The OS platform (str).
     """
     return platform.system()
+
+
+class OperatingSystem(Enum):
+    windows = 'Windows'
+    linux = 'Linux'
+    darwin = 'Darwin'
 
 
 class Row(object):
@@ -446,12 +454,12 @@ class JobWatcher(object):
         self.job_watcher = os.path.join(
             os.path.dirname(__file__), "tools", "job_watcher.py")
         platform = get_os()
-        if platform == "Windows":
+        if platform == OperatingSystem.windows:
             self.proc_cmd = 'system("WMIC PROCESS where (Name=\'mayapy.exe\') get Commandline")'
             self.start_cmd = 'system("start mayapy {0}")'
             self.quotes = '\\"'
             self.splitter = 'mayapy'
-        elif platform == "Darwin":
+        elif platform == OperatingSystem.darwin:
             self.proc_cmd = 'system("ps -ef")'
             self.start_cmd = 'system("osascript -e \'tell application \\"Terminal\\" to do script \\"python {0}\\"\'")'
             self.quotes = '\\\\\\"'
