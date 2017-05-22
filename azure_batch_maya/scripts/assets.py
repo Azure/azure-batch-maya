@@ -28,7 +28,7 @@
 
 import logging
 from datetime import datetime
-import multiprocessing
+import threading
 import os
 import sys
 import glob
@@ -53,6 +53,7 @@ from default import AzureBatchRenderAssets
 SYS_SEARCHPATHS = []
 USR_SEARCHPATHS = []
 BYTES = 1024
+UPLOAD_THREADS = 10
 
 
 class AzureBatchAssets(object):
@@ -221,15 +222,18 @@ class AzureBatchAssets(object):
         return Asset(map_file, [], self.batch, self._log)
 
     def _upload_all(self, to_upload, progress, total, project):
-        """Upload all selected assets in multiple processes according to available cores."""
+        """Upload all selected assets in 10 threads."""
+        uploads_running = []
         progress_queue = Queue()
-        for i in range(0, len(to_upload), multiprocessing.cpu_count()):
-            for index, asset in enumerate(to_upload[i:i + multiprocessing.cpu_count()]):
+        for i in range(0, len(to_upload), UPLOAD_THREADS):
+            for index, asset in enumerate(to_upload[i:i + UPLOAD_THREADS]):
                 self._log.debug("Starting thread for asset: {}".format(asset.path))
-                upload = multiprocessing.Process(
+                upload = threading.Thread(
                     target=asset.upload, args=(index, progress, progress_queue, project))
                 upload.start()
-            while multiprocessing.active_children() or not progress_queue.empty():
+                uploads_running.append(upload)
+            self._log.debug("Batch of asset uploads pending: {}".format(threading.active_count()))
+            while any(t for t in uploads_running if t.is_alive()) or not progress_queue.empty():
                 uploaded = progress_queue.get()
                 if isinstance(uploaded, Exception):
                     raise uploaded
