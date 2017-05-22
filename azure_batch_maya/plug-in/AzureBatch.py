@@ -419,14 +419,14 @@ def initializePlugin(obj):
     print("Initializing Azure Batch plug-in")
     existing = cmds.optionVar(exists=EULA_PREF)
     if not existing:
-        agree = cmds.layoutDialog(ui=sla_prompt, title="Azure Batch Maya Client")
+        agree = cmds.layoutDialog(ui=eula_prompt, title="Azure Batch Maya Client")
         if str(agree) != 'Agree':
             raise RuntimeError("Plugin initialization aborted.")
         cmds.optionVar(stringValue=(EULA_PREF, VERSION))
     else:
         agreed = cmds.optionVar(query=EULA_PREF)
         if StrictVersion(agreed) < VERSION:
-            agree = cmds.layoutDialog(ui=sla_prompt, title="Azure Batch Maya Client")
+            agree = cmds.layoutDialog(ui=eula_prompt, title="Azure Batch Maya Client")
             if str(agree) != 'Agree':
                 raise RuntimeError("Plugin initialization aborted.")
             cmds.optionVar(stringValue=(EULA_PREF, VERSION))

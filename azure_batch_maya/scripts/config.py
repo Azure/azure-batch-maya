@@ -40,7 +40,6 @@ import batch_extensions as batch
 from batch_extensions.batch_auth import SharedKeyCredentials
 
 
-VERSION = os.environ['AZUREBATCH_VERSION']
 LOG_LEVELS = {
     'debug':10,
     'info':20,
@@ -64,7 +63,7 @@ class AzureBatchConfig(object):
         self._tab_index = index
         self._data_dir = os.path.join(maya.prefs_dir(), 'AzureBatchData')
         self._ini_file = "azure_batch.ini"
-        self._user_agent = "batchmaya/{}".format(VERSION)
+        self._user_agent = "batchmaya/{}".format(os.environ.get('AZUREBATCH_VERSION'))
         self._cfg = ConfigParser.ConfigParser()
         self._client = None
         self._log = None
@@ -98,7 +97,7 @@ class AzureBatchConfig(object):
             os.makedirs(self._data_dir)
         config_file = os.path.join(self._data_dir, self._ini_file)
         if not os.path.exists(config_file):
-            self._log = self._configure_logging(10)
+            self._log = self._configure_logging(LOG_LEVELS['debug'])
             return
         try:
             self._cfg.read(config_file)
@@ -112,14 +111,17 @@ class AzureBatchConfig(object):
             self._client = batch.BatchExtensionsClient(
                 credentials, base_url=self._cfg.get('AzureBatch', 'batch_url'),
                 storage_client=self._storage)
-            self._client._config.add_user_agent(self._user_agent)
+            self._client.config.add_user_agent(self._user_agent)
             self._log = self._configure_logging(
                 self._cfg.get('AzureBatch', 'logging'))
-        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError) as exp:
+        except Exception as exp:
             # We should only worry about this if it happens when authenticating
             # using the UI, otherwise it's expected.
             if self.ui:
-                raise ValueError("Invalid Configuration File: {}".format(exp))
+                raise ValueError("Invalid Configuration: {}".format(exp))
+            else:
+                # We'll need a place holder logger
+                self._log = self._configure_logging(LOG_LEVELS['debug'])
 
     def _configure_logging(self, log_level):
         """Configure the logger. Setup the file output and format
@@ -218,7 +220,7 @@ class AzureBatchConfig(object):
             self._configure_plugin()
             self._auth = self._auto_authentication()
         except ValueError as exp:
-            maya.error(exp)
+            maya.error(str(exp))
             self._auth = False
         finally:
             self.ui.set_authenticate(self._auth)

@@ -438,6 +438,7 @@ class TestAzureBatchAssets(unittest.TestCase):
         os.environ["AZUREBATCH_TEMPLATES"] = os.path.join(top_dir, 'azure_batch_maya', 'templates')
         os.environ["AZUREBATCH_MODULES"] = mod_dir
         os.environ["AZUREBATCH_SCRIPTS"] = "{0};{1};{2}".format(src_dir, ui_dir, tools_dir)
+        os.environ["AZUREBATCH_VERSION"] = "0.1"
         return super(TestAzureBatchAssets, self).setUp()
 
 
@@ -445,7 +446,7 @@ class TestAzureBatchAssets(unittest.TestCase):
     @mock.patch("assets.callback")
     @mock.patch("assets.AssetsUI")
     def test_batchassets_create(self, mock_ui, mock_call, mock_collect):
-        assets = AzureBatchAssets("frame", "call")
+        assets = AzureBatchAssets(3, "frame", "call")
         mock_ui.assert_called_with(assets, "frame")
         mock_collect.assert_called_with()
         #mock_call.after_new.assert_called_with(assets.callback_refresh)

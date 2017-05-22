@@ -56,10 +56,10 @@ from batch_extensions import models
 
 from azure.storage.blob import BlockBlobService
 
-LIVE = True
 
 def print_status(status):
     print(status)
+
 
 class TestBatchSubmission(unittest.TestCase):
     
@@ -74,6 +74,7 @@ class TestBatchSubmission(unittest.TestCase):
         os.environ["AZUREBATCH_TEMPLATES"] = os.path.join(top_dir, 'azure_batch_maya', 'templates')
         os.environ["AZUREBATCH_MODULES"] = mod_dir
         os.environ["AZUREBATCH_SCRIPTS"] = "{0};{1};{2}".format(src_dir, ui_dir, tools_dir)
+        os.environ["AZUREBATCH_VERSION"] = "0.1"
         self.mock_self = mock.create_autospec(AzureBatchSubmission)
         self.mock_self.batch = mock.create_autospec(BatchExtensionsClient)
         self.mock_self.batch.job = mock.create_autospec(operations.ExtendedJobOperations)
@@ -93,7 +94,7 @@ class TestBatchSubmission(unittest.TestCase):
     @mock.patch("submission.callback")
     @mock.patch("submission.SubmissionUI")
     def test_submission_create(self, mock_ui, mock_call, mock_mods):
-        submission = AzureBatchSubmission("frame", "call")
+        submission = AzureBatchSubmission(2, "frame", "call")
         mock_mods.assert_called_with()
         mock_ui.assert_called_with(submission, "frame")
         #mock_call.after_new.assert_called_with(mock.ANY)
@@ -165,7 +166,7 @@ class TestBatchSubmission(unittest.TestCase):
         self.mock_self.pool_manager.create_auto_pool.return_value = {'autoPool': 'auto-pool'}
         self.mock_self.pool_manager.create_pool.return_value = {'poolId': 'new-pool'}
         self.mock_self.env_manager.get_environment_settings.return_value = [{'name':'foo', 'value':'bar'}]
-        self.mock_self.renderer = mock.Mock()
+        self.mock_self.renderer = mock.Mock(render_engine='arnold')
         self.mock_self.renderer.get_jobdata.return_value = ("a", "b")
         self.mock_self.renderer.get_params.return_value = {"foo": "bar"}
         self.mock_self.renderer.get_title.return_value = "job name"

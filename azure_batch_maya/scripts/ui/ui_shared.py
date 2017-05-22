@@ -77,8 +77,7 @@ class AzureBatchUI(object):
         """Select a specific tab for display.
         :param int tab: The index of the tab to display.
         """
-        index = self.base.tab_index[tab]
-        maya.tab_layout(self.tab_display, edit=True, selectTabIndex=index)
+        maya.tab_layout(self.tab_display, edit=True, selectTabIndex=tab)
 
     def selected_tab(self):
         """Get the index of the currently selected tab.

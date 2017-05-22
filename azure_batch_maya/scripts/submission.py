@@ -61,6 +61,7 @@ class AzureBatchSubmission(object):
         self._call = call
         self._tab_index = index
 
+        self.max_pool_size = 1000
         self.ui = SubmissionUI(self, frame)
         self.modules = self._collect_modules()
         self.renderer = None
@@ -69,7 +70,6 @@ class AzureBatchSubmission(object):
         self.pool_manager = None
         self.env_manager = None
         self.batch = None
-        self.max_pool_size = 1000
 
         #callback.after_new(self.ui.refresh)
         #callback.after_open(self.ui.refresh)
@@ -272,7 +272,7 @@ class AzureBatchSubmission(object):
             batch_parameters['metadata'] =  [{"name": "JobType", "value": "Maya"}]
             template_file = os.path.join(
                 os.environ['AZUREBATCH_TEMPLATES'],
-                "{}-basic-{}.json".format(self.renderer.render_engine, pool_os.lower()))
+                "{}-basic-{}.json".format(self.renderer.render_engine, pool_os.value.lower()))
             batch_parameters['applicationTemplateInfo'] = {'filePath': template_file}
             application_params = {}
             batch_parameters['applicationTemplateInfo']['parameters'] = application_params

@@ -1,5 +1,6 @@
 {
   "templateMetadata": {
+    "description": "Application template for working with Maya on Windows."
   },
   "parameters": {
     "sceneFile": {

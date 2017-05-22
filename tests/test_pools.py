@@ -61,7 +61,7 @@ class AzureTestBatchPools(unittest.TestCase):
 
     @mock.patch("pools.PoolsUI")
     def test_pools_initialize(self, mock_ui):
-        pools = AzureBatchPools("frame", "call")
+        pools = AzureBatchPools(4, "frame", "call")
         mock_ui.assert_called_with(pools, "frame")
 
     def test_pools_configure(self):
