@@ -1,9 +1,8 @@
 # coding=utf-8
-# --------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-# --------------------------------------------------------------------------
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
 
 import webbrowser
 import ConfigParser
@@ -15,12 +14,12 @@ import re
 
 batch_client = None
 storage_client = None
+header_line_length = 50
 
 
 def header(header):
     header_chars = len(header)
-    total_len = 50
-    dashes = total_len - header_chars
+    dashes = header_line_length - header_chars
     mult = int(dashes/2)
     padded = "\n\n" + mult*"-" + header + mult*"-"
     if dashes % 2 > 0:
@@ -88,7 +87,7 @@ def _check_job_stopped(job):
         if job.state in stopped_status:
             print(header("Job has stopped"))
             print("Job status: {0}".format(job.state))
-            raise RuntimeError("Job is no longer running. Status: {0}".format(job.state))
+            raise RuntimeError("Job is no longer active. State: {0}".format(job.state))
         elif job.state == JobState.completed:
             print(header("Job has completed"))
             return True
@@ -115,7 +114,7 @@ def track_job_progress(id, container, dwnld_dir):
                 percentage = (100 * len(completed_tasks)) / len(tasks)
             print("Running - {}%".format(percentage))
             if errored_tasks:
-                print("    - Warning: some tasks have completed with a non-zero exit code.")
+                print("    - Warning: some tasks have failed.")
 
             _track_completed_outputs(container, dwnld_dir)
             if _check_job_stopped(job):

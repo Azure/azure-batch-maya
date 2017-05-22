@@ -30,6 +30,7 @@ import ConfigParser
 import os
 import logging
 import sys
+import traceback
 
 from ui_config import ConfigUI
 from api import MayaAPI as maya
@@ -49,14 +50,17 @@ LOG_LEVELS = {
 class AzureBatchConfig(object):
     """Handler for authentication and configuration of the SDK clients."""
 
-    def __init__(self, frame, start):
+    def __init__(self, index, frame, start):
         """Create new configuration Handler.
 
+        :param index: The UI tab index.
         :param frame: The shared plug-in UI frame.
         :type frame: :class:`.AzureBatchUI`
         :param func call: The shared REST API call wrapper.
         """
+        self.ui = None
         self.session = start
+        self._tab_index = index
         self._data_dir = os.path.join(maya.prefs_dir(), 'AzureBatchData')
         self._ini_file = "azure_batch.ini"
         self._cfg = ConfigParser.ConfigParser()
@@ -110,7 +114,10 @@ class AzureBatchConfig(object):
             self._log = self._configure_logging(
                 self._cfg.get("AzureBatch", "logging"))
         except (ConfigParser.NoOptionError, ConfigParser.NoSectionError) as exp:
-            print(exp) #TODO: Better error handling
+            # We should only worry about this if it happens when authenticating
+            # using the UI, otherwise it's expected.
+            if self.ui:
+                raise ValueError("Invalid Configuration File: {}".format(exp))
 
     def _configure_logging(self, log_level):
         """Configure the logger. Setup the file output and format
@@ -173,10 +180,10 @@ class AzureBatchConfig(object):
         try:
             filter = batch.models.PoolListOptions(max_results=1, select="id")
             self._client.pool.list(filter)
-            self._storage.create_container("batch-maya-assets", fail_on_exist=False)
+            self._storage.list_containers(num_results=1)
             return True
         except Exception as exp:
-            self._log.info("Could not get authenticate session: {0}".format(exp))
+            self._log.info("Failed to authenticate: {0}".format(exp))
             return False
 
     def set_logging(self, level):
@@ -205,10 +212,15 @@ class AzureBatchConfig(object):
 
     def authenticate(self):
         """Begin authentication - initiated by the UI button."""
-        self._configure_plugin()
-        self._auth = self._auto_authentication()
-        self.ui.set_authenticate(self._auth)
-        self.session()
+        try:
+            self._configure_plugin()
+            self._auth = self._auto_authentication()
+        except ValueError as exp:
+            maya.error(exp)
+            self._auth = False
+        finally:
+            self.ui.set_authenticate(self._auth)
+            self.session()
 
     def get_cached_vm_sku(self):
         """Attempt to retrieve a selected VM SKU from a previous session."""

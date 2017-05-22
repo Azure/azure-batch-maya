@@ -9,7 +9,7 @@ global proc run_guiStarter()
 
 global proc openMissionControl()
 {
-    python("import webbrowser\nwebbrowser.open(\"https://ms.portal.azure.com\", 2, True)");
+    python("import webbrowser\nwebbrowser.open(\"https://portal.azure.com\", 2, True)");
 }
 
 

@@ -28,7 +28,7 @@
 
 import logging
 from datetime import datetime
-import threading
+import multiprocessing
 import os
 import sys
 import glob
@@ -52,15 +52,16 @@ from default import AzureBatchRenderAssets
 
 SYS_SEARCHPATHS = []
 USR_SEARCHPATHS = []
-UPLOAD_THREADS = 10
+BYTES = 1024
 
 
 class AzureBatchAssets(object):
     """Handler for asset file functionality."""
     
-    def __init__(self, frame, call):
+    def __init__(self, index, frame, call):
         """Create new Asset Handler.
 
+        :param index: The UI tab index.
         :param frame: The shared plug-in UI frame.
         :type frame: :class:`.AzureBatchUI`
         :param func call: The shared REST API call wrapper.
@@ -69,6 +70,7 @@ class AzureBatchAssets(object):
         self._call = call
         self._session = None
         self._assets = None
+        self._tab_index = index
 
         self.batch = None
         self.modules = self._collect_modules()
@@ -154,6 +156,12 @@ class AzureBatchAssets(object):
         self.renderer = AzureBatchRenderAssets()
         self._log.debug("Configured renderer to {0}".format(self.renderer.render_engine))
 
+    def _switch_tab(self):
+        """Make this tab the currently displayed tab. If this tab is already
+        open, this will do nothing.
+        """
+        self.frame.select_tab(self._tab_index)
+
     def _collect_assets(self):
         """Called on upload. If the asset tab has not yet been loaded before
         job submission is attempted, then the asset references have not yet
@@ -213,37 +221,38 @@ class AzureBatchAssets(object):
         return Asset(map_file, [], self.batch, self._log)
 
     def _upload_all(self, to_upload, progress, total, project):
-        """Upload all selected assets in 10 threads."""
-        uploads_running = []
+        """Upload all selected assets in multiple processes according to available cores."""
         progress_queue = Queue()
-        for i in range(0, len(to_upload), UPLOAD_THREADS):
-            for index, asset in enumerate(to_upload[i:i + UPLOAD_THREADS]):
+        for i in range(0, len(to_upload), multiprocessing.cpu_count()):
+            for index, asset in enumerate(to_upload[i:i + multiprocessing.cpu_count()]):
                 self._log.debug("Starting thread for asset: {}".format(asset.path))
-                upload = threading.Thread(
+                upload = multiprocessing.Process(
                     target=asset.upload, args=(index, progress, progress_queue, project))
                 upload.start()
-                uploads_running.append(upload)
-            self._log.debug("Batch of asset uploads pending: {}".format(threading.active_count()))
-
-            while any(t for t in uploads_running if t.is_alive()) or not progress_queue.empty():
+            while multiprocessing.active_children() or not progress_queue.empty():
                 uploaded = progress_queue.get()
                 if isinstance(uploaded, Exception):
                     raise uploaded
                 elif callable(uploaded):
                     uploaded()
                 else:
-                    total = total - (uploaded/1024/1024)
+                    total = total - (uploaded/BYTES/BYTES)
                     self.ui.upload_status("Uploading {0}...".format(self._format_size(total)))
                 progress_queue.task_done()
 
-    def _format_size(self, data):
+    def _format_size(self, nbytes):
         """Format the data size in bytes to nicely display
         for upload progress.
         """
-        if data > 1024:
-            return "{:0.2f}GB".format(data/1014)
-        else:
-            return "{:0.2f}MB".format(data)
+        suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+        if nbytes == 0:
+            return '0 B'
+        i = 0
+        while nbytes >= BYTES and i < len(suffixes)-1:
+            nbytes /= BYTES
+            i += 1
+        f = ('%.2f' % nbytes).rstrip('0').rstrip('.')
+        return '%s %s' % (f, suffixes[i])
 
     def _total_data(self, files):
         """Format the combined size of the files to display
@@ -252,7 +261,7 @@ class AzureBatchAssets(object):
         data = float(0)
         for asset in files:
             data += asset.size
-        return data/1024/1024
+        return data/BYTES/BYTES
 
     def configure(self, session):
         """Populate the Batch client for the current sessions of the asset tab.
@@ -288,14 +297,14 @@ class AzureBatchAssets(object):
 
     def add_files(self, files, column_layout, scroll_layout):
         """Function called by the 'Add File(s)' button in the UI for adding arbitrary
-        file references to the collection that included with the next job subbmission.
+        file references to the collection to be included with the next job subbmission.
         """
         for f in files:
             self._assets.add_asset(f, self.ui, column_layout, scroll_layout)
 
     def add_dir(self, dirs, column_layout, scroll_layout):
         """Function called by the 'Add Directory' button in the UI for adding arbitrary
-        file references to the collection that included with the next job subbmission.
+        file references to the collection to be included with the next job subbmission.
         """
         for folder in dirs:
             for root, _, files in os.walk(folder):
@@ -310,8 +319,8 @@ class AzureBatchAssets(object):
          if the upload process is part of job submission.
         :param progress_bar: The progress of the current process. This is only populated
          if the upload process is part of job submission.
-        :param job_id: The ID of the job being submitted. This is only populated is the
-         upload process if path of job submission.
+        :param job_id: The ID of the job being submitted. This is only populated if the
+         upload process is part of job submission.
         :param load_plugins: A list of plugins to be added to the pre-render script for
          loading on the server. Only populated if part of a job submission.
         :param os_flavor: The OS flavor of the rendering pool. Only set as part of the job
@@ -339,7 +348,7 @@ class AzureBatchAssets(object):
             progress_bar.is_cancelled()
             progress_bar.status('Uploading files...')
             progress_bar.max(len(asset_refs))
-            self.frame.select_tab(3)
+            self._switch_tab()
             self.ui.disable(False)
             self.ui.upload_button.start()
             payload = self._total_data(asset_refs)
@@ -364,7 +373,7 @@ class AzureBatchAssets(object):
             else:
                 maya.error(str(exp))
         finally:
-            # If part of job submission errors and progress bar
+            # If part of job submission, errors and progress bar
             # will be handled back in submission.py
             if not job_set:
                 progress_bar.end()
@@ -548,7 +557,7 @@ class Assets(object):
 
 
 class Asset(object):
-    """Representation of a single asset, managing it's file reference,
+    """Representation of a single asset, managing its file reference,
     display listing and upload of the file.
     """
 
@@ -652,7 +661,7 @@ class Asset(object):
     def make_visible(self, index):
         """Attempt to auto-scroll the asset display list so that the progress of
         currently uploading assets remains in view.
-        TODO: Thie needs some work....
+        TODO: This needs some work....
         """
         if index == 0:
             while maya.scroll_layout(self.scroll_layout, query=True, scrollAreaValue=True)[0] > 0:

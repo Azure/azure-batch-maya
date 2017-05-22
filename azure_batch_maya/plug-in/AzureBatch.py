@@ -53,44 +53,43 @@ warnings.simplefilter('ignore')
 INSTALL_DIR = os.path.normpath(
     os.path.join(cmds.internalVar(userScriptDir=True), 'azure-batch-libs'))
 sys.path.append(INSTALL_DIR)
-                               
+
 REQUIREMENTS = [
     "pathlib==1.0.1",
 ]
 
 NAMESPACE_PACAKGES = [
-    #"azure-mgmt-nspkg==2.0.0",
     "azure-mgmt-batch==4.0.0",
-    "azure-mgmt-storage==1.0.0rc1",
+    "azure-mgmt-storage==1.0.0",
     "azure-common==1.1.5",
     "azure-batch==3.0.0",
     "azure-storage==0.32.0",
 ]
 
 VERSION = "0.9.0"
-SLA_PREF = "AzureBatch_SLA"
+EULA_PREF = "AzureBatch_EULA"
 SHELF_FILE = "shelf_AzureBatch.mel"
 cmd_name = "AzureBatch"
 fMayaExitingCB = None
 os.environ["AZUREBATCH_VERSION"] = VERSION
 
 
-def sla_prompt():
-    """Open prompt for T's & C's agreement."""
+def eula_prompt():
+    """Open prompt for terms and conditions."""
     current_file = inspect.getfile(inspect.currentframe())
     current_dir = os.path.dirname(os.path.abspath(current_file))
-    SLA = os.path.join(current_dir, "SLA.html")
+    eula = os.path.join(current_dir, "EULA.html")
     form = cmds.setParent(q=True)
     cmds.formLayout(form, e=True, width=500)
     heading = cmds.text(
-        l='Maya Cloud Rendering Service Level Agreement', font="boldLabelFont")
+        l='Maya Cloud Rendering License Agreement', font="boldLabelFont")
     text = cmds.text(l="By loading this plug-in you are agreeing to "
                         "the following terms and conditions.")
-    if not os.path.exists(SLA):
-        raise RuntimeError("SLA notice not found at {0}".format(SLA))
+    if not os.path.exists(eula):
+        raise RuntimeError("EULA notice not found at {0}".format(eula))
 
-    with open(SLA, "rb") as sla_text:
-        html = sla_text.read()
+    with open(eula, "rb") as eula_text:
+        html = eula_text.read()
         unicode = html.decode("windows-1252")
         encoded_str = unicode.encode("ascii", "xmlcharrefreplace")
         read = cmds.scrollField(editable=False, wordWrap=True, height=300,
@@ -388,7 +387,7 @@ def install_pkg(package):
 
 
 def install_namespace_pkg(package, namespace):
-    """Azure packages have issues installing one by one as the don't
+    """Azure packages have issues installing one by one as they don't
     unpackage correctly into the namespace directory. So we have to install
     to a temp directory and move it to the right place.
 
@@ -418,19 +417,19 @@ def install_namespace_pkg(package, namespace):
 def initializePlugin(obj):
     """Initialize Plug-in"""
     print("Initializing Azure Batch plug-in")
-    existing = cmds.optionVar(exists=SLA_PREF)
+    existing = cmds.optionVar(exists=EULA_PREF)
     if not existing:
         agree = cmds.layoutDialog(ui=sla_prompt, title="Azure Batch Maya Client")
         if str(agree) != 'Agree':
             raise RuntimeError("Plugin initialization aborted.")
-        cmds.optionVar(stringValue=(SLA_PREF, VERSION))
+        cmds.optionVar(stringValue=(EULA_PREF, VERSION))
     else:
-        agreed = cmds.optionVar(query=SLA_PREF)
+        agreed = cmds.optionVar(query=EULA_PREF)
         if StrictVersion(agreed) < VERSION:
-            agree = cmds.layoutDialog(ui=sla_prompt, title="AzureBatch Maya Client")
+            agree = cmds.layoutDialog(ui=sla_prompt, title="Azure Batch Maya Client")
             if str(agree) != 'Agree':
                 raise RuntimeError("Plugin initialization aborted.")
-            cmds.optionVar(stringValue=(SLA_PREF, VERSION))
+            cmds.optionVar(stringValue=(EULA_PREF, VERSION))
 
     print("Checking for dependencies...")
     missing_libs = []
@@ -483,7 +482,7 @@ def initializePlugin(obj):
         raise ImportError("Please restart Maya. Azure Batch installed "
                           "Python dependencies.")
 
-    print("Dependency check complete!")
+    print("Dependency check complete")
     plugin = OpenMayaMPx.MFnPlugin(
         obj, "Microsoft Corporation", VERSION, "Any")
     plugin.registerCommand(cmd_name, cmd_creator)
@@ -507,7 +506,7 @@ def initializePlugin(obj):
 
 def uninitializePlugin(obj):
     """Remove and uninstall plugin."""
-    print("Removing AzureBatch plug-in")
+    print("Removing Azure Batch plug-in")
     plugin = MFnPlugin(obj)
     plugin.deregisterCommand(cmd_name)
     try:
@@ -520,7 +519,7 @@ def uninitializePlugin(obj):
     if cmds.window("AzureBatch", exists=1):
         cmds.deleteUI("AzureBatch")
     AzureBatchSetup.remove_environment()
-    print("Finished clearing up all AzureBatch components")
+    print("Finished clearing up all Azure Batch components")
 
 
 """Check for environment and set up if not found."""
@@ -528,5 +527,5 @@ try:
     sys.path.extend(os.environ["AZUREBATCH_SCRIPTS"].split(os.pathsep))
     sys.path.append(os.environ['AZUREBATCH_MODULES'])
 except KeyError as e:
-    print("Couldn't find AzureBatch environment, setting up now...")
+    print("Couldn't find Azure Batch environment, setting up now...")
     setup_module()

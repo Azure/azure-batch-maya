@@ -76,7 +76,7 @@ You can also delete the pool and resize the number of VMs in the pool. A pool ca
 
 ## Monitoring jobs
 
-Once you have submitted a job, you can monitor it both via the [Azure Management Portal](http://ms.portal.azure.com/) and the `Jobs` tab of the plug-in.
+Once you have submitted a job, you can monitor it both via the [Azure Management Portal](http://portal.azure.com/) and the `Jobs` tab of the plug-in.
 Selecting a listed job will display the current state of the job. You can also use this tab to cancel and delete jobs, as well as download the outputs and rendering logs.
 To download outputs, use the `Outputs` field to set the desired destination directory, and click the center button (with the gear icon) to start a background process that will
 watch the job and download outputs as it progresses. You can close Maya without disrupting the download.

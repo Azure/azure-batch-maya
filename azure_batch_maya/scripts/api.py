@@ -32,7 +32,6 @@ try:
     import maya.OpenMayaMPx as omp
 except ImportError:
     print("No maya module found.")
- 
 import os
 import logging
 LOG = logging.getLogger('AzureBatchMaya')

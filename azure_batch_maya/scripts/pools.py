@@ -42,9 +42,10 @@ from ui_pools import PoolsUI
 class AzureBatchPools(object):
     """Handler for pool functionality."""
     
-    def __init__(self, frame, call):
+    def __init__(self, index, frame, call):
         """Create new Pool Handler.
 
+        :param index: The UI tab index.
         :param frame: The shared plug-in UI frame.
         :type frame: :class:`.AzureBatchUI`
         :param func call: The shared REST API call wrapper.
@@ -52,6 +53,7 @@ class AzureBatchPools(object):
         self._log = logging.getLogger('AzureBatchMaya')
         self._call = call               
         self._session = None
+        self._tab_index = index
 
         self.batch = None
         self.ui = PoolsUI(self, frame)

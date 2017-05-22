@@ -70,21 +70,23 @@ class AzureBatchMayaJob(AzureBatchRenderJob):
             raise ValueError("Current Maya scene has not been saved to disk.")
         pending_changes = cmds.file(query=True, modified=True)
         if not pending_changes:
-            return [self.scene_name]
-        options = ["Save and Continue",
-                   "Don't Save and Continue",
-                   "Cancel"]
+            return self.scene_name, [self.scene_name]
+        options = {
+            'save': "Save and continue",
+            'nosave': "Continue without saving",
+            'cancel': "Cancel"
+        }
         answer = cmds.confirmDialog(title='Unsaved Changes',
-                                    message='There are unsaved changes. Proceed?',
-                                    button=options,
-                                    defaultButton=options[0],
-                                    cancelButton=options[2],
-                                    dismissString=options[2])
-        if answer == options[2]:
-            raise Exception("Submission Aborted")
-        if answer == options[0]:
+                                    message='There are unsaved changes. Continue?',
+                                    button=options.values(),
+                                    defaultButton=options['save'],
+                                    cancelButton=options['cancel'],
+                                    dismissString=options['cancel'])
+        if answer == options['cancel']:
+            raise Exception("Submission aborted")
+        if answer == options['save']:
             cmds.SaveScene()
-        return [self.scene_name]
+        return self.scene_name, [self.scene_name]
 
     def get_params(self):
         params = {}

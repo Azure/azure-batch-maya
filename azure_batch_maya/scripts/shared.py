@@ -27,9 +27,9 @@
 #--------------------------------------------------------------------------
 
 import logging
-import webbrowser
 import os
-import threading
+import sys
+import traceback
 
 from ui_shared import AzureBatchUI
 from config import AzureBatchConfig
@@ -51,6 +51,15 @@ ACCEPTED_ERRORS = [
 
 class AzureBatchSettings(object):
 
+    tab_index = {
+        'AUTH': 1,
+        'SUBMIT': 2,
+        'ASSETS': 3,
+        'POOLS': 4,
+        'JOBHISTORY': 5,
+        'ENV': 6
+    }
+
     @staticmethod
     def starter():
         """Called by the mel script when the shelf button is clicked."""
@@ -63,12 +72,12 @@ class AzureBatchSettings(object):
         self._log = logging.getLogger('AzureBatchMaya')
         try:
             self.frame = AzureBatchUI(self)
-            self.config = AzureBatchConfig(self.frame, self.start)
-            self.submission = AzureBatchSubmission(self.frame, self.call)
-            self.assets = AzureBatchAssets(self.frame, self.call)
-            self.pools = AzureBatchPools(self.frame, self.call)
-            self.history =  AzureBatchHistory(self.frame, self.call)
-            self.env =  AzureBatchEnvironment(self.frame, self.call)
+            self.config = AzureBatchConfig(self.tab_index['AUTH'], self.frame, self.start)
+            self.submission = AzureBatchSubmission(self.tab_index['SUBMIT'], self.frame, self.call)
+            self.assets = AzureBatchAssets(self.tab_index['ASSETS'], self.frame, self.call)
+            self.pools = AzureBatchPools(self.tab_index['POOLS'], self.frame, self.call)
+            self.history =  AzureBatchHistory(self.tab_index['JOBHISTORY'], self.frame, self.call)
+            self.env =  AzureBatchEnvironment(self.tab_index['ENV'], self.frame, self.call)
             self.start()
         except Exception as exp:
             if (maya.window("AzureBatch", q=1, exists=1)):
@@ -79,7 +88,7 @@ class AzureBatchSettings(object):
     def start(self):
         """Start the plugin UI. Depending on whether auto-authentication was
         successful, the plugin will start by displaying the submission tab.
-        Otherwise the UI will be disables, and the log in tab will be displayed.
+        Otherwise the UI will be disabled, and the login tab will be displayed.
         """
         try:
             self._log.debug("Starting AzureBatchShared...")
@@ -119,4 +128,6 @@ class AzureBatchSettings(object):
         except Exception as exp:
             if (maya.window("AzureBatch", q=1, exists=1)):
                 maya.delete_ui("AzureBatch")
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            self._log.error("".join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
             raise ValueError("Error: {0}".format(exp))

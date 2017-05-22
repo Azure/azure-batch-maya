@@ -49,15 +49,17 @@ from default import AzureBatchRenderJob
 class AzureBatchSubmission(object):
     """Handler for job submission functionality."""
 
-    def __init__(self, frame, call):
+    def __init__(self, index, frame, call):
         """Create new Submission Handler.
 
+        :param index: The UI tab index.
         :param frame: The shared plug-in UI frame.
         :type frame: :class:`.AzureBatchUI`
         :param func call: The shared REST API call wrapper.
         """
         self._log = logging.getLogger('AzureBatchMaya')
         self._call = call
+        self._tab_index = index
 
         self.ui = SubmissionUI(self, frame)
         self.modules = self._collect_modules()
@@ -67,6 +69,7 @@ class AzureBatchSubmission(object):
         self.pool_manager = None
         self.env_manager = None
         self.batch = None
+        self.max_pool_size = 1000
 
         #callback.after_new(self.ui.refresh)
         #callback.after_open(self.ui.refresh)
@@ -110,6 +113,12 @@ class AzureBatchSubmission(object):
                 return
         self.renderer = AzureBatchRenderJob()
         self._log.debug("Configured renderer to {0}".format(self.renderer.render_engine))
+
+    def _switch_tab(self):
+        """Make this tab the currently displayed tab. If this tab is already
+        open, this will do nothing.
+        """
+        self.frame.select_tab(self._tab_index)
 
     def _check_outputs(self):
         """Check whether at least one of the scene cameras is marked as renderable
@@ -280,7 +289,7 @@ class AzureBatchSubmission(object):
             application_params['assetScript'] = map_url
             application_params['thumbScript'] = thumb_url
             application_params['workspace'] = workspace_url
-            self.frame.select_tab(2)
+            self._switch_tab()
 
             self.ui.submit_status("Configuring job...")
             progress.status("Configuring job...")
@@ -313,5 +322,5 @@ class AzureBatchSubmission(object):
         finally:
             if progress:
                 progress.end()
-            self.frame.select_tab(2)
+            self._switch_tab()
             self.renderer.disable(True)

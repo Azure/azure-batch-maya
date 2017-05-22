@@ -60,8 +60,8 @@ class ArnoldRenderJob(AzureBatchRenderJob):
             file_prefix = os.path.split(file_prefix)[1]
         else:
             file_prefix = "<Scene>"
-        self.job_name = self.display_string("Job Name:   ", job_name)
-        self.output_name = self.display_string("Output Prefix:   ", file_prefix)
+        self.job_name = self.display_string("Job name:   ", job_name)
+        self.output_name = self.display_string("Output prefix:   ", file_prefix)
         self.start = self.display_int("Start frame:   ", self.start_frame, edit=True)
         self.end = self.display_int("End frame:   ", self.end_frame, edit=True)
         self.step = self.display_int("Frame step:   ", self.frame_step, edit=True)
@@ -82,18 +82,20 @@ class ArnoldRenderJob(AzureBatchRenderJob):
         pending_changes = cmds.file(query=True, modified=True)
         if not pending_changes:
             return self.scene_name, [self.scene_name]
-        options = ["Save and Continue",
-                   "Don't Save and Continue",
-                   "Cancel"]
+        options = {
+            'save': "Save and continue",
+            'nosave': "Continue without saving",
+            'cancel': "Cancel"
+        }
         answer = cmds.confirmDialog(title='Unsaved Changes',
-                                    message='There are unsaved changes. Proceed?',
-                                    button=options,
-                                    defaultButton=options[0],
-                                    cancelButton=options[2],
-                                    dismissString=options[2])
-        if answer == options[2]:
-            raise Exception("Submission Aborted")
-        if answer == options[0]:
+                                    message='There are unsaved changes. Continue?',
+                                    button=options.values(),
+                                    defaultButton=options['save'],
+                                    cancelButton=options['cancel'],
+                                    dismissString=options['cancel'])
+        if answer == options['cancel']:
+            raise Exception("Submission aborted")
+        if answer == options['save']:
             cmds.SaveScene()
         return self.scene_name, [self.scene_name]
 

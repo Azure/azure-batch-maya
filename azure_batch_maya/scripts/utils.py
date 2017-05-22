@@ -177,7 +177,6 @@ class Layout(object):
         return self.layout
 
     def __exit__(self, type, value, traceback):
-        #TODO: Exception handling should go in here
         maya.parent()
 
 

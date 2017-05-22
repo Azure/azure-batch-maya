@@ -1,6 +1,6 @@
 {
   "templateMetadata": {
-    "description": "Sample application template for working with Blender."
+    "description": "Application template for working with Maya and Arnold on Windows."
   },
   "parameters": {
     "sceneFile": {

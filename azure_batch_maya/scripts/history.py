@@ -45,9 +45,10 @@ import azure.batch as batch
 class AzureBatchHistory(object):
     """Handler for job display functionality."""
     
-    def __init__(self, frame, call):
+    def __init__(self, index, frame, call):
         """Create new job history Handler.
 
+        :param index: The UI tab index.
         :param frame: The shared plug-in UI frame.
         :type frame: :class:`.AzureBatchUI`
         :param func call: The shared REST API call wrapper.
@@ -55,9 +56,10 @@ class AzureBatchHistory(object):
         self._log = logging.getLogger('AzureBatchMaya')
         self._call = call
         self._session = None
+        self._tab_index = index
         self.batch = None
         self.index = 0
-        self.per_call = 5
+        self.jobs_per_page = 5
         self.count = 0
         self.min = True
         self.max = False
@@ -70,17 +72,28 @@ class AzureBatchHistory(object):
         """Get the pixel height of the job thumbnail to display.
         Note: This function only works under Python 2.7
         """
+        # The first 8 bytes of data are the PNG signature, the next 4
+        # are the type field of the first chunk (which we don't need).
+        png_signature_bytes = 12
+        # The IHDR header is always the first chunk in a valid PNG image
+        png_header = 'IHDR'
+        # X and Y image dimensions are the first 8 bytes of the IDHR chunk
+        dimensions_bytes = 8
+        # 120 pixels is the default height of a thumbnail image
         y = 120
+        # Byte order = network (!), format = unsigned long (L)
+        excepted_byte_format = '!LL'
         with open(image, 'rb') as im:
-            im.read(12)
-            if im.read(4) == 'IHDR':
-                x, y = struct.unpack("!LL", im.read(8))
+            png_signature = im.read(png_signature_bytes)
+            valid_png = im.read(len(png_header)) == png_header
+            if valid_png:
+                x, y = struct.unpack(excepted_byte_format, im.read(dimensions_bytes))
         return y
 
     def _download_thumbnail(self, job, thumbs):
         """Download a preview thumbnail for the selected job.
-        Only certain output formats are supported. If not thumbnail exists
-        then we display the default 'no preview' image.
+        Only certain output formats are supported. If the thumbnail doesn't
+        exist then we display the default 'no preview' image.
         TODO: Remove direct storage reference to use batch.download.
 
         :param job: The selected job object.
@@ -105,7 +118,7 @@ class AzureBatchHistory(object):
         self._log.debug("Thumbnail path: {}".format(thumb_path))
         try:
             if not os.path.isfile(thumb_path):
-                self._log.info("Downloading task thumb: {}".format(thumbs[-1]))
+                self._log.info("Downloading task thumbnail: {}".format(thumbs[-1]))
                 self.storage.get_blob_to_path('fgrp-' + job.id, thumbs[-1], thumb_path)
                 self._log.info("    thumbnail download successful.\n")
         except Exception as exp:
@@ -120,25 +133,25 @@ class AzureBatchHistory(object):
         """Calculate the paging progress label, including which page
         is currently displayed out of how many.
         """
-        if (self.index + self.per_call) > self.count:
-            extra = (self.index + self.per_call) - self.count
-            new_range = ((self.index + self.per_call) - extra)
+        if (self.index + self.jobs_per_page) > self.count:
+            extra = (self.index + self.jobs_per_page) - self.count
+            new_range = ((self.index + self.jobs_per_page) - extra)
             self.ui.num_jobs =  "{0} - {1} of {2}".format(
                 min((self.index + 1), new_range), new_range, self.count)
         else:
             self.ui.num_jobs = "{0} - {1} of {2}".format(
-                min((self.index + 1), self.count), (self.index + self.per_call), self.count)
+                min((self.index + 1), self.count), (self.index + self.jobs_per_page), self.count)
 
     def _set_min_max(self):
         """Determine whether we are currently displaying the first or
-        last page, for that the forward and back buttons can be disabled
+        last page, so that the forward and back buttons can be disabled
         accordingly.
         """
         self.min = True if self.index < 1 else False
-        if (self.count % self.per_call) == 0:
-            self.max = (self.index >= (self.count - self.per_call)) or (self.per_call > self.count)
+        if (self.count % self.jobs_per_page) == 0:
+            self.max = (self.index >= (self.count - self.jobs_per_page)) or (self.jobs_per_page > self.count)
         else:
-            self.max = self.index >= (self.count - self.per_call + (self.per_call - (self.count % self.per_call)))
+            self.max = self.index >= (self.count - self.jobs_per_page + (self.jobs_per_page - (self.count % self.jobs_per_page)))
         self.ui.last_page = not self.max
         self.ui.first_page = not self.min
 
@@ -172,7 +185,7 @@ class AzureBatchHistory(object):
 
     def show_jobs(self):
         """Display the current page of jobs."""
-        self.jobs = self.all_jobs[self.index:self.index + self.per_call]
+        self.jobs = self.all_jobs[self.index:self.index + self.jobs_per_page]
         self._set_num_jobs()
         self._set_min_max()
         display_jobs = []
@@ -182,11 +195,11 @@ class AzureBatchHistory(object):
 
     def show_next_jobs(self):
         """Show the next page of jobs."""
-        self.index = min(self.index + self.per_call, self.count)
+        self.index = min(self.index + self.jobs_per_page, self.count)
 
     def show_prev_jobs(self):
         """Show the previous page of jobs."""
-        self.index = max(self.index - self.per_call, 0)
+        self.index = max(self.index - self.jobs_per_page, 0)
 
     def show_first_jobs(self):
         """Return to the first page of jobs (most recently submitted)."""
@@ -194,14 +207,14 @@ class AzureBatchHistory(object):
 
     def show_last_jobs(self):
         """Skip to the last page of jobs (first ones submitted)."""
-        if (self.count % self.per_call) == 0:
-            self.index = self.count - self.per_call
+        if (self.count % self.jobs_per_page) == 0:
+            self.index = self.count - self.jobs_per_page
         else:
-            self.index = self.count - self.per_call + \
-                (self.per_call - (self.count % self.per_call))
+            self.index = self.count - self.jobs_per_page + \
+                (self.jobs_per_page - (self.count % self.jobs_per_page))
 
     def job_selected(self, job_ui):
-        """A job has been selected, so it's details need to be retrieved
+        """A job has been selected, so its details need to be retrieved
         and displayed. This is also called when a job entry has been
         refreshed.
         """

@@ -1,30 +1,7 @@
-#-------------------------------------------------------------------------
-#
-# Azure Batch Maya Plugin
-#
-# Copyright (c) Microsoft Corporation.  All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the ""Software""), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-#--------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
 
 import os
 import utils
@@ -34,6 +11,11 @@ from api import MayaAPI as maya
 
 class SubmissionUI(object):
     """Class to create the 'Submit' tab in the plug-in UI"""
+
+    AUTO_POOL = 1
+    EXISTING_POOL = 2
+    NEW_POOL = 3
+
 
     def __init__(self, base, frame):
         """Create 'Submit' tab and add to UI frame.
@@ -46,7 +28,7 @@ class SubmissionUI(object):
         self.base = base
         self.label = "Submit"
         self.page = maya.form_layout(enableBackground=True) 
-        self.select_pool_type = 1
+        self.select_pool_type = self.AUTO_POOL
         self.select_instances = 1
         
         with utils.ScrollLayout(height=475, parent=self.page) as scroll:
@@ -60,8 +42,8 @@ class SubmissionUI(object):
                 maya.text(label="Pools:   ", align="right")
                 maya.radio_group(
                     labelArray3=("Auto provision a pool for this job",
-                                    "Reuse an existing persistent pool",
-                                    "Create a new persistent pool"),
+                                 "Reuse an existing persistent pool",
+                                 "Create a new persistent pool"),
                     numberOfRadioButtons=3,
                     select=self.select_pool_type,
                     vertical=True,
@@ -73,9 +55,9 @@ class SubmissionUI(object):
                 self.control = maya.int_slider(
                     field=True, value=self.select_instances,
                     minValue=1,
-                    maxValue=1000,
+                    maxValue=self.base.max_pool_size,
                     fieldMinValue=1,
-                    fieldMaxValue=1000,
+                    fieldMaxValue=self.base.max_pool_size,
                     changeCommand=self.set_pool_instances,
                     annotation="Number of instances in pool")
                 maya.parent()
@@ -207,7 +189,7 @@ class SubmissionUI(object):
         :returns: A dictionary with selected pool type as key and pool
          specification as value.
         """
-        if self.select_pool_type == 2:
+        if self.select_pool_type == self.EXISTING_POOL:
             details = str(maya.menu(self.control, query=True, value=True))
         else:
             details = self.select_instances
@@ -224,16 +206,16 @@ class SubmissionUI(object):
         Displays the pool size UI control.
         Command for select_pool_type radio buttons.
         """
-        self.select_pool_type = 3
+        self.select_pool_type = self.NEW_POOL
         maya.delete_ui(self.control)
         maya.text(self.pool_text, edit=True, label="Instances:   ")
         self.control = maya.int_slider(
             field=True,
             value=self.select_instances,
             minValue=1,
-            maxValue=1000,
+            maxValue=self.base.max_pool_size,
             fieldMinValue=1,
-            fieldMaxValue=1000,
+            fieldMaxValue=self.base.max_pool_size,
             parent=self.pool_settings,
             changeCommand=self.set_pool_instances,
             annotation="Number of instances in pool")
@@ -243,16 +225,16 @@ class SubmissionUI(object):
         Displays the pool size UI control.
         Command for select_pool_type radio buttons.
         """
-        self.select_pool_type = 1
+        self.select_pool_type = self.AUTO_POOL
         maya.delete_ui(self.control)
         maya.text(self.pool_text, edit=True, label="Instances:   ")
         self.control = maya.int_slider(
             field=True,
             value=self.select_instances,
             minValue=1,
-            maxValue=1000,
+            maxValue=self.base.max_pool_size,
             fieldMinValue=1,
-            fieldMaxValue=1000,
+            fieldMaxValue=self.base.max_pool_size,
             parent=self.pool_settings,
             changeCommand=self.set_pool_instances,
             annotation="Number of instances in pool")
@@ -263,7 +245,7 @@ class SubmissionUI(object):
         in a dropdown menu.
         Command for select_pool_type radio buttons.
         """
-        self.select_pool_type = 2
+        self.select_pool_type = self.EXISTING_POOL
         maya.delete_ui(self.control)
         maya.text(self.pool_text, edit=True, label="loading...")
         maya.refresh()
@@ -274,8 +256,3 @@ class SubmissionUI(object):
             annotation="Use an existing persistent pool ID")
         for pool_id in pool_options:
             maya.menu_option(pool_id)
-        #with utils.Dropdown(None, parent=self.pool_settings, annotation="Use an existing persistent pool ID") as pools:
-        #    self.control = pools
-        #    for pool_id in pool_options:
-        #        self.control.add_item(pool_id)
-

@@ -154,7 +154,6 @@ class AzureBatchRenderJob(object):
             horizontalScrollBarThickness=0,
             verticalScrollBarThickness=3,
             parent=layout,
-            #width=360,
             height=260)
 
         self.subLayout = cmds.rowColumnLayout(
