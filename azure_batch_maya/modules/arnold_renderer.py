@@ -1,30 +1,7 @@
-#-------------------------------------------------------------------------
-#
-# Azure Batch Maya Plugin
-#
-# Copyright (c) Microsoft Corporation.  All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the ""Software""), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-#--------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
 
 import os
 import sys
@@ -57,7 +34,7 @@ class ArnoldRenderJob(AzureBatchRenderJob):
             job_name = "Untitled"
         else:
             job_name = str(os.path.splitext(os.path.basename(self.scene_name))[0])
-        file_prefix = mel.eval("getAttr defaultRenderGlobals.imageFilePrefix")
+        file_prefix = cmds.getAttr("defaultRenderGlobals.imageFilePrefix")
         if file_prefix:
             file_prefix = os.path.split(file_prefix)[1]
         else:
@@ -68,7 +45,10 @@ class ArnoldRenderJob(AzureBatchRenderJob):
         self.end = self.display_int("End frame:   ", self.end_frame, edit=True)
         self.step = self.display_int("Frame step:   ", self.frame_step, edit=True)
 
-        log_level = mel.eval("getAttr defaultArnoldRenderOptions.log_verbosity")
+        try:
+            log_level = cmds.getAttr("defaultArnoldRenderOptions.log_verbosity")
+        except ValueError:
+            log_level = 1
         self.logging = self.display_menu("Logging:   ", self.log_levels, log_level+1)
 
     def get_title(self):
@@ -96,7 +76,7 @@ class ArnoldRenderJob(AzureBatchRenderJob):
                                     cancelButton=options['cancel'],
                                     dismissString=options['cancel'])
         if answer == options['cancel']:
-            raise Exception("Submission aborted")
+            raise Exception("Submission cancelled")
         if answer == options['save']:
             cmds.SaveScene()
         return self.scene_name, [self.scene_name]
