@@ -56,10 +56,15 @@ class AzureBatchPools(object):
         """
         #if lazy and self.pools:
         #    return [pool.id for pool in self.pools if not pool.auto]
-        self.pools = [p for p in self._call(self.batch.pool.list) if p.id.startswith('Maya_')]
+        all_pools = self._call(self.batch.pool.list)
+        self.pools = []
+        for pool in all_pools:
+            if pool.virtual_machine_configuration and \
+                    pool.virtual_machine_configuration.image_reference.publisher == 'batch':
+                self.pools.append(pool)
         self.pools.sort(key=lambda x: x.creation_time, reverse=True)
         self.count = len(self.pools)
-        return [pool.id for pool in self.pools if pool.id.startswith("Maya_Pool")]
+        return [pool.id for pool in self.pools if not pool.id.startswith("Maya_Auto_Pool")]
 
     def get_pools(self):
         """Retrieves the currently running pools and populates the UI
