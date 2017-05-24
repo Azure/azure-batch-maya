@@ -25,6 +25,7 @@ from pools import AzureBatchPools
 from environment import AzureBatchEnvironment
 from shared import AzureBatchSettings
 from exception import CancellationException
+from utils import OperatingSystem
 
 from batch_extensions import BatchExtensionsClient
 from batch_extensions.batch_auth import SharedKeyCredentials
@@ -139,7 +140,7 @@ class TestBatchSubmission(unittest.TestCase):
         mock_utils.format_scene_path.return_value = "test_file_path"
         self.mock_self._configure_pool = lambda t: AzureBatchSubmission._configure_pool(self.mock_self, t)
         self.mock_self._check_plugins.return_value = []
-        self.mock_self._get_os_flavor.return_value = 'Windows'
+        self.mock_self._get_os_flavor.return_value = OperatingSystem.windows
         self.mock_self.pool_manager.create_auto_pool.return_value = {'autoPool': 'auto-pool'}
         self.mock_self.pool_manager.create_pool.return_value = {'poolId': 'new-pool'}
         self.mock_self.env_manager.get_environment_settings.return_value = [{'name':'foo', 'value':'bar'}]

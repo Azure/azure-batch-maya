@@ -50,9 +50,15 @@ class AzureTestBatchPools(unittest.TestCase):
         self.mock_self.batch.pool = mock.create_autospec(batch.operations.ExtendedPoolOperations)
         pool1 = mock.create_autospec(models.CloudPool)
         pool1.id = "12345"
+        pool1.virtual_machine_configuration = mock.create_autospec(models.VirtualMachineConfiguration)
+        pool1.virtual_machine_configuration.image_reference = mock.create_autospec(models.ImageReference)
+        pool1.virtual_machine_configuration.image_reference.publisher = "MicrosoftWindows"
         pool1.creation_time = datetime.datetime.now()
         pool2 = mock.create_autospec(models.CloudPool)
         pool2.id = "67890"
+        pool2.virtual_machine_configuration = mock.create_autospec(models.VirtualMachineConfiguration)
+        pool2.virtual_machine_configuration.image_reference = mock.create_autospec(models.ImageReference)
+        pool2.virtual_machine_configuration.image_reference.publisher = "LinuxUbuntu"
         pool2.creation_time = datetime.datetime.now()
         self.mock_self._call = lambda x: [pool1, pool2]
 
@@ -61,7 +67,9 @@ class AzureTestBatchPools(unittest.TestCase):
         self.assertEqual(len(self.mock_self.pools), 0)
 
         pool1.id = "Maya_Pool_A"
+        pool1.virtual_machine_configuration.image_reference.publisher = "batch"
         pool2.id = "Maya_Auto_Pool_B"
+        pool2.virtual_machine_configuration.image_reference.publisher = "batch"
         ids = AzureBatchPools.list_pools(self.mock_self)
         self.assertEqual(ids, ["Maya_Pool_A"])
         self.assertEqual(len(self.mock_self.pools), 2)
