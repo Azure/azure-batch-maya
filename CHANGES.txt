@@ -1,1 +1,10 @@
-v0.9.0 - Core re-written to use latest Azure Batch Python SDK and Batch Extensions template files.
+
+2017-05-24 v0.9.1
+-----------------
+- Expanded Pool display UI to show pools created via the Azure portal
+- Fixed bug where Pool couldn't be displayed if created with a non-current image
+
+
+2017-05-23 v0.9.0  
+-----------------
+- Core re-written to use latest Azure Batch Python SDK and Batch Extensions template files.
