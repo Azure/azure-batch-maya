@@ -120,8 +120,8 @@ class AzureBatchEnvironment(object):
         if pool_image:
             return pool_image[0]
         else:
-            self._log.debug("Pool using unknown image reference: {}".format(image_ref['offer']))
-            return ""
+            self._log.debug("Pool using unknown image reference: {}".format(image_ref.offer))
+            return image_ref.offer
 
     def get_vm_sku(self):
         return self.ui.get_sku()
