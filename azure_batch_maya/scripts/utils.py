@@ -431,12 +431,12 @@ class JobWatcher(object):
         self.job_watcher = os.path.join(
             os.path.dirname(__file__), "tools", "job_watcher.py")
         platform = get_os()
-        if platform == OperatingSystem.windows:
+        if platform == OperatingSystem.windows.value:
             self.proc_cmd = 'system("WMIC PROCESS where (Name=\'mayapy.exe\') get Commandline")'
             self.start_cmd = 'system("start mayapy {0}")'
             self.quotes = '\\"'
             self.splitter = 'mayapy'
-        elif platform == OperatingSystem.darwin:
+        elif platform == OperatingSystem.darwin.value:
             self.proc_cmd = 'system("ps -ef")'
             self.start_cmd = 'system("osascript -e \'tell application \\"Terminal\\" to do script \\"python {0}\\"\'")'
             self.quotes = '\\\\\\"'
