@@ -18,16 +18,16 @@ MAYA_IMAGES = {
         {
             'node_sku_id': 'batch.node.windows amd64',
             'publisher': 'batch',
-            'offer': 'autodesk-maya-arnold-win2016-preview',
-            'sku': 'maya2017',
+            'offer': 'rendering-windows2016',
+            'sku': 'rendering',
             'version': 'latest'
         },
     'Batch CentOS Preview':
         {
             'node_sku_id': 'batch.node.centos 7',
             'publisher': 'batch',
-            'offer': 'autodesk-maya-arnold-centos73-preview',
-            'sku': 'maya2017',
+            'offer': 'autodesk-maya-arnold-centos73',
+            'sku': 'maya-arnold-2017',
             'version': 'latest'
         },
 }
