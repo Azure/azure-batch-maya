@@ -32,7 +32,7 @@ import subprocess
 import shutil
 import zipfile
 
-VERSION = "0.9.1"
+VERSION = "0.9.2"
 
 def main():
     """Build Maya Plug-in package"""
