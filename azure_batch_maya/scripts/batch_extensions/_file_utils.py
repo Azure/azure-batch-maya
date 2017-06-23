@@ -226,6 +226,7 @@ class FileUtils(object):
 
     def __init__(self, get_storage_client):
         self.resource_file_cache = {}
+        self.container_sas_cache = {}
         self.resolve_storage_account = get_storage_client
 
     def filter_resource_cache(self, container, prefix):
@@ -264,7 +265,11 @@ class FileUtils(object):
     def get_container_sas(self, file_group_name):
         storage_client = self.resolve_storage_account()
         container = _get_container_name(file_group_name)
-        return _generate_container_sas_token(container, storage_client)
+        try:
+            return self.container_sas_cache[container]
+        except KeyError:
+            self.container_sas_cache[container] = _generate_container_sas_token(container, storage_client)
+            return self.container_sas_cache[container]
 
     def get_container_list(self, source):
         """List blob references in container."""   
