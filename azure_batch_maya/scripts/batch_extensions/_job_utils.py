@@ -5,7 +5,12 @@
 
 from msrest.exceptions import ValidationError, ClientRequestError
 from azure.batch.models import BatchErrorException
-
+import threading
+try:
+    from queue import Queue
+except ImportError:
+    from Queue import Queue
+    
 # pylint: disable=too-few-public-methods
 
 
@@ -25,16 +30,34 @@ def _handle_batch_exception(action):
         raise Exception(ex)
 
 
+def _bulk_add_tasks(client, job_id, tasks, queue):
+    added_tasks = client.add_collection(job_id, tasks)
+    for task in added_tasks.value:
+        queue.put(task)
+    
 def deploy_tasks(client, job_id, tasks):
     MAX_TASKS_COUNT_IN_BATCH = 100
+    MAX_SUBMIT_THREADS = 10
 
     def add_task():
         start = 0
-        while start < len(tasks):
+        progress_queue = Queue()
+        submitting_tasks = []
+        submitted_tasks = []
+        while True:
             end = min(start + MAX_TASKS_COUNT_IN_BATCH, len(tasks))
-            client.add_collection(job_id, tasks[start:end])
+            submit = threading.Thread(target=_bulk_add_tasks, args=(client, job_id, tasks[start:end], progress_queue))
+            submit.start()
+            submitting_tasks.append(submit)
             start = end
-
+            if start >= len(tasks) or len(submitting_tasks) >= MAX_SUBMIT_THREADS:
+                while any(s for s in submitting_tasks if s.is_alive()) or not progress_queue.empty():
+                    submitted_tasks.append(progress_queue.get())
+                    progress_queue.task_done()
+                submitting_tasks = []
+                if start >= len(tasks):
+                    break
+        return submitted_tasks
     _handle_batch_exception(add_task)
 
 
