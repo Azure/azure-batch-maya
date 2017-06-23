@@ -106,11 +106,11 @@ class BatchExtensionsClient(BatchServiceClient):
             # the Batch account in the subscription
             # Example URL: https://batchaccount.westus.batch.azure.com
             region = urlsplit(self.config.base_url).netloc.split('.', 2)[1]
-            accounts = [x for x in client.batch_account.list()
-                        if x.name == self._account and x.location == region]
+            accounts = (x for x in client.batch_account.list()
+                        if x.name == self._account and x.location == region)
             try:
-                account = accounts[0]
-            except IndexError:
+                account = next(accounts)
+            except StopIteration:
                 raise ValueError('Couldn\'t find the account named {} in subscription {} '
                                  'in region {}'.format(
                                      self._account, self._subscription, region))
@@ -125,7 +125,7 @@ class BatchExtensionsClient(BatchServiceClient):
         keys = storage_client.storage_accounts.list_keys(storage_resource_group, storage_account)
         storage_key = keys.keys[0].value  # pylint: disable=no-member
 
-        self.resolved_storage_client = CloudStorageAccount(storage_account, storage_key)\
+        self._resolved_storage_client = CloudStorageAccount(storage_account, storage_key)\
             .create_block_blob_service()
-        return self.resolved_storage_client
+        return self._resolved_storage_client
 
