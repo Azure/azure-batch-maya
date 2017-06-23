@@ -215,6 +215,32 @@ class AzureBatchJobHistory(object):
             self.selected_job.set_thumbnail(loading_thumb, 24)
             maya.refresh()
             job = self._call(self.batch.job.get, job.id)
+            self.selected_job.set_status('loading...')
+            self.selected_job.set_progress('loading...')
+            self.selected_job.set_tasks('loading...')
+            self.selected_job.set_submission(job.creation_time.isoformat())
+            self.selected_job.set_job(job.id)
+            self.selected_job.set_pool(job.pool_info.pool_id)
+            self.selected_job.set_label(job.display_name)
+            maya.refresh()
+            self._log.info("Updated {0}".format(job.display_name))
+        except Exception as exp:
+            self._log.warning("Failed to update job details {0}".format(exp))
+            self.ui.refresh()
+    
+    def load_tasks(self):
+        """Get a list of tasks associated with the job."""
+        try:
+            job = self.jobs[self.selected_job.index]
+        except (IndexError, AttributeError):
+            self._log.warning("Selected job index does not match jobs list.")
+            if not self.selected_job:
+                return
+            self.selected_job.set_status('unknown')
+            self.selected_job.set_progress('unknown')
+            self.selected_job.set_tasks('unknown')
+            return
+        try:
             tasks = list(self._call(self.batch.task.list, job.id))
             completed_tasks = [t for t in tasks if t.state == batch.models.TaskState.completed]
             errored_tasks = [t for t in completed_tasks if t.execution_info.exit_code != 0]
@@ -225,14 +251,9 @@ class AzureBatchJobHistory(object):
             else:
                 percentage = (100 * len(completed_tasks)) / (len(tasks))
             self.selected_job.set_status(state)
-            self.selected_job.set_progress(percentage)
-            self.selected_job.set_submission(job.creation_time.isoformat())
+            self.selected_job.set_progress(str(percentage)+'%')
             self.selected_job.set_tasks(len(tasks))
-            self.selected_job.set_job(job.id)
-            self.selected_job.set_pool(job.pool_info.pool_id)
-            self.selected_job.set_label(job.display_name)
             maya.refresh()
-            self._log.info("Updated {0}".format(job.display_name))
         except Exception as exp:
             self._log.warning("Failed to update job details {0}".format(exp))
             self.ui.refresh()
@@ -257,7 +278,6 @@ class AzureBatchJobHistory(object):
             self._log.warning(exp)
             blobs = []
         thumbs = sorted([b.name for b in blobs])
-        print(thumbs)
         self._download_thumbnail(job, thumbs)
 
     def cancel_job(self):
