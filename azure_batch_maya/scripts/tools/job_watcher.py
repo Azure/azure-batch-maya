@@ -41,7 +41,7 @@ def _check_valid_dir(directory):
 
 def _download_output(container, blob_name, output_path, size):
     print("Downloading task output: {}".format(blob_name))
-    storage_client.get_blob_to_path(container, blob_name, output_path))
+    storage_client.get_blob_to_path(container, blob_name, output_path)
     print("Output {} download successful".format(blob_name))
 
 

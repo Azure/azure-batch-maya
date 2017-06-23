@@ -1,4 +1,11 @@
 
+2017-06-23 v0.9.3
+-----------------
+- Added threading to output downloads
+- Added threading to task submission
+- Made task counting for job detail display load asynchronously
+
+
 2017-06-12 v0.9.2
 -----------------
 - Fixed bug in OS detection of Job Watcher

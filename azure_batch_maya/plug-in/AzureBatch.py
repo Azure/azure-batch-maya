@@ -43,7 +43,7 @@ NAMESPACE_PACAKGES = [
     "azure-storage==0.32.0",
 ]
 
-VERSION = "0.9.2"
+VERSION = "0.9.3"
 EULA_PREF = "AzureBatch_EULA"
 SHELF_FILE = "shelf_AzureBatch.mel"
 cmd_name = "AzureBatch"
