@@ -160,7 +160,7 @@ class AzureBatchConfig(object):
         """
         try:
             filter = batch.models.PoolListOptions(max_results=1, select="id")
-            self._client.pool.list(filter)
+            list(self._client.pool.list(filter))
             self._storage.list_containers(num_results=1)
             return True
         except Exception as exp:

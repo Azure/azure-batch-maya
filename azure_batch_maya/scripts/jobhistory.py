@@ -227,7 +227,7 @@ class AzureBatchJobHistory(object):
         except Exception as exp:
             self._log.warning("Failed to update job details {0}".format(exp))
             self.ui.refresh()
-    
+
     def load_tasks(self):
         """Get a list of tasks associated with the job."""
         try:
@@ -257,7 +257,7 @@ class AzureBatchJobHistory(object):
         except Exception as exp:
             self._log.warning("Failed to update job details {0}".format(exp))
             self.ui.refresh()
-    
+
     def get_thumbnail(self):
         """Check job outputs of the currently selected job to find
         any available thumbnails.

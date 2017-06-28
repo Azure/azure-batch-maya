@@ -141,7 +141,10 @@ class ConfigUI(object):
     @status.setter
     def status(self, value):
         """Plug-in authentication status. Sets contents of label."""
-        maya.text(self.auth_status, edit=True, label=value)
+        if value:
+            maya.text(self.auth_status, edit=True, label="Authenticated", backgroundColor=[0.23, 0.44, 0.21])
+        else:
+            maya.text(self.auth_status, edit=True, label="Not authenticated", backgroundColor=[0.6, 0.23, 0.23])
 
     @property
     def logging(self):
@@ -181,6 +184,7 @@ class ConfigUI(object):
         """Set label of authentication button depending on auth status.
         :param bool auth: Whether plug-in is authenticated.
         """
+        self.status = auth
         if auth:
             maya.button(
                 self._authenticate, edit=True, label="Refresh Authentication")
