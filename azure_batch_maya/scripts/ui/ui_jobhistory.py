@@ -418,6 +418,7 @@ class AzureBatchJobInfo(object):
     def refresh(self):
         """Refresh the details of the specified job, and update the UI."""
         self.base.update_job(self.index)
+        maya.execute(self.base.load_tasks)
         maya.execute(self.base.get_thumbnail)
         self.selected_dir = utils.get_default_output_path()
         maya.text_field(self._dir, edit=True, text=self.selected_dir)
