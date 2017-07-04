@@ -100,7 +100,8 @@ class AzureBatchPools(object):
             nodes = [n for n in _nodes]
             self.selected_pool.set_id(pool.id)
             self.selected_pool.set_label(pool.display_name if pool.display_name else pool.id)
-            self.selected_pool.set_size(pool)
+            self.selected_pool.set_dedicated_size(pool)
+            self.selected_pool.set_low_pri_size(pool)
             self.selected_pool.set_type(
                 "Auto" if pool.id.startswith("Maya_Auto_Pool") else "Provisioned")
             self.selected_pool.set_state(pool.state.value, nodes)
@@ -141,10 +142,10 @@ class AzureBatchPools(object):
         """Get the target number of VMs in the selected pool."""
         try:
             pool = self.pools[self.selected_pool.index]
-            return int(pool.target_dedicated_nodes)
+            return int(pool.target_dedicated_nodes), int(pool.target_low_priority_nodes)
         except (IndexError, TypeError, AttributeError) as exp:
             self._log.info("Failed to parse pool target size {0}".format(exp))
-            return 0
+            return 0, 0
 
     def get_pool_os(self, pool_id):
         """Get the OS flavor of the specified pool ID."""
@@ -173,7 +174,8 @@ class AzureBatchPools(object):
             application_licenses=self.environment.get_application_licenses(),
             vm_size=self.environment.get_vm_sku(),
             virtual_machine_configuration=pool_config,
-            target_dedicated_nodes=int(size),
+            target_dedicated_nodes=int(size[0]),
+            target_low_priority_nodes=int(size[1]),
             max_tasks_per_node=1)
         self._call(self.batch.pool.add, new_pool)
         self._log.debug("Successfully created pool.")
@@ -194,7 +196,8 @@ class AzureBatchPools(object):
             'virtualMachineConfiguration': pool_config,
             'maxTasksPerNode': 1,
             'applicationLicenses': self.environment.get_application_licenses(),
-            'targetDedicatedNodes': int(size)}
+            'targetDedicatedNodes': int(size[0]),
+            'targetLowPriorityNodes': int(size[1])}
         auto_pool = {
             'autoPoolIdPrefix': "Maya_Auto_Pool_",
             'poolLifetimeOption': "job",
@@ -202,13 +205,16 @@ class AzureBatchPools(object):
             'pool': pool_spec}      
         return {'autoPoolSpecification': auto_pool}
 
-    def resize_pool(self, new_size):
+    def resize_pool(self, new_dedicated, new_low_pri):
         """Resize an existing pool."""
         try:
             pool = self.pools[self.selected_pool.index]
-            self._log.info("Resizing pool '{}' to {} VMs".format(pool.id, new_size))
-            self._call(self.batch.pool.resize, pool.id, {'target_dedicated_nodes':int(new_size),
-                                                         'target_low_priority_nodes': 0})
+            self._log.info(
+                "Resizing pool '{}' to {} dedicated VMs"
+                " and {} low priority VMs".format(pool.id, new_dedicated, new_low_pri))
+            self._call(self.batch.pool.resize, pool.id,
+                       {'target_dedicated_nodes':int(new_dedicated),
+                        'target_low_priority_nodes': int(new_low_pri)})
             maya.refresh()
         except Exception as exp:
             self._log.info("Failed to resize pool {0}".format(exp))

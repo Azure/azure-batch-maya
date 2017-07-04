@@ -61,6 +61,7 @@ class AzureBatchSettings(object):
                 maya.delete_ui("AzureBatch")
             message = "Batch Plugin Failed to Start: {0}".format(exp)
             maya.error(message)
+            raise
 
     def start(self):
         """Start the plugin UI. Depending on whether auto-authentication was
