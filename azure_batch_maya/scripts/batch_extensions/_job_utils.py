@@ -35,10 +35,10 @@ def _bulk_add_tasks(client, job_id, tasks, queue):
     for task in added_tasks.value:
         queue.put(task)
     
-def deploy_tasks(client, job_id, tasks):
+def deploy_tasks(client, job_id, tasks, threads):
     MAX_TASKS_COUNT_IN_BATCH = 100
-    MAX_SUBMIT_THREADS = 10
-
+    submit_threads = threads or 10
+    
     def add_task():
         start = 0
         progress_queue = Queue()
@@ -50,7 +50,7 @@ def deploy_tasks(client, job_id, tasks):
             submit.start()
             submitting_tasks.append(submit)
             start = end
-            if start >= len(tasks) or len(submitting_tasks) >= MAX_SUBMIT_THREADS:
+            if start >= len(tasks) or len(submitting_tasks) >= submit_threads:
                 while any(s for s in submitting_tasks if s.is_alive()) or not progress_queue.empty():
                     submitted_tasks.append(progress_queue.get())
                     progress_queue.task_done()

@@ -308,6 +308,14 @@ class MayaAPI(object):
             return None
 
     @staticmethod
+    def int_field(*args, **kwargs):
+        try:
+            return cmds.intField(*args, **kwargs)
+        except Exception as exp:
+            LOG.debug("MayaAPI exception in 'int_field': {0}".format(exp).strip())
+            return None
+
+    @staticmethod
     def popup_menu(*args, **kwargs):
         try:
             return cmds.popupMenu(*args, **kwargs)

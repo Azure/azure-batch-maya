@@ -152,6 +152,10 @@ class AzureBatchConfig(object):
             self.ui.logging = int(self._cfg.get('AzureBatch', 'logging'))
         except ConfigParser.NoOptionError:
             self.ui.logging = 10
+        try:
+            self.ui.threads = int(self._cfg.get('AzureBatch', 'threads'))
+        except ConfigParser.NoOptionError:
+            self.ui.threads = 20
         self.ui.set_authenticate(self._auth)
 
     def _auto_authentication(self):
@@ -167,16 +171,29 @@ class AzureBatchConfig(object):
             self._log.info("Failed to authenticate: {0}".format(exp))
             return False
 
+    def _save_config(self):
+        """Persist the current plugin configuration to file."""
+        config_file = os.path.join(self._data_dir, self._ini_file)
+        with open(config_file, 'w') as handle:
+            self._cfg.write(handle)
+
     def set_logging(self, level):
         """Set the logging level to that specified in the UI.
         :param str level: The specified logging level.
         """
-        log_level = int(LOG_LEVELS[level])
-        self._log.setLevel(log_level)
-        self._cfg.set('AzureBatch', 'logging', str(level))
+        self._log.setLevel(level)
+        self._cfg.set('AzureBatch', 'logging', level)
+        self._save_config()
+
+    def set_threads(self, threads):
+        """Set the number of threads to that specified in the UI.
+        :param int threads: The specified number of threads.
+        """
+        self._cfg.set('AzureBatch', 'threads', threads)
+        self._save_config()
 
     def save_changes(self):
-        """Persist configuration changes to file for future sessions."""
+        """Persist auth config changes to file for future sessions."""
         try:
             self._cfg.add_section('AzureBatch')
         except ConfigParser.DuplicateSectionError:
@@ -186,10 +203,7 @@ class AzureBatchConfig(object):
         self._cfg.set('AzureBatch', 'batch_key', self.ui.key)
         self._cfg.set('AzureBatch', 'storage_account', self.ui.storage)
         self._cfg.set('AzureBatch', 'storage_key', self.ui.storage_key)
-        self._cfg.set('AzureBatch', 'logging', self.ui.logging)
-        config_file = os.path.join(self._data_dir, self._ini_file)
-        with open(config_file, 'w') as handle:
-            self._cfg.write(handle)
+        self._save_config()
 
     def authenticate(self):
         """Begin authentication - initiated by the UI button."""
@@ -202,6 +216,13 @@ class AzureBatchConfig(object):
         finally:
             self.ui.set_authenticate(self._auth)
             self.session()
+    
+    def get_threads(self):
+        """Attempt to retrieve number of threads configured for the plugin."""
+        try:
+            return int(self._cfg.get('AzureBatch', 'threads'))
+        except ConfigParser.NoOptionError:
+            return self.ui.threads
 
     def get_cached_vm_sku(self):
         """Attempt to retrieve a selected VM SKU from a previous session."""
@@ -213,9 +234,7 @@ class AzureBatchConfig(object):
     def store_vm_sku(self, sku):
         """Cache selected VM SKU for later sessions."""
         self._cfg.set('AzureBatch', 'vm_sku', sku)
-        config_file = os.path.join(self._data_dir, self._ini_file)
-        with open(config_file, 'w') as handle:
-            self._cfg.write(handle)
+        self._save_config()
 
     def get_cached_image(self):
         """Attempt to retrieve a selected image a previous session."""
@@ -227,9 +246,7 @@ class AzureBatchConfig(object):
     def store_image(self, image):
         """Cache selected image for later sessions."""
         self._cfg.set('AzureBatch', 'image', image)
-        config_file = os.path.join(self._data_dir, self._ini_file)
-        with open(config_file, 'w') as handle:
-            self._cfg.write(handle)
+        self._save_config()
 
     def get_cached_autoscale_formula(self):
         """Attempt to retrieve an autoscale forumla from a previous session."""
@@ -241,6 +258,4 @@ class AzureBatchConfig(object):
     def store_autoscale_formula(self, formula):
         """Cache selected VM SKU for later sessions."""
         self._cfg.set('AzureBatch', 'autoscale', formula)
-        config_file = os.path.join(self._data_dir, self._ini_file)
-        with open(config_file, 'w') as handle:
-            self._cfg.write(handle)
+        self._save_config()

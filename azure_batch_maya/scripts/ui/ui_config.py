@@ -37,6 +37,17 @@ class ConfigUI(object):
                 maya.text(label="Service:    ", align="left")
                 self._endpoint = maya.text_field(height=25, enable=True)
             
+            #TODO: Allow set to 0 to disable threads
+            with utils.Row(2, 2, (70,260), ("left","left")):
+                maya.text(label="Threads:    ", align="left")
+                self._threads = maya.int_field(
+                    changeCommand=self.set_threads,
+                    height=25,
+                    minValue=1,
+                    maxValue=40,
+                    enable=True,
+                    value=20)
+            
             with utils.Row(2, 2, (70,260), ("left","center"),
                            [(1, "bottom", 20),(2,"bottom",15)]):
                 maya.text(label="Logging:    ", align="left")
@@ -92,6 +103,16 @@ class ConfigUI(object):
     def endpoint(self, value):
         """AzureBatch Service Endpoint. Sets contents of text field."""
         maya.text_field(self._endpoint, edit=True, text=str(value))
+
+    @property
+    def threads(self):
+        """Max number of threads used. Retrieves contents of int field."""
+        return maya.int_field(self._threads, query=True, value=True)
+
+    @threads.setter
+    def threads(self, value):
+        """Max number of threads used. Sets contents of iny field."""
+        maya.int_field(self._threads, edit=True, value=int(value))
 
     @property
     def account(self):
@@ -178,7 +199,13 @@ class ConfigUI(object):
         """Set logging level. Command for logging dropdown selection.
         :param str level: The selected logging level, e.g. ``debug``.
         """
-        self.base.set_logging(level.lower())
+        self.base.set_logging(self.logging)
+
+    def set_threads(self, threads):
+        """Set number of threads. OnChange command for threads field.
+        :param int threads: The selected number of threads.
+        """
+        self.base.set_threads(int(threads))
 
     def set_authenticate(self, auth):
         """Set label of authentication button depending on auth status.
