@@ -1,3 +1,10 @@
+2017-07-05 v0.10.0
+------------------
+- Exposed low priority VM allocation for pools
+- Exposed thread configuration for uploads/downloads/task submission
+- Added coloured label to confirm successful authentication
+- Fixed some bugs in job status loading
+
 
 2017-06-23 v0.9.3
 -----------------
