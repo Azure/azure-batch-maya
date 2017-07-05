@@ -48,7 +48,6 @@ def _download_output(container, blob_name, output_path, size):
 def _track_completed_outputs(container, dwnld_dir):
     job_outputs = storage_client.list_blobs(container)
     downloads = []
-    print("concurrent downloads", concurrent_downloads)
     for output in job_outputs:
         if output.name.startswith('thumbs/'):
             continue

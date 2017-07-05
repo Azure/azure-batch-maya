@@ -149,11 +149,11 @@ class AzureBatchConfig(object):
         except ConfigParser.NoOptionError:
             self.ui.storage_key = ""
         try:
-            self.ui.logging = int(self._cfg.get('AzureBatch', 'logging'))
+            self.ui.logging = self._cfg.getint('AzureBatch', 'logging')
         except ConfigParser.NoOptionError:
             self.ui.logging = 10
         try:
-            self.ui.threads = int(self._cfg.get('AzureBatch', 'threads'))
+            self.ui.threads = self._cfg.getint('AzureBatch', 'threads')
         except ConfigParser.NoOptionError:
             self.ui.threads = 20
         self.ui.set_authenticate(self._auth)
@@ -219,10 +219,7 @@ class AzureBatchConfig(object):
     
     def get_threads(self):
         """Attempt to retrieve number of threads configured for the plugin."""
-        try:
-            return int(self._cfg.get('AzureBatch', 'threads'))
-        except ConfigParser.NoOptionError:
-            return self.ui.threads
+        return self.ui.threads
 
     def get_cached_vm_sku(self):
         """Attempt to retrieve a selected VM SKU from a previous session."""
