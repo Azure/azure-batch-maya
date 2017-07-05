@@ -286,7 +286,7 @@ class AzureBatchJobHistory(object):
             job = self.jobs[self.selected_job.index]
             self._call(self.batch.job.terminate, job.id)
             self.update_job(self.selected_job.index)
-            maya.execute(self.base.load_tasks)
+            maya.execute(self.load_tasks)
             maya.execute(self.get_thumbnail)
             maya.refresh()
         except (IndexError, AttributeError) as exp:
@@ -302,7 +302,7 @@ class AzureBatchJobHistory(object):
             job = self.jobs[self.selected_job.index]
             self._call(self.batch.job.delete, job.id)
             self.update_job(self.selected_job.index)
-            maya.execute(self.base.load_tasks)
+            maya.execute(self.load_tasks)
             maya.execute(self.get_thumbnail)
             maya.refresh()
         except (IndexError, AttributeError) as exp:
