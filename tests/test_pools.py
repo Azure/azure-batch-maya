@@ -152,21 +152,21 @@ class AzureTestBatchPools(unittest.TestCase):
 
     def test_pools_get_size(self):
 
-        self.mock_self.pools = [mock.Mock(target_dedicated_nodes=5),
-                                mock.Mock(target_dedicated_nodes="8"),
-                                mock.Mock(target_dedicated_nodes=None)]
+        self.mock_self.pools = [mock.Mock(target_dedicated_nodes=5, target_low_priority_nodes=3),
+                                mock.Mock(target_dedicated_nodes="8", target_low_priority_nodes="3"),
+                                mock.Mock(target_dedicated_nodes=None, target_low_priority_nodes=None)]
 
         self.mock_self.selected_pool = mock.Mock(index=0)
-        self.assertEqual(AzureBatchPools.get_pool_size(self.mock_self), 5)
+        self.assertEqual(AzureBatchPools.get_pool_size(self.mock_self), (5, 3))
 
         self.mock_self.selected_pool = mock.Mock(index=1)
-        self.assertEqual(AzureBatchPools.get_pool_size(self.mock_self), 8)
+        self.assertEqual(AzureBatchPools.get_pool_size(self.mock_self), (8, 3))
 
         self.mock_self.selected_pool = mock.Mock(index=2)
-        self.assertEqual(AzureBatchPools.get_pool_size(self.mock_self), 0)
+        self.assertEqual(AzureBatchPools.get_pool_size(self.mock_self), (0, 0))
 
         self.mock_self.selected_pool = mock.Mock(index=3)
-        self.assertEqual(AzureBatchPools.get_pool_size(self.mock_self), 0)
+        self.assertEqual(AzureBatchPools.get_pool_size(self.mock_self), (0, 0))
 
     def test_pools_delete(self):
 
@@ -202,7 +202,8 @@ class AzureTestBatchPools(unittest.TestCase):
             global pool_obj
             self.assertTrue(callable(func))
             pool_obj = new_pool
-            self.assertEqual(new_pool.target_dedicated_nodes, 5)
+            self.assertEqual(new_pool.target_dedicated_nodes, 3)
+            self.assertEqual(new_pool.target_low_priority_nodes, 5)
             self.assertEqual(new_pool.display_name, "Maya Pool for test job")
             self.assertEqual(new_pool.application_licenses, ['maya'])
             self.assertEqual(new_pool.virtual_machine_configuration.node_agent_sku_id, 'sku_id')
@@ -213,7 +214,7 @@ class AzureTestBatchPools(unittest.TestCase):
         self.mock_self.environment.get_application_licenses.return_value = ['maya']
         self.mock_self.environment.get_image.return_value = {
             'publisher': 'foo', 'sku': 'bar', 'offer': 'baz', 'node_sku_id':'sku_id'}
-        AzureBatchPools.create_pool(self.mock_self, 5, "test job")
+        AzureBatchPools.create_pool(self.mock_self, (3, 5), "test job")
         self.mock_self.batch.pool.add.assert_called_with(mock.ANY)
 
     @mock.patch("pools.maya")
@@ -222,6 +223,7 @@ class AzureTestBatchPools(unittest.TestCase):
         def call(func, *args):
             self.assertTrue(callable(func))
             self.assertEqual(args[1]['target_dedicated_nodes'], 5)
+            self.assertEqual(args[1]['target_low_priority_nodes'], 8)
             return func(*args)
 
         mock_pool = mock.create_autospec(models.CloudPool)
@@ -232,11 +234,11 @@ class AzureTestBatchPools(unittest.TestCase):
         self.mock_self.selected_pool = mock.Mock(index=0)
         self.mock_self.ui = mock.create_autospec(PoolsUI)
 
-        AzureBatchPools.resize_pool(self.mock_self, 5)
+        AzureBatchPools.resize_pool(self.mock_self, 5, 8)
         self.assertFalse(self.mock_self.ui.refresh.call_count)
 
-        AzureBatchPools.resize_pool(self.mock_self, "5")
+        AzureBatchPools.resize_pool(self.mock_self, "5", "8")
         self.assertFalse(self.mock_self.ui.refresh.call_count)
 
-        AzureBatchPools.resize_pool(self.mock_self, None)
+        AzureBatchPools.resize_pool(self.mock_self, None, None)
         self.assertEqual(self.mock_self.ui.refresh.call_count, 1)
