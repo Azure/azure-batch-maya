@@ -1,30 +1,7 @@
-#-------------------------------------------------------------------------
-#
-# Azure Batch Maya Plugin
-#
-# Copyright (c) Microsoft Corporation.  All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the ""Software""), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-#--------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
 
 import os
 import logging
@@ -32,7 +9,7 @@ import json
 
 from api import MayaAPI as maya
 from api import MayaCallbacks as callback
-
+import utils
 from ui_environment import EnvironmentUI
 
 
@@ -41,16 +18,16 @@ MAYA_IMAGES = {
         {
             'node_sku_id': 'batch.node.windows amd64',
             'publisher': 'batch',
-            'offer': 'autodesk-maya-arnold-win2016-preview',
-            'sku': 'maya2017',
+            'offer': 'rendering-windows2016',
+            'sku': 'rendering',
             'version': 'latest'
         },
     'Batch CentOS Preview':
         {
             'node_sku_id': 'batch.node.centos 7',
             'publisher': 'batch',
-            'offer': 'autodesk-maya-arnold-centos73-preview',
-            'sku': 'maya2017',
+            'offer': 'autodesk-maya-arnold-centos73',
+            'sku': 'maya-arnold-2017',
             'version': 'latest'
         },
 }
@@ -63,9 +40,10 @@ LICENSES = [
 class AzureBatchEnvironment(object):
     """Handler for rendering environment configuration functionality."""
     
-    def __init__(self, frame, call):
+    def __init__(self, index, frame, call):
         """Create new Environment Handler.
 
+        :param index: The UI tab index.
         :param frame: The shared plug-in UI frame.
         :type frame: :class:`.AzureBatchUI`
         :param func call: The shared REST API call wrapper.
@@ -73,6 +51,7 @@ class AzureBatchEnvironment(object):
         self._log = logging.getLogger('AzureBatchMaya')
         self._call = call
         self._session = None
+        self._tab_index = index
 
         self.licenses = {}
         self._get_plugin_licenses()
@@ -141,8 +120,8 @@ class AzureBatchEnvironment(object):
         if pool_image:
             return pool_image[0]
         else:
-            self._log.debug("Pool using unknown image reference: {}".format(image_ref['offer']))
-            return ""
+            self._log.debug("Pool using unknown image reference: {}".format(image_ref.offer))
+            return image_ref.offer
 
     def get_vm_sku(self):
         return self.ui.get_sku()
@@ -152,16 +131,16 @@ class AzureBatchEnvironment(object):
             windows_offers = [value['offer'] for value in MAYA_IMAGES.values() if 'windows' in value['node_sku_id']]
             linux_offers = [value['offer'] for value in MAYA_IMAGES.values() if value['offer'] not in windows_offers]
             if pool_image.offer in windows_offers:
-                return 'Windows'
+                return utils.OperatingSystem.windows
             elif pool_image.offer in linux_offers:
-                return 'Linux'
+                return utils.OperatingSystem.linux
             else:
                 raise ValueError('Selected pool is not using a valid Maya image.')
 
-        if 'Windows' in self.ui.get_image():
-            return 'Windows'
+        if utils.OperatingSystem.windows.value in self.ui.get_image():
+            return utils.OperatingSystem.windows
         else:
-            return 'Linux'
+            return utils.OperatingSystem.linux
 
     def get_environment_settings(self):
         env_vars = self.ui.get_env_vars()

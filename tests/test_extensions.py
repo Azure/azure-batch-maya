@@ -20,7 +20,6 @@ from batch_extensions import _pool_utils as pool_utils
 from batch_extensions import _file_utils as file_utils
 
 
-
 class TestBatchExtensions(unittest.TestCase):
     # pylint: disable=attribute-defined-outside-init,no-member,too-many-public-methods
 

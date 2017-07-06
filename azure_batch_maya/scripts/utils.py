@@ -1,36 +1,15 @@
-﻿#-------------------------------------------------------------------------
-#
-# Azure Batch Maya Plugin
-#
-# Copyright (c) Microsoft Corporation.  All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the ""Software""), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-#--------------------------------------------------------------------------
+﻿# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
 
-from api import MayaAPI as maya
+from enum import Enum
 import os
 import logging
 import platform
 import pathlib
+
+from api import MayaAPI as maya
 
 from batch_extensions import _file_utils as file_utils
 from exception import CancellationException, FileUploadException
@@ -67,7 +46,7 @@ def get_remote_file_path(assetpath):
     """
     def generate_path(os_flavor, fullpath=assetpath):
         local_sep = os.sep
-        remote_sep = '\\' if os_flavor == 'Windows' else '/'
+        remote_sep = '\\' if os_flavor == OperatingSystem.windows else '/'
         path = shorten_path(*os.path.split(fullpath))
         if ':' in path:
             drive_letter, path = path.split(':', 1)
@@ -82,7 +61,7 @@ def get_remote_directory(dir_path, os_flavor):
     path according to the remote OS.
     """
     local_sep = os.sep
-    remote_sep = '\\' if os_flavor == 'Windows' else '/'
+    remote_sep = '\\' if os_flavor == OperatingSystem.windows else '/'
     if ':' in dir_path:
         drive_letter, dir_path = dir_path.split(':', 1)
         dir_path = drive_letter + local_sep + dir_path[1:]
@@ -95,7 +74,7 @@ def format_scene_path(scene_file, os_flavor):
     be on the render node.
     """
     scene_path = get_remote_file_path(scene_file)(os_flavor)
-    if os_flavor == 'Windows':
+    if os_flavor == OperatingSystem.windows:
         return "X:\\\\" + scene_path + '\\\\' + os.path.basename(scene_file)
     else:
         return "/X/" + scene_path + '/' + os.path.basename(scene_file)
@@ -117,6 +96,12 @@ def get_os():
     :returns: The OS platform (str).
     """
     return platform.system()
+
+
+class OperatingSystem(Enum):
+    windows = 'Windows'
+    linux = 'Linux'
+    darwin = 'Darwin'
 
 
 class Row(object):
@@ -177,7 +162,6 @@ class Layout(object):
         return self.layout
 
     def __exit__(self, type, value, traceback):
-        #TODO: Exception handling should go in here
         maya.parent()
 
 
@@ -447,12 +431,12 @@ class JobWatcher(object):
         self.job_watcher = os.path.join(
             os.path.dirname(__file__), "tools", "job_watcher.py")
         platform = get_os()
-        if platform == "Windows":
+        if platform == OperatingSystem.windows.value:
             self.proc_cmd = 'system("WMIC PROCESS where (Name=\'mayapy.exe\') get Commandline")'
             self.start_cmd = 'system("start mayapy {0}")'
             self.quotes = '\\"'
             self.splitter = 'mayapy'
-        elif platform == "Darwin":
+        elif platform == OperatingSystem.darwin.value:
             self.proc_cmd = 'system("ps -ef")'
             self.start_cmd = 'system("osascript -e \'tell application \\"Terminal\\" to do script \\"python {0}\\"\'")'
             self.quotes = '\\\\\\"'

@@ -1,30 +1,7 @@
-﻿#-------------------------------------------------------------------------
-#
-# Azure Batch Maya Plugin
-#
-# Copyright (c) Microsoft Corporation.  All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the ""Software""), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-#--------------------------------------------------------------------------
+﻿# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
 
 import os
 import logging
@@ -42,9 +19,10 @@ from ui_pools import PoolsUI
 class AzureBatchPools(object):
     """Handler for pool functionality."""
     
-    def __init__(self, frame, call):
+    def __init__(self, index, frame, call):
         """Create new Pool Handler.
 
+        :param index: The UI tab index.
         :param frame: The shared plug-in UI frame.
         :type frame: :class:`.AzureBatchUI`
         :param func call: The shared REST API call wrapper.
@@ -52,6 +30,7 @@ class AzureBatchPools(object):
         self._log = logging.getLogger('AzureBatchMaya')
         self._call = call               
         self._session = None
+        self._tab_index = index
 
         self.batch = None
         self.ui = PoolsUI(self, frame)
@@ -77,10 +56,15 @@ class AzureBatchPools(object):
         """
         #if lazy and self.pools:
         #    return [pool.id for pool in self.pools if not pool.auto]
-        self.pools = [p for p in self._call(self.batch.pool.list) if p.id.startswith('Maya_')]
+        all_pools = self._call(self.batch.pool.list)
+        self.pools = []
+        for pool in all_pools:
+            if pool.virtual_machine_configuration and \
+                    pool.virtual_machine_configuration.image_reference.publisher == 'batch':
+                self.pools.append(pool)
         self.pools.sort(key=lambda x: x.creation_time, reverse=True)
         self.count = len(self.pools)
-        return [pool.id for pool in self.pools if pool.id.startswith("Maya_Pool")]
+        return [pool.id for pool in self.pools if not pool.id.startswith("Maya_Auto_Pool")]
 
     def get_pools(self):
         """Retrieves the currently running pools and populates the UI
@@ -114,13 +98,13 @@ class AzureBatchPools(object):
             pool = self._call(self.batch.pool.get, pool.id)
             _nodes = self._call(self.batch.compute_node.list, pool.id)
             nodes = [n for n in _nodes]
+            self.selected_pool.set_id(pool.id)
             self.selected_pool.set_label(pool.display_name if pool.display_name else pool.id)
-            self.selected_pool.set_size(pool.current_dedicated_nodes)
-            self.selected_pool.set_target(pool.target_dedicated_nodes)
+            self.selected_pool.set_dedicated_size(pool)
+            self.selected_pool.set_low_pri_size(pool)
             self.selected_pool.set_type(
                 "Auto" if pool.id.startswith("Maya_Auto_Pool") else "Provisioned")
             self.selected_pool.set_state(pool.state.value, nodes)
-            self.selected_pool.set_tasks(pool.max_tasks_per_node)
             self.selected_pool.set_allocation(pool.allocation_state.value)
             self.selected_pool.set_created(pool.creation_time)
             self.selected_pool.set_licenses(pool.application_licenses)
@@ -158,10 +142,10 @@ class AzureBatchPools(object):
         """Get the target number of VMs in the selected pool."""
         try:
             pool = self.pools[self.selected_pool.index]
-            return int(pool.target_dedicated_nodes)
+            return int(pool.target_dedicated_nodes), int(pool.target_low_priority_nodes)
         except (IndexError, TypeError, AttributeError) as exp:
             self._log.info("Failed to parse pool target size {0}".format(exp))
-            return 0
+            return 0, 0
 
     def get_pool_os(self, pool_id):
         """Get the OS flavor of the specified pool ID."""
@@ -190,7 +174,8 @@ class AzureBatchPools(object):
             application_licenses=self.environment.get_application_licenses(),
             vm_size=self.environment.get_vm_sku(),
             virtual_machine_configuration=pool_config,
-            target_dedicated_nodes=int(size),
+            target_dedicated_nodes=int(size[0]),
+            target_low_priority_nodes=int(size[1]),
             max_tasks_per_node=1)
         self._call(self.batch.pool.add, new_pool)
         self._log.debug("Successfully created pool.")
@@ -211,7 +196,8 @@ class AzureBatchPools(object):
             'virtualMachineConfiguration': pool_config,
             'maxTasksPerNode': 1,
             'applicationLicenses': self.environment.get_application_licenses(),
-            'targetDedicatedNodes': int(size)}
+            'targetDedicatedNodes': int(size[0]),
+            'targetLowPriorityNodes': int(size[1])}
         auto_pool = {
             'autoPoolIdPrefix': "Maya_Auto_Pool_",
             'poolLifetimeOption': "job",
@@ -219,13 +205,16 @@ class AzureBatchPools(object):
             'pool': pool_spec}      
         return {'autoPoolSpecification': auto_pool}
 
-    def resize_pool(self, new_size):
+    def resize_pool(self, new_dedicated, new_low_pri):
         """Resize an existing pool."""
         try:
             pool = self.pools[self.selected_pool.index]
-            self._log.info("Resizing pool '{}' to {} VMs".format(pool.id, new_size))
-            self._call(self.batch.pool.resize, pool.id, {'target_dedicated_nodes':int(new_size),
-                                                         'target_low_priority_nodes': 0})
+            self._log.info(
+                "Resizing pool '{}' to {} dedicated VMs"
+                " and {} low priority VMs".format(pool.id, new_dedicated, new_low_pri))
+            self._call(self.batch.pool.resize, pool.id,
+                       {'target_dedicated_nodes':int(new_dedicated),
+                        'target_low_priority_nodes': int(new_low_pri)})
             maya.refresh()
         except Exception as exp:
             self._log.info("Failed to resize pool {0}".format(exp))

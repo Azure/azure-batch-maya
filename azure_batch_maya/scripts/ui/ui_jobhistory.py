@@ -1,30 +1,7 @@
-#-------------------------------------------------------------------------
-#
-# Azure Batch Maya Plugin
-#
-# Copyright (c) Microsoft Corporation.  All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the ""Software""), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-#--------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
 
 import os
 import webbrowser
@@ -33,14 +10,14 @@ from api import MayaAPI as maya
 import utils
 
 
-class HistoryUI(object):
+class JobHistoryUI(object):
     """Class to create the 'Jobs' tab in the plug-in UI"""
 
     def __init__(self, base, frame):
         """Create 'Jobs' tab and add to UI frame.
 
         :param base: The base class for handling jobs monitoring functionality.
-        :type base: :class:`.AzureBatchHistory`
+        :type base: :class:`.AzureBatchJobHistory`
         :param frame: The shared plug-in UI frame.
         :type frame: :class:`.AzureBatchUI`
         """
@@ -260,7 +237,7 @@ class AzureBatchJobInfo(object):
         """Create a new job reference.
 
         :param base: The base class for handling jobs monitoring functionality.
-        :type base: :class:`.AzureBatchHistory`
+        :type base: :class:`.AzureBatchJobHistory`
         :param int index: The index of where this reference is displayed on
          the current page.
         :param layout: The layout on which the job details will be displayed.
@@ -308,7 +285,7 @@ class AzureBatchJobInfo(object):
         """Set the label for progress complete.
         :param int value: The percent complete.
         """
-        maya.text(self._progress, edit=True, label=" {0}%".format(value))
+        maya.text(self._progress, edit=True, label=" {0}".format(value))
 
     def set_submission(self, value):
         """Set the label for date/time submitted.
@@ -328,10 +305,11 @@ class AzureBatchJobInfo(object):
     def set_job(self, value):
         """Set the label for the job ID, and format the portal URL reference
         for the job with this ID.
+        Except that with the current portal we have no way to directly link to a job.
         :param str value: The job ID.
         """
         maya.text_field(self._job, edit=True, text=value)
-        self.url = "https://ms.portal.azure.com"
+        self.url = "https://portal.azure.com"
 
     def set_pool(self, value):
         """Set the label for the pool ID that this job ran on.
@@ -411,6 +389,7 @@ class AzureBatchJobInfo(object):
                             (self.cancel_button, 'right', 5, 80),
                             (self.delete_button, 'left', 5, 80)])
         self.base.job_selected(self)
+        maya.execute(self.base.load_tasks)
         maya.execute(self.base.get_thumbnail)  
         maya.refresh()
 
@@ -439,6 +418,7 @@ class AzureBatchJobInfo(object):
     def refresh(self):
         """Refresh the details of the specified job, and update the UI."""
         self.base.update_job(self.index)
+        maya.execute(self.base.load_tasks)
         maya.execute(self.base.get_thumbnail)
         self.selected_dir = utils.get_default_output_path()
         maya.text_field(self._dir, edit=True, text=self.selected_dir)

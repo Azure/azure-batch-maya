@@ -89,7 +89,7 @@ class ExtendedJobOperations(JobOperations):
         except Exception as exp:
             raise ValueError("Unable to deserialize to ExtendedJobParameter: {}".format(exp))
 
-    def add(self, job, job_add_options=None, custom_headers=None, raw=False, **operation_config):
+    def add(self, job, job_add_options=None, custom_headers=None, raw=False, threads=None, **operation_config):
         """Adds a job to the specified account.
 
         The Batch service supports two ways to control the work done as part of
@@ -176,7 +176,7 @@ class ExtendedJobOperations(JobOperations):
         # Begin original job add process
         result = super(ExtendedJobOperations, self).add(job, job_add_options, custom_headers, raw, **operation_config)
         if task_collection:
-            job_utils.deploy_tasks(self._parent.task, job.id, task_collection)
+            job_utils.deploy_tasks(self._parent.task, job.id, task_collection, threads)
             if auto_complete:
                 # If the option to terminate the job was set, we need to reapply it with a patch
                 # now that the tasks have been added.

@@ -1,30 +1,7 @@
-﻿#-------------------------------------------------------------------------
-#
-# Azure Batch Maya Plugin
-#
-# Copyright (c) Microsoft Corporation.  All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the ""Software""), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-#--------------------------------------------------------------------------
+﻿# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
 
 import os
 import sys
@@ -49,16 +26,20 @@ from default import AzureBatchRenderJob
 class AzureBatchSubmission(object):
     """Handler for job submission functionality."""
 
-    def __init__(self, frame, call):
+    def __init__(self, index, frame, call):
         """Create new Submission Handler.
 
+        :param index: The UI tab index.
         :param frame: The shared plug-in UI frame.
         :type frame: :class:`.AzureBatchUI`
         :param func call: The shared REST API call wrapper.
         """
         self._log = logging.getLogger('AzureBatchMaya')
         self._call = call
+        self._tab_index = index
+        self._submit_threads = None
 
+        self.max_pool_size = 1000
         self.ui = SubmissionUI(self, frame)
         self.modules = self._collect_modules()
         self.renderer = None
@@ -111,6 +92,12 @@ class AzureBatchSubmission(object):
         self.renderer = AzureBatchRenderJob()
         self._log.debug("Configured renderer to {0}".format(self.renderer.render_engine))
 
+    def _switch_tab(self):
+        """Make this tab the currently displayed tab. If this tab is already
+        open, this will do nothing.
+        """
+        self.frame.select_tab(self._tab_index)
+
     def _check_outputs(self):
         """Check whether at least one of the scene cameras is marked as renderable
         and that at least one layer is a render layer. If not, there will be no
@@ -137,10 +124,10 @@ class AzureBatchSubmission(object):
         culprits to the ignore list if necessary.
         """
         try:
-            with open(os.path.join(os.environ["AZUREBATCH_TOOLS"],
+            with open(os.path.join(os.environ['AZUREBATCH_TOOLS'],
                     "supported_plugins.json"), 'r') as plugins:
                 supported_plugins = json.load(plugins)
-            with open(os.path.join(os.environ["AZUREBATCH_TOOLS"],
+            with open(os.path.join(os.environ['AZUREBATCH_TOOLS'],
                     "ignored_plugins.json"), 'r') as plugins:
                 ignored_plugins = json.load(plugins)
         except EnvironmentError:
@@ -154,7 +141,7 @@ class AzureBatchSubmission(object):
                        "yet supported.\nRendering may be affected.\n")
             for plugin in unsupported_plugins:
                 warning += plugin + "\n"
-            options = ["Continue", "Cancel"]
+            options = ['Continue', 'Cancel']
             answer = maya.confirm(warning, options)
             if answer == options[-1]:
                 raise CancellationException("Submission Aborted")
@@ -188,16 +175,16 @@ class AzureBatchSubmission(object):
         pool_spec = self.ui.get_pool()
         if pool_spec.get(1):
             self._log.info("Using auto-pool.")
-            return self.pool_manager.create_auto_pool(int(pool_spec[1]), job_name)
+            return self.pool_manager.create_auto_pool(pool_spec[1], job_name)
         if pool_spec.get(2):
             self._log.info("Using existing pool.")
             pool_id = str(pool_spec[2])
             if pool_id == "None":
                 raise PoolException("No pool selected.")
-            return {"poolId" : pool_id}
+            return {'poolId' : pool_id}
         if pool_spec.get(3):
             self._log.info("Creating new pool.")
-            return self.pool_manager.create_pool(int(pool_spec[3]), job_name)
+            return self.pool_manager.create_pool(pool_spec[3], job_name)
 
     def start(self, session, assets, pools, env):
         """Load submission tab after plug-in has been authenticated.
@@ -217,6 +204,7 @@ class AzureBatchSubmission(object):
         self.pool_manager = pools
         self.env_manager = env
         self.data_path = session.path
+        self._submit_threads = session.get_threads
         if self.renderer:
             self.renderer.delete()
         self._configure_renderer()
@@ -262,7 +250,8 @@ class AzureBatchSubmission(object):
             batch_parameters['displayName'] = self.renderer.get_title()
             batch_parameters['metadata'] =  [{"name": "JobType", "value": "Maya"}]
             template_file = os.path.join(
-                os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-{}.json'.format(pool_os.lower()))
+                os.environ['AZUREBATCH_TEMPLATES'],
+                "{}-basic-{}.json".format(self.renderer.render_engine, pool_os.value.lower()))
             batch_parameters['applicationTemplateInfo'] = {'filePath': template_file}
             application_params = {}
             batch_parameters['applicationTemplateInfo']['parameters'] = application_params
@@ -280,7 +269,7 @@ class AzureBatchSubmission(object):
             application_params['assetScript'] = map_url
             application_params['thumbScript'] = thumb_url
             application_params['workspace'] = workspace_url
-            self.frame.select_tab(2)
+            self._switch_tab()
 
             self.ui.submit_status("Configuring job...")
             progress.status("Configuring job...")
@@ -298,7 +287,9 @@ class AzureBatchSubmission(object):
             progress.is_cancelled()
             self.ui.submit_status("Submitting...")
             progress.status("Submitting...")
-            self._call(self.batch.job.add, new_job)
+            threads = self._submit_threads()
+            self._log.debug("Submitting using {} threads.".format(threads))
+            self._call(self.batch.job.add, new_job, threads=threads)
             maya.info("Job submitted successfully")
 
             if watch_job:
@@ -308,10 +299,10 @@ class AzureBatchSubmission(object):
         except Exception as exp:
             self._log.error(str(exp))
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            self._log.debug("".join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+            self._log.debug(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
             maya.error(str(exp))
         finally:
             if progress:
                 progress.end()
-            self.frame.select_tab(2)
+            self._switch_tab()
             self.renderer.disable(True)

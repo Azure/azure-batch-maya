@@ -1,30 +1,7 @@
-#-------------------------------------------------------------------------
-#
-# Azure Batch Maya Plugin
-#
-# Copyright (c) Microsoft Corporation.  All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the ""Software""), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-#--------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
 
 import sys
 import os
@@ -48,6 +25,7 @@ from pools import AzureBatchPools
 from environment import AzureBatchEnvironment
 from shared import AzureBatchSettings
 from exception import CancellationException
+from utils import OperatingSystem
 
 from batch_extensions import BatchExtensionsClient
 from batch_extensions.batch_auth import SharedKeyCredentials
@@ -56,10 +34,10 @@ from batch_extensions import models
 
 from azure.storage.blob import BlockBlobService
 
-LIVE = True
 
 def print_status(status):
     print(status)
+
 
 class TestBatchSubmission(unittest.TestCase):
     
@@ -74,6 +52,7 @@ class TestBatchSubmission(unittest.TestCase):
         os.environ["AZUREBATCH_TEMPLATES"] = os.path.join(top_dir, 'azure_batch_maya', 'templates')
         os.environ["AZUREBATCH_MODULES"] = mod_dir
         os.environ["AZUREBATCH_SCRIPTS"] = "{0};{1};{2}".format(src_dir, ui_dir, tools_dir)
+        os.environ["AZUREBATCH_VERSION"] = "0.1"
         self.mock_self = mock.create_autospec(AzureBatchSubmission)
         self.mock_self.batch = mock.create_autospec(BatchExtensionsClient)
         self.mock_self.batch.job = mock.create_autospec(operations.ExtendedJobOperations)
@@ -93,7 +72,7 @@ class TestBatchSubmission(unittest.TestCase):
     @mock.patch("submission.callback")
     @mock.patch("submission.SubmissionUI")
     def test_submission_create(self, mock_ui, mock_call, mock_mods):
-        submission = AzureBatchSubmission("frame", "call")
+        submission = AzureBatchSubmission(2, "frame", "call")
         mock_mods.assert_called_with()
         mock_ui.assert_called_with(submission, "frame")
         #mock_call.after_new.assert_called_with(mock.ANY)
@@ -161,11 +140,11 @@ class TestBatchSubmission(unittest.TestCase):
         mock_utils.format_scene_path.return_value = "test_file_path"
         self.mock_self._configure_pool = lambda t: AzureBatchSubmission._configure_pool(self.mock_self, t)
         self.mock_self._check_plugins.return_value = []
-        self.mock_self._get_os_flavor.return_value = 'Windows'
+        self.mock_self._get_os_flavor.return_value = OperatingSystem.windows
         self.mock_self.pool_manager.create_auto_pool.return_value = {'autoPool': 'auto-pool'}
         self.mock_self.pool_manager.create_pool.return_value = {'poolId': 'new-pool'}
         self.mock_self.env_manager.get_environment_settings.return_value = [{'name':'foo', 'value':'bar'}]
-        self.mock_self.renderer = mock.Mock()
+        self.mock_self.renderer = mock.Mock(render_engine='arnold')
         self.mock_self.renderer.get_jobdata.return_value = ("a", "b")
         self.mock_self.renderer.get_params.return_value = {"foo": "bar"}
         self.mock_self.renderer.get_title.return_value = "job name"

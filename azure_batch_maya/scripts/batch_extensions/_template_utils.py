@@ -436,7 +436,7 @@ def _parse_arm_parameter(name, template_obj, parameters):
             user_value = user_value['value']
         except TypeError:
             pass
-    if not user_value:
+    if user_value is None:
         raise ValueError("No value supplied for parameter '{}' and no default value".format(name))
     if isinstance(user_value, dict):
         # If substitute value is a complex object - it may require

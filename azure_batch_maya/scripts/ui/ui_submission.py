@@ -1,30 +1,7 @@
-#-------------------------------------------------------------------------
-#
-# Azure Batch Maya Plugin
-#
-# Copyright (c) Microsoft Corporation.  All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the ""Software""), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-#--------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
 
 import os
 import utils
@@ -34,6 +11,11 @@ from api import MayaAPI as maya
 
 class SubmissionUI(object):
     """Class to create the 'Submit' tab in the plug-in UI"""
+
+    AUTO_POOL = 1
+    EXISTING_POOL = 2
+    NEW_POOL = 3
+
 
     def __init__(self, base, frame):
         """Create 'Submit' tab and add to UI frame.
@@ -46,38 +28,60 @@ class SubmissionUI(object):
         self.base = base
         self.label = "Submit"
         self.page = maya.form_layout(enableBackground=True) 
-        self.select_pool_type = 1
-        self.select_instances = 1
+        self.select_pool_type = self.AUTO_POOL
+        self.select_dedicated_instances = 1
+        self.select_low_pri_instances = 0
         
         with utils.ScrollLayout(height=475, parent=self.page) as scroll:
             box_label = "Pool Settings"
-            with utils.FrameLayout(label=box_label, collapsable=True):
-                self.pool_settings = maya.col_layout(
+            with utils.FrameLayout(label=box_label, collapsable=True) as pool_settings:
+                self.pool_settings = pool_settings
+                maya.col_layout(
                     numberOfColumns=2,
                     columnWidth=((1, 100), (2, 200)),
                     rowSpacing=(1, 10),
-                    rowOffset=((1, "top", 20), (2, "bottom", 20)))
+                    rowOffset=((1, "top", 20),))
                 maya.text(label="Pools:   ", align="right")
                 maya.radio_group(
                     labelArray3=("Auto provision a pool for this job",
-                                    "Reuse an existing persistent pool",
-                                    "Create a new persistent pool"),
+                                 "Reuse an existing persistent pool",
+                                 "Create a new persistent pool"),
                     numberOfRadioButtons=3,
                     select=self.select_pool_type,
                     vertical=True,
                     onCommand1=self.set_pool_auto,
                     onCommand2=self.set_pool_reuse,
                     onCommand3=self.set_pool_new)
-                self.pool_text = maya.text(
-                    label="Instances:   ", align="right")
-                self.control = maya.int_slider(
-                    field=True, value=self.select_instances,
+                maya.parent()
+                self.pool_config = []
+                self.pool_config.append(maya.col_layout(
+                    numberOfColumns=4,
+                    columnWidth=((1, 100), (2, 50), (3, 100), (4, 50)),
+                    rowSpacing=(1, 10),
+                    rowOffset=((1, "bottom", 20),),
+                    parent=self.pool_settings))
+                self.pool_config.append(maya.text(
+                    label="Dedicated VMs:   ",
+                    align="right",
+                    parent=self.pool_config[0]))
+                self.pool_config.append(maya.int_field(
+                    value=self.select_dedicated_instances,
                     minValue=1,
-                    maxValue=1000,
-                    fieldMinValue=1,
-                    fieldMaxValue=1000,
-                    changeCommand=self.set_pool_instances,
-                    annotation="Number of instances in pool")
+                    maxValue=self.base.max_pool_size,
+                    changeCommand=self.set_dedicated_instances,
+                    annotation="Number of dedicated VMs in pool",
+                    parent=self.pool_config[0]))
+                self.pool_config.append(maya.text(
+                    label="Low-pri VMs:   ",
+                    align="right",
+                    parent=self.pool_config[0]))
+                self.pool_config.append(maya.int_field(
+                    value=self.select_low_pri_instances,
+                    minValue=0,
+                    maxValue=self.base.max_pool_size,
+                    changeCommand=self.set_low_pri_instances,
+                    annotation="Number of low-priority VMs in pool",
+                    parent=self.pool_config[0]))
                 maya.parent()
 
             box_label = "Render Settings"
@@ -207,55 +211,97 @@ class SubmissionUI(object):
         :returns: A dictionary with selected pool type as key and pool
          specification as value.
         """
-        if self.select_pool_type == 2:
-            details = str(maya.menu(self.control, query=True, value=True))
+        if self.select_pool_type == self.EXISTING_POOL:
+            details = str(maya.menu(self.pool_config[-1], query=True, value=True))
         else:
-            details = self.select_instances
+            details = (self.select_dedicated_instances, self.select_low_pri_instances)
         return {self.select_pool_type: details}
 
-    def set_pool_instances(self, instances):
+    def set_dedicated_instances(self, instances):
         """Update the number of requested instances in a pool
         based on the instance slider.
         """
-        self.select_instances = instances
+        self.select_dedicated_instances = instances
+
+    def set_low_pri_instances(self, instances):
+        """Update the number of requested instances in a pool
+        based on the instance slider.
+        """
+        self.select_low_pri_instances = instances
 
     def set_pool_new(self, *args):
         """Set selected pool type to be new pool of given size.
         Displays the pool size UI control.
         Command for select_pool_type radio buttons.
         """
-        self.select_pool_type = 3
-        maya.delete_ui(self.control)
-        maya.text(self.pool_text, edit=True, label="Instances:   ")
-        self.control = maya.int_slider(
-            field=True,
-            value=self.select_instances,
+        self.select_pool_type = self.NEW_POOL
+        maya.delete_ui(self.pool_config)
+        self.pool_config = []
+        self.pool_config.append(maya.col_layout(
+            numberOfColumns=4,
+            columnWidth=((1, 100), (2, 50), (3, 100), (4, 50)),
+            rowSpacing=(1, 10),
+            rowOffset=((1, "bottom", 20),),
+            parent=self.pool_settings))
+        self.pool_config.append(maya.text(
+            label="Dedicated VMs:   ",
+            align="right",
+            parent=self.pool_config[0]))
+        self.pool_config.append(maya.int_field(
+            value=self.select_dedicated_instances,
             minValue=1,
-            maxValue=1000,
-            fieldMinValue=1,
-            fieldMaxValue=1000,
-            parent=self.pool_settings,
-            changeCommand=self.set_pool_instances,
-            annotation="Number of instances in pool")
+            maxValue=self.base.max_pool_size,
+            changeCommand=self.set_dedicated_instances,
+            annotation="Number of dedicated VMs in pool",
+            parent=self.pool_config[0]))
+        self.pool_config.append(maya.text(
+            label="Low-pri VMs:   ",
+            align="right",
+            parent=self.pool_config[0]))
+        self.pool_config.append(maya.int_field(
+            value=self.select_low_pri_instances,
+            minValue=0,
+            maxValue=self.base.max_pool_size,
+            changeCommand=self.set_low_pri_instances,
+            annotation="Number of low-priority VMs in pool",
+            parent=self.pool_config[0]))
 
     def set_pool_auto(self, *args):
         """Set selected pool type to be new pool of given size.
         Displays the pool size UI control.
         Command for select_pool_type radio buttons.
         """
-        self.select_pool_type = 1
-        maya.delete_ui(self.control)
-        maya.text(self.pool_text, edit=True, label="Instances:   ")
-        self.control = maya.int_slider(
-            field=True,
-            value=self.select_instances,
+        self.select_pool_type = self.AUTO_POOL
+        maya.delete_ui(self.pool_config)
+        self.pool_config = []
+        self.pool_config.append(maya.col_layout(
+            numberOfColumns=4,
+            columnWidth=((1, 100), (2, 50), (3, 100), (4, 50)),
+            rowSpacing=(1, 10),
+            rowOffset=((1, "bottom", 20),),
+            parent=self.pool_settings))
+        self.pool_config.append(maya.text(
+            label="Dedicated VMs:   ",
+            align="right",
+            parent=self.pool_config[0]))
+        self.pool_config.append(maya.int_field(
+            value=self.select_dedicated_instances,
             minValue=1,
-            maxValue=1000,
-            fieldMinValue=1,
-            fieldMaxValue=1000,
-            parent=self.pool_settings,
-            changeCommand=self.set_pool_instances,
-            annotation="Number of instances in pool")
+            maxValue=self.base.max_pool_size,
+            changeCommand=self.set_dedicated_instances,
+            annotation="Number of dedicated VMs in pool",
+            parent=self.pool_config[0]))
+        self.pool_config.append(maya.text(
+            label="Low-pri VMs:   ",
+            align="right",
+            parent=self.pool_config[0]))
+        self.pool_config.append(maya.int_field(
+            value=self.select_low_pri_instances,
+            minValue=0,
+            maxValue=self.base.max_pool_size,
+            changeCommand=self.set_low_pri_instances,
+            annotation="Number of low-priority VMs in pool",
+            parent=self.pool_config[0]))
 
     def set_pool_reuse(self, *args):
         """Set selected pool type to be an existing pool with given ID.
@@ -263,19 +309,25 @@ class SubmissionUI(object):
         in a dropdown menu.
         Command for select_pool_type radio buttons.
         """
-        self.select_pool_type = 2
-        maya.delete_ui(self.control)
-        maya.text(self.pool_text, edit=True, label="loading...")
+        self.select_pool_type = self.EXISTING_POOL
+        maya.delete_ui(self.pool_config)
+        self.pool_config = []
+        self.pool_config.append(maya.col_layout(
+            numberOfColumns=2,
+            columnWidth=((1, 100), (2, 200)),
+            rowSpacing=(1, 10),
+            rowOffset=((1, "bottom", 20),),
+            parent=self.pool_settings))
+        self.pool_config.append(maya.text(
+            label="loading...",
+            align="right",
+            parent=self.pool_config[0]))
         maya.refresh()
         pool_options = self.base.available_pools()
-        maya.text(self.pool_text, edit=True, label="Pool ID:   ")
-        self.control = maya.menu(
-            parent=self.pool_settings,
-            annotation="Use an existing persistent pool ID")
+        maya.text(self.pool_config[-1], edit=True, label="Pool ID:   ")
+        self.pool_config.append(maya.menu(
+            annotation="Use an existing persistent pool ID",
+            parent=self.pool_config[0]))
         for pool_id in pool_options:
             maya.menu_option(pool_id)
-        #with utils.Dropdown(None, parent=self.pool_settings, annotation="Use an existing persistent pool ID") as pools:
-        #    self.control = pools
-        #    for pool_id in pool_options:
-        #        self.control.add_item(pool_id)
-
+        

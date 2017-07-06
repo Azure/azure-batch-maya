@@ -1,31 +1,7 @@
-#-------------------------------------------------------------------------
-#
-# Azure Batch Maya Plugin
-#
-# Copyright (c) Microsoft Corporation.  All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the ""Software""), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-#--------------------------------------------------------------------------
-
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
 
 import sys
 import os
@@ -48,6 +24,7 @@ from ui_assets import AssetsUI
 from assets import Asset, Assets, AzureBatchAssets
 from exception import FileUploadException
 from utils import ProgressBar, ProcButton
+
 
 class TestAsset(unittest.TestCase):
     
@@ -438,6 +415,7 @@ class TestAzureBatchAssets(unittest.TestCase):
         os.environ["AZUREBATCH_TEMPLATES"] = os.path.join(top_dir, 'azure_batch_maya', 'templates')
         os.environ["AZUREBATCH_MODULES"] = mod_dir
         os.environ["AZUREBATCH_SCRIPTS"] = "{0};{1};{2}".format(src_dir, ui_dir, tools_dir)
+        os.environ["AZUREBATCH_VERSION"] = "0.1"
         return super(TestAzureBatchAssets, self).setUp()
 
 
@@ -445,7 +423,7 @@ class TestAzureBatchAssets(unittest.TestCase):
     @mock.patch("assets.callback")
     @mock.patch("assets.AssetsUI")
     def test_batchassets_create(self, mock_ui, mock_call, mock_collect):
-        assets = AzureBatchAssets("frame", "call")
+        assets = AzureBatchAssets(3, "frame", "call")
         mock_ui.assert_called_with(assets, "frame")
         mock_collect.assert_called_with()
         #mock_call.after_new.assert_called_with(assets.callback_refresh)

@@ -1,31 +1,7 @@
-#-------------------------------------------------------------------------
-#
-# Azure Batch Maya Plugin
-#
-# Copyright (c) Microsoft Corporation.  All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the ""Software""), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-#--------------------------------------------------------------------------
-
+# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
 
 import sys
 import os
@@ -61,7 +37,7 @@ class AzureTestBatchPools(unittest.TestCase):
 
     @mock.patch("pools.PoolsUI")
     def test_pools_initialize(self, mock_ui):
-        pools = AzureBatchPools("frame", "call")
+        pools = AzureBatchPools(4, "frame", "call")
         mock_ui.assert_called_with(pools, "frame")
 
     def test_pools_configure(self):
@@ -74,9 +50,15 @@ class AzureTestBatchPools(unittest.TestCase):
         self.mock_self.batch.pool = mock.create_autospec(batch.operations.ExtendedPoolOperations)
         pool1 = mock.create_autospec(models.CloudPool)
         pool1.id = "12345"
+        pool1.virtual_machine_configuration = mock.create_autospec(models.VirtualMachineConfiguration)
+        pool1.virtual_machine_configuration.image_reference = mock.create_autospec(models.ImageReference)
+        pool1.virtual_machine_configuration.image_reference.publisher = "MicrosoftWindows"
         pool1.creation_time = datetime.datetime.now()
         pool2 = mock.create_autospec(models.CloudPool)
         pool2.id = "67890"
+        pool2.virtual_machine_configuration = mock.create_autospec(models.VirtualMachineConfiguration)
+        pool2.virtual_machine_configuration.image_reference = mock.create_autospec(models.ImageReference)
+        pool2.virtual_machine_configuration.image_reference.publisher = "LinuxUbuntu"
         pool2.creation_time = datetime.datetime.now()
         self.mock_self._call = lambda x: [pool1, pool2]
 
@@ -85,7 +67,9 @@ class AzureTestBatchPools(unittest.TestCase):
         self.assertEqual(len(self.mock_self.pools), 0)
 
         pool1.id = "Maya_Pool_A"
+        pool1.virtual_machine_configuration.image_reference.publisher = "batch"
         pool2.id = "Maya_Auto_Pool_B"
+        pool2.virtual_machine_configuration.image_reference.publisher = "batch"
         ids = AzureBatchPools.list_pools(self.mock_self)
         self.assertEqual(ids, ["Maya_Pool_A"])
         self.assertEqual(len(self.mock_self.pools), 2)

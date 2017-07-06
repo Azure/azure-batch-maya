@@ -35,7 +35,7 @@ ensure the updated dependencies are loaded correctly.
 Before using the plug-in, it will need to be authenticated using your Azure Batch and Azure Storage account keys.
 In order to retrieve this information:
 
-1. Open the Azure management portal (ms.portal.azure.com).
+1. Open the Azure management portal (portal.azure.com).
 2. Select Azure Batch Accounts in the left-hand menu. This can be found under `More Services` in the `Compute` category.
 3. Select your account in the list. Copy and paste the account URL into `Service` field of the plug-in UI. Paste the account name into the `Batch Account` field.
 4. In the portal, select `Keys` on the left-hand menu. Copy and paste one of the access keys into the `Batch Key` field in the plug-in.

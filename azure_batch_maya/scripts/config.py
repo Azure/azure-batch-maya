@@ -1,35 +1,13 @@
-﻿#-------------------------------------------------------------------------
-#
-# Azure Batch Maya Plugin
-#
-# Copyright (c) Microsoft Corporation.  All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the ""Software""), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-#--------------------------------------------------------------------------
+﻿# --------------------------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for license information.
+# --------------------------------------------------------------------------------------------
 
 import ConfigParser
 import os
 import logging
 import sys
+import traceback
 
 from ui_config import ConfigUI
 from api import MayaAPI as maya
@@ -49,16 +27,20 @@ LOG_LEVELS = {
 class AzureBatchConfig(object):
     """Handler for authentication and configuration of the SDK clients."""
 
-    def __init__(self, frame, start):
+    def __init__(self, index, frame, start):
         """Create new configuration Handler.
 
+        :param index: The UI tab index.
         :param frame: The shared plug-in UI frame.
         :type frame: :class:`.AzureBatchUI`
         :param func call: The shared REST API call wrapper.
         """
+        self.ui = None
         self.session = start
+        self._tab_index = index
         self._data_dir = os.path.join(maya.prefs_dir(), 'AzureBatchData')
         self._ini_file = "azure_batch.ini"
+        self._user_agent = "batchmaya/{}".format(os.environ.get('AZUREBATCH_VERSION'))
         self._cfg = ConfigParser.ConfigParser()
         self._client = None
         self._log = None
@@ -92,25 +74,31 @@ class AzureBatchConfig(object):
             os.makedirs(self._data_dir)
         config_file = os.path.join(self._data_dir, self._ini_file)
         if not os.path.exists(config_file):
-            self._log = self._configure_logging(10)
+            self._log = self._configure_logging(LOG_LEVELS['debug'])
             return
         try:
             self._cfg.read(config_file)
             self._storage = storage.BlockBlobService(
-                self._cfg.get("AzureBatch", "storage_account"),
-                self._cfg.get("AzureBatch", "storage_key"),
-                endpoint_suffix="core.windows.net")
+                self._cfg.get('AzureBatch', 'storage_account'),
+                self._cfg.get('AzureBatch', 'storage_key'))
             self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
             credentials = SharedKeyCredentials(
-                self._cfg.get("AzureBatch", "batch_account"),
-                self._cfg.get("AzureBatch", "batch_key"))
+                self._cfg.get('AzureBatch', 'batch_account'),
+                self._cfg.get('AzureBatch', 'batch_key'))
             self._client = batch.BatchExtensionsClient(
-                credentials, base_url=self._cfg.get("AzureBatch", "batch_url"),
+                credentials, base_url=self._cfg.get('AzureBatch', 'batch_url'),
                 storage_client=self._storage)
+            self._client.config.add_user_agent(self._user_agent)
             self._log = self._configure_logging(
-                self._cfg.get("AzureBatch", "logging"))
-        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError) as exp:
-            print(exp) #TODO: Better error handling
+                self._cfg.get('AzureBatch', 'logging'))
+        except Exception as exp:
+            # We should only worry about this if it happens when authenticating
+            # using the UI, otherwise it's expected.
+            if self.ui:
+                raise ValueError("Invalid Configuration: {}".format(exp))
+            else:
+                # We'll need a place holder logger
+                self._log = self._configure_logging(LOG_LEVELS['debug'])
 
     def _configure_logging(self, log_level):
         """Configure the logger. Setup the file output and format
@@ -137,33 +125,37 @@ class AzureBatchConfig(object):
         configuration file.
         """
         try:
-            self._cfg.add_section("AzureBatch")
+            self._cfg.add_section('AzureBatch')
         except ConfigParser.DuplicateSectionError:
             pass
         try:
-            self.ui.endpoint = self._cfg.get("AzureBatch", "batch_url")
+            self.ui.endpoint = self._cfg.get('AzureBatch', 'batch_url')
         except ConfigParser.NoOptionError:
             self.ui.endpoint = ""
         try:
-            self.ui.account = self._cfg.get("AzureBatch", "batch_account")
+            self.ui.account = self._cfg.get('AzureBatch', 'batch_account')
         except ConfigParser.NoOptionError:
             self.ui.account = ""
         try:
-            self.ui.key = self._cfg.get("AzureBatch", "batch_key")
+            self.ui.key = self._cfg.get('AzureBatch', 'batch_key')
         except ConfigParser.NoOptionError:
             self.ui.key = ""
         try:
-            self.ui.storage = self._cfg.get("AzureBatch", "storage_account")
+            self.ui.storage = self._cfg.get('AzureBatch', 'storage_account')
         except ConfigParser.NoOptionError:
             self.ui.storage = ""
         try:
-            self.ui.storage_key = self._cfg.get("AzureBatch", "storage_key")
+            self.ui.storage_key = self._cfg.get('AzureBatch', 'storage_key')
         except ConfigParser.NoOptionError:
             self.ui.storage_key = ""
         try:
-            self.ui.logging = int(self._cfg.get("AzureBatch", "logging"))
+            self.ui.logging = self._cfg.getint('AzureBatch', 'logging')
         except ConfigParser.NoOptionError:
             self.ui.logging = 10
+        try:
+            self.ui.threads = self._cfg.getint('AzureBatch', 'threads')
+        except ConfigParser.NoOptionError:
+            self.ui.threads = 20
         self.ui.set_authenticate(self._auth)
 
     def _auto_authentication(self):
@@ -172,82 +164,95 @@ class AzureBatchConfig(object):
         """
         try:
             filter = batch.models.PoolListOptions(max_results=1, select="id")
-            self._client.pool.list(filter)
-            self._storage.create_container("batch-maya-assets", fail_on_exist=False)
+            list(self._client.pool.list(filter))
+            self._storage.list_containers(num_results=1)
             return True
         except Exception as exp:
-            self._log.info("Could not get authenticate session: {0}".format(exp))
+            self._log.info("Failed to authenticate: {0}".format(exp))
             return False
+
+    def _save_config(self):
+        """Persist the current plugin configuration to file."""
+        config_file = os.path.join(self._data_dir, self._ini_file)
+        with open(config_file, 'w') as handle:
+            self._cfg.write(handle)
 
     def set_logging(self, level):
         """Set the logging level to that specified in the UI.
         :param str level: The specified logging level.
         """
-        log_level = int(LOG_LEVELS[level])
-        self._log.setLevel(log_level)
-        self._cfg.set("AzureBatch", "logging", str(level))
+        self._log.setLevel(level)
+        self._cfg.set('AzureBatch', 'logging', level)
+        self._save_config()
+
+    def set_threads(self, threads):
+        """Set the number of threads to that specified in the UI.
+        :param int threads: The specified number of threads.
+        """
+        self._cfg.set('AzureBatch', 'threads', threads)
+        self._save_config()
 
     def save_changes(self):
-        """Persist configuration changes to file for future sessions."""
+        """Persist auth config changes to file for future sessions."""
         try:
-            self._cfg.add_section("AzureBatch")
+            self._cfg.add_section('AzureBatch')
         except ConfigParser.DuplicateSectionError:
             pass
-        self._cfg.set("AzureBatch", "batch_url", self.ui.endpoint)
-        self._cfg.set("AzureBatch", "batch_account", self.ui.account)
-        self._cfg.set("AzureBatch", "batch_key", self.ui.key)
-        self._cfg.set("AzureBatch", "storage_account", self.ui.storage)
-        self._cfg.set("AzureBatch", "storage_key", self.ui.storage_key)
-        self._cfg.set("AzureBatch", "logging", self.ui.logging)
-        config_file = os.path.join(self._data_dir, self._ini_file)
-        with open(config_file, 'w') as handle:
-            self._cfg.write(handle)
+        self._cfg.set('AzureBatch', 'batch_url', self.ui.endpoint)
+        self._cfg.set('AzureBatch', 'batch_account', self.ui.account)
+        self._cfg.set('AzureBatch', 'batch_key', self.ui.key)
+        self._cfg.set('AzureBatch', 'storage_account', self.ui.storage)
+        self._cfg.set('AzureBatch', 'storage_key', self.ui.storage_key)
+        self._save_config()
 
     def authenticate(self):
         """Begin authentication - initiated by the UI button."""
-        self._configure_plugin()
-        self._auth = self._auto_authentication()
-        self.ui.set_authenticate(self._auth)
-        self.session()
+        try:
+            self._configure_plugin()
+            self._auth = self._auto_authentication()
+        except ValueError as exp:
+            maya.error(str(exp))
+            self._auth = False
+        finally:
+            self.ui.set_authenticate(self._auth)
+            self.session()
+    
+    def get_threads(self):
+        """Attempt to retrieve number of threads configured for the plugin."""
+        return self.ui.threads
 
     def get_cached_vm_sku(self):
         """Attempt to retrieve a selected VM SKU from a previous session."""
         try:
-            return self._cfg.get("AzureBatch", "vm_sku")
+            return self._cfg.get('AzureBatch', 'vm_sku')
         except ConfigParser.NoOptionError:
             return None
 
     def store_vm_sku(self, sku):
         """Cache selected VM SKU for later sessions."""
-        self._cfg.set("AzureBatch", "vm_sku", sku)
-        config_file = os.path.join(self._data_dir, self._ini_file)
-        with open(config_file, 'w') as handle:
-            self._cfg.write(handle)
+        self._cfg.set('AzureBatch', 'vm_sku', sku)
+        self._save_config()
 
     def get_cached_image(self):
         """Attempt to retrieve a selected image a previous session."""
         try:
-            return self._cfg.get("AzureBatch", "image")
+            return self._cfg.get('AzureBatch', 'image')
         except ConfigParser.NoOptionError:
             return None
 
     def store_image(self, image):
         """Cache selected image for later sessions."""
-        self._cfg.set("AzureBatch", "image", image)
-        config_file = os.path.join(self._data_dir, self._ini_file)
-        with open(config_file, 'w') as handle:
-            self._cfg.write(handle)
+        self._cfg.set('AzureBatch', 'image', image)
+        self._save_config()
 
     def get_cached_autoscale_formula(self):
         """Attempt to retrieve an autoscale forumla from a previous session."""
         try:
-            return self._cfg.get("AzureBatch", "autoscale")
+            return self._cfg.get('AzureBatch', 'autoscale')
         except ConfigParser.NoOptionError:
             return None
 
     def store_autoscale_formula(self, formula):
         """Cache selected VM SKU for later sessions."""
-        self._cfg.set("AzureBatch", "autoscale", formula)
-        config_file = os.path.join(self._data_dir, self._ini_file)
-        with open(config_file, 'w') as handle:
-            self._cfg.write(handle)
+        self._cfg.set('AzureBatch', 'autoscale', formula)
+        self._save_config()
