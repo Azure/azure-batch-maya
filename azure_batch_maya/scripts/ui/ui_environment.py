@@ -38,7 +38,7 @@ class EnvironmentUI(object):
 
                     with utils.ColumnLayout(
                         2, col_width=((1,160),(2,160)), row_spacing=(1,5),
-                        row_offset=((1, "top", 15),(4, "bottom", 15))):
+                        row_offset=((1, "top", 15),(5, "bottom", 15))):
                         maya.text(label="Use Image: ", align='right')
                         with utils.Dropdown(self.set_image) as image_settings:
                             self._image = image_settings

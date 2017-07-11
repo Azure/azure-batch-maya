@@ -11,7 +11,7 @@ import pathlib
 
 from api import MayaAPI as maya
 
-from batch_extensions import _file_utils as file_utils
+from azure.batch_extensions import _file_utils as file_utils
 from exception import CancellationException, FileUploadException
 
 

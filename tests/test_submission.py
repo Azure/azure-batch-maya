@@ -27,10 +27,10 @@ from shared import AzureBatchSettings
 from exception import CancellationException
 from utils import OperatingSystem
 
-from batch_extensions import BatchExtensionsClient
-from batch_extensions.batch_auth import SharedKeyCredentials
-from batch_extensions import operations
-from batch_extensions import models
+from azure.batch_extensions import BatchExtensionsClient
+from azure.batch.batch_auth import SharedKeyCredentials
+from azure.batch_extensions import operations
+from azure.batch_extensions import models
 
 from azure.storage.blob import BlockBlobService
 

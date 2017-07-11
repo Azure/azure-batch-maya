@@ -18,7 +18,7 @@ try:
 except ImportError:
     import mock
 
-import batch_extensions
+from azure import batch_extensions
 
 from ui_assets import AssetsUI
 from assets import Asset, Assets, AzureBatchAssets

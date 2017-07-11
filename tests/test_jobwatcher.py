@@ -16,7 +16,7 @@ except ImportError:
 import os
 import sys
 from collections import namedtuple
-from batch_extensions import models
+from azure.batch_extensions import models
 
 CWD = os.path.dirname(os.path.abspath(__file__))
 top_dir = os.path.dirname(CWD)

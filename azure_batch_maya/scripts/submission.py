@@ -13,7 +13,7 @@ import json
 import uuid
 import traceback
 
-from batch_extensions import models
+from azure.batch_extensions import models
 from api import MayaAPI as maya
 from api import MayaCallbacks as callback
 

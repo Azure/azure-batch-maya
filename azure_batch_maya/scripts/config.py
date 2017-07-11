@@ -13,8 +13,8 @@ from ui_config import ConfigUI
 from api import MayaAPI as maya
 
 import azure.storage.blob as storage
-import batch_extensions as batch
-from batch_extensions.batch_auth import SharedKeyCredentials
+import azure.batch_extensions as batch
+from azure.batch.batch_auth import SharedKeyCredentials
 
 
 LOG_LEVELS = {

@@ -18,7 +18,7 @@ MAYA_IMAGES = {
         {
             'node_sku_id': 'batch.node.windows amd64',
             'publisher': 'batch',
-            'offer': 'rendering-windows2016',
+            'offer': 'rendering-windows2016-preview',
             'sku': 'rendering',
             'version': 'latest'
         },
@@ -33,7 +33,8 @@ MAYA_IMAGES = {
 }
 LICENSES = [
     {'label': 'Maya', 'id': 'maya', 'plugin': None },
-    {'label': 'Arnold', 'id': 'arnold', 'plugin': 'mtoa' }
+    {'label': 'Arnold', 'id': 'arnold', 'plugin': 'mtoa' },
+    {'label': 'V-Ray', 'id': 'vray', 'plugin': 'vrayformaya' }
 ]
 #
 
