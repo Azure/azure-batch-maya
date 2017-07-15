@@ -37,7 +37,6 @@ class AzureBatchSubmission(object):
         self._log = logging.getLogger('AzureBatchMaya')
         self._call = call
         self._tab_index = index
-        self._submit_threads = None
 
         self.max_pool_size = 1000
         self.ui = SubmissionUI(self, frame)
@@ -204,7 +203,6 @@ class AzureBatchSubmission(object):
         self.pool_manager = pools
         self.env_manager = env
         self.data_path = session.path
-        self._submit_threads = session.get_threads
         if self.renderer:
             self.renderer.delete()
         self._configure_renderer()
@@ -287,9 +285,8 @@ class AzureBatchSubmission(object):
             progress.is_cancelled()
             self.ui.submit_status("Submitting...")
             progress.status("Submitting...")
-            threads = self._submit_threads()
-            self._log.debug("Submitting using {} threads.".format(threads))
-            self._call(self.batch.job.add, new_job, threads=threads)
+            self._log.debug("Submitting using {} threads.".format(self.batch.threads))
+            self._call(self.batch.job.add, new_job)
             maya.info("Job submitted successfully")
 
             if watch_job:
