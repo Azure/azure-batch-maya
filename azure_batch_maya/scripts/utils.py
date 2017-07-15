@@ -10,8 +10,6 @@ import platform
 import pathlib
 
 from api import MayaAPI as maya
-
-from azure.batch_extensions import _file_utils as file_utils
 from exception import CancellationException, FileUploadException
 
 
@@ -483,7 +481,6 @@ class JobWatcher(object):
                 self.data_path,
                 self.job_id,
                 self.selected_dir,
-                file_utils._get_container_name(self.job_id),
                 os.path.join(maya.script_dir(), 'azure-batch-libs')]  # TODO: Configure somewhere
         self._log.debug("Preparing commandline arguments...")
         return self.cleanup_args(args)
