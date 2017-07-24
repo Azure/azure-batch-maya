@@ -66,13 +66,6 @@
       "metadata": {
         "description": "The file group where outputs will be stored"
       }
-    },
-    "logLevel": {
-      "type": "int",
-      "defaultValue": 1,
-      "metadata": {
-        "description": "Arnold logging verbosity"
-      }
     }
   },
   "jobPreparationTask": {
@@ -115,7 +108,7 @@
           "elevationLevel": "admin"
         }
       },
-      "commandLine": "sudo mkdir -m a=rwx -p \"/X\";sudo mount --rbind $AZ_BATCH_JOB_PREP_WORKING_DIR/assets /X;Render -renderer [parameters('renderer')] -proj \"$AZ_BATCH_JOB_PREP_WORKING_DIR\" -ai:ltc 1 -ai:lve [parameters('logLevel')] -verb -preRender renderPrep -rd \"$AZ_BATCH_TASK_WORKING_DIR/images\" -s {0} -e {0} \"[parameters('sceneFile')]\";err=$?;python /mnt/resource/batch/tasks/workitems/[parameters('outputs')]/job-1/jobpreparation/wd/thumbnail.py $err;sudo umount \"/X\";exit $err",
+      "commandLine": "sudo mkdir -m a=rwx -p \"/X\";sudo mount --rbind $AZ_BATCH_JOB_PREP_WORKING_DIR/assets /X;Render -renderer [parameters('renderer')] -proj \"$AZ_BATCH_JOB_PREP_WORKING_DIR\" -verb -rd \"$AZ_BATCH_TASK_WORKING_DIR/images\" -s {0} -e {0} \"[parameters('sceneFile')]\";err=$?;python /mnt/resource/batch/tasks/workitems/[parameters('outputs')]/job-1/jobpreparation/wd/thumbnail.py $err;sudo umount \"/X\";exit $err",
       "environmentSettings": [
         {
           "name": "MAYA_SCRIPT_PATH",
@@ -124,6 +117,10 @@
         {
           "name": "FLEXLM_TIMEOUT",
           "value": "5000000"
+        },
+        {
+          "name": "VRAY_AUTH_CLIENT_FILE_PATH",
+          "value": "/etc/vray"
         }
       ],
       "outputFiles": [
