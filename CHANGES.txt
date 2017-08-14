@@ -1,3 +1,9 @@
+2017-08-?? v0.11.0
+------------------
+- Support for V-ray for Maya
+- Dependency on new Batch Extensions module
+- Fixed asset file limitation
+
 2017-07-05 v0.10.0
 ------------------
 - Exposed low priority VM allocation for pools

@@ -141,7 +141,7 @@ def _authenticate(cfg_path):
             storage_client=storage_client)
         try:
             batch_client.threads = cfg.get("AzureBatch", "threads")
-        except ConfigParser.NoSectionError:
+        except ConfigParser.NoOptionError:
             batch_client.threads = 20
     except (EnvironmentError, ConfigParser.NoOptionError, ConfigParser.NoSectionError) as exp:
         raise ValueError("Failed to authenticate.\n"

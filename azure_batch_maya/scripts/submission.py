@@ -267,6 +267,7 @@ class AzureBatchSubmission(object):
             application_params['assetScript'] = map_url
             application_params['thumbScript'] = thumb_url
             application_params['workspace'] = workspace_url
+            application_params['storageURL'] = self.asset_manager.generate_sas_token(file_group)
             self._switch_tab()
 
             self.ui.submit_status("Configuring job...")

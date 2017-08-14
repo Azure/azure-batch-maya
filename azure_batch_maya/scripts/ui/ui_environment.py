@@ -49,7 +49,7 @@ class EnvironmentUI(object):
                             self._sku = sku_settings
                             for sku in skus:
                                 self._sku.add_item(sku)
-                        maya.text(label="Use license servers: ", align='right')
+                        maya.text(label="Use licenses: ", align='right')
                         for label, checked in licenses.items():
                             self.license_settings[label] = maya.check_box(
                                     label=label, value=checked, changeCommand=self.use_license_server)

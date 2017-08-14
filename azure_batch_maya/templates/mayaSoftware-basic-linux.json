@@ -66,16 +66,21 @@
       "metadata": {
         "description": "The file group where outputs will be stored"
       }
+    },
+    "storageURL": {
+      "type": "string",
+      "metadata": {
+        "description": "SAS URL for input file group with read and list permissions"
+      }
     }
   },
   "jobPreparationTask": {
+    "userIdentity": {
+      "autoUser": {
+        "elevationLevel": "admin"
+      }
+    },
     "resourceFiles": [
-      {
-        "source": {
-          "fileGroup": "[parameters('projectData')]"
-        },
-        "filePath": "assets/"
-      },
       {
         "blobSource": "[parameters('assetScript')]",
         "filePath": "scripts/renderPrep.mel"
@@ -89,7 +94,7 @@
         "filePath": "workspace.mel"
       }
     ],
-    "commandLine": "dir"
+    "commandLine": "/bin/bash -c \"yum install -y libunwind libicu && curl -sSL -o dotnet.tar.gz https://go.microsoft.com/fwlink/?linkid=848821 && mkdir -p /opt/dotnet && tar zxf dotnet.tar.gz -C /opt/dotnet && ln -nsf /opt/dotnet/dotnet /usr/local/bin && wget -O azcopy.tar.gz https://aka.ms/downloadazcopyprlinux && tar -xf azcopy.tar.gz && ./install.sh && azcopy --source \\\"[parameters('storageURL')]\\\" --destination $AZ_BATCH_JOB_PREP_WORKING_DIR/assets --recursive\""
   },
   "taskFactory": {
     "type": "parametricSweep",

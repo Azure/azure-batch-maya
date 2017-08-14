@@ -73,6 +73,12 @@
       "metadata": {
         "description": "Arnold logging verbosity"
       }
+    },
+    "storageURL": {
+      "type": "string",
+      "metadata": {
+        "description": "SAS URL for input file group with read and list permissions"
+      }
     }
   },
   "jobPreparationTask": {
