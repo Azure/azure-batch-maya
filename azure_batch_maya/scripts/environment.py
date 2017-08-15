@@ -14,7 +14,7 @@ from ui_environment import EnvironmentUI
 
 
 MAYA_IMAGES = {
-    'Batch Windows Preview':
+    'Window 2016':
         {
             'node_sku_id': 'batch.node.windows amd64',
             'publisher': 'batch',
@@ -22,7 +22,23 @@ MAYA_IMAGES = {
             'sku': 'rendering',
             'version': 'latest'
         },
-    'Batch CentOS Preview':
+    'Centos 73':
+        {
+            'node_sku_id': 'batch.node.centos 7',
+            'publisher': 'batch',
+            'offer': 'rendering-centos73',
+            'sku': 'rendering',
+            'version': 'latest'
+        },
+    'Window 2016 (Preview)':
+        {
+            'node_sku_id': 'batch.node.windows amd64',
+            'publisher': 'batch',
+            'offer': 'rendering-windows2016-preview',
+            'sku': 'rendering',
+            'version': 'latest'
+        },
+    'Centos 73 (Preview)':
         {
             'node_sku_id': 'batch.node.centos 7',
             'publisher': 'batch',
