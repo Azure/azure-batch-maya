@@ -17,6 +17,7 @@ import glob
 import webbrowser
 import subprocess
 from distutils.version import StrictVersion
+from distutils import dir_util
 
 from maya import mel
 from maya import cmds
@@ -32,16 +33,17 @@ INSTALL_DIR = os.path.normpath(
 sys.path.append(INSTALL_DIR)
 
 REQUIREMENTS = {
-    "pathlib==1.0.1": "pathlib"
+    "pathlib==1.0.1": "pathlib",
+    "msrestazure==0.4.11": "msrestazure",
+    "azure-common==1.1.8": "azure.common",
 }
 
 NAMESPACE_PACKAGES = {
     "azure-mgmt-batch==4.0.0": "azure.mgmt.batch",
     "azure-mgmt-storage==1.0.0": "azure.mgmt.storage",
-    "azure-common==1.1.5": "azure.common",
     "azure-batch==3.0.0": "azure.batch",
     "azure-storage==0.32.0": "azure.storage",
-    "azure-batch-extensions==0.1.1": "azure.batch_extensions"
+    "azure-batch-extensions==0.2.0": "azure.batch_extensions"
 }
 
 VERSION = "0.10.0"
@@ -338,10 +340,11 @@ def dependency_installed(package, namespace):
         if hasattr(module, '__version__') and len(package_ref) > 1:
             if StrictVersion(package_ref[1]) > StrictVersion(getattr(module, '__version__')):
                 raise ImportError("Installed package out of date")
-    except ImportError:
-        print("Unable to load {}".format(package))
+    except ImportError as error:
+        print("Unable to load {}: {}".format(package, error))
         return False
     else:
+        print("Successfully loaded {} from path: {}".format(package, module.__file__))
         return True
 
 
@@ -390,7 +393,7 @@ def install_namespace_pkg(package, namespace):
     installer.wait()
     if installer.returncode == 0:
         try:
-            shutil.copytree(os.path.join(temp_target, namespace), os.path.join(INSTALL_DIR, namespace))
+            dir_util.copy_tree(os.path.join(temp_target, namespace), os.path.join(INSTALL_DIR, namespace))
         except Exception as exp:
             print(exp)
         try:
@@ -422,6 +425,8 @@ def initializePlugin(obj):
 
     print("Checking for dependencies...")
     missing_libs = []
+    python_path = os.environ['PYTHONPATH'].lstrip(os.pathsep)
+    os.environ['PYTHONPATH'] = INSTALL_DIR + os.pathsep + python_path
     for package in REQUIREMENTS:
         if not dependency_installed(package, REQUIREMENTS[package]):
             missing_libs.append(package)
@@ -445,7 +450,6 @@ def initializePlugin(obj):
 
         print("Attempting to install dependencies via Pip.")
         try:
-            os.environ['PYTHONPATH'] = INSTALL_DIR + os.pathsep + os.environ['PYTHONPATH']
             install_script = os.path.normpath(os.path.join( os.environ['AZUREBATCH_TOOLS'], 'install_pip.py'))
             installer = subprocess.Popen(["mayapy", install_script, '--target', INSTALL_DIR],
                                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -465,6 +469,7 @@ def initializePlugin(obj):
                     install_namespace_pkg(package, os.path.join(*package_path))
                 else:
                     install_pkg(package)
+            shutil.copy(os.path.join(INSTALL_DIR, 'azure', '__init__.py'), os.path.join(INSTALL_DIR, 'azure', 'mgmt', '__init__.py'))
         except:
             error = "Failed to install dependencies - please install manually"
             cmds.confirmDialog(message=error, button='OK')
