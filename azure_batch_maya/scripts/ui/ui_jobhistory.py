@@ -285,7 +285,7 @@ class AzureBatchJobInfo(object):
         """Set the label for progress complete.
         :param int value: The percent complete.
         """
-        maya.text(self._progress, edit=True, label=" {0}%".format(value))
+        maya.text(self._progress, edit=True, label=" {0}".format(value))
 
     def set_submission(self, value):
         """Set the label for date/time submitted.
@@ -389,6 +389,7 @@ class AzureBatchJobInfo(object):
                             (self.cancel_button, 'right', 5, 80),
                             (self.delete_button, 'left', 5, 80)])
         self.base.job_selected(self)
+        maya.execute(self.base.load_tasks)
         maya.execute(self.base.get_thumbnail)  
         maya.refresh()
 
@@ -417,6 +418,7 @@ class AzureBatchJobInfo(object):
     def refresh(self):
         """Refresh the details of the specified job, and update the UI."""
         self.base.update_job(self.index)
+        maya.execute(self.base.load_tasks)
         maya.execute(self.base.get_thumbnail)
         self.selected_dir = utils.get_default_output_path()
         maya.text_field(self._dir, edit=True, text=self.selected_dir)

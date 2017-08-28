@@ -10,10 +10,11 @@ import time
 import sys
 import os
 import re
-
+import threading
 
 batch_client = None
 storage_client = None
+concurrent_downloads = None
 header_line_length = 50
 
 
@@ -39,22 +40,14 @@ def _check_valid_dir(directory):
 
 
 def _download_output(container, blob_name, output_path, size):
-    def progress(data, total):
-        try:
-            percent = float(data)*100/float(size) 
-            sys.stdout.write('    Downloading... {0}%\r'.format(int(percent)))
-        except:
-            sys.stdout.write('    Downloading... %\r')
-        finally:
-            sys.stdout.flush()
-
     print("Downloading task output: {}".format(blob_name))
-    storage_client.get_blob_to_path(container, blob_name, output_path, progress_callback=progress)
-    print("    Output download successful.\n")
+    storage_client.get_blob_to_path(container, blob_name, output_path)
+    print("Output {} download successful".format(blob_name))
 
 
 def _track_completed_outputs(container, dwnld_dir):
     job_outputs = storage_client.list_blobs(container)
+    downloads = []
     for output in job_outputs:
         if output.name.startswith('thumbs/'):
             continue
@@ -63,7 +56,17 @@ def _track_completed_outputs(container, dwnld_dir):
         if not os.path.isfile(output_file):
             if not os.path.isdir(os.path.dirname(output_file)):
                 os.makedirs(os.path.dirname(output_file))
-            _download_output(container, output.name, output_file, output.properties.content_length)
+            downloads.append(
+                threading.Thread(
+                    target=_download_output,
+                    args=(container, output.name, output_file, output.properties.content_length)))
+            downloads[-1].start()
+            if len(downloads) >= concurrent_downloads:
+                for thread in downloads:
+                    thread.join()
+                downloads = []
+    for thread in downloads:
+        thread.join()
 
 
 def _check_job_stopped(job):
@@ -128,7 +131,7 @@ def track_job_progress(id, container, dwnld_dir):
 
 
 def _authenticate(cfg_path):
-    global batch_client, storage_client
+    global batch_client, storage_client, concurrent_downloads
     cfg = ConfigParser.ConfigParser()
     try:
         cfg.read(cfg_path)
@@ -141,6 +144,10 @@ def _authenticate(cfg_path):
             cfg.get("AzureBatch", "storage_account"),
             cfg.get("AzureBatch", "storage_key"),
             endpoint_suffix="core.windows.net")
+        try:
+            concurrent_downloads = cfg.get("AzureBatch", "threads")
+        except ConfigParser.NoSectionError:
+            concurrent_downloads = 20
     except (EnvironmentError, ConfigParser.NoOptionError, ConfigParser.NoSectionError) as exp:
         raise ValueError("Failed to authenticate using Maya configuration {0}".format(cfg_path))
 

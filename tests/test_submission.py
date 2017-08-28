@@ -139,6 +139,7 @@ class TestBatchSubmission(unittest.TestCase):
         mock_utils.ProgressBar.return_value = mock_prog
         mock_utils.format_scene_path.return_value = "test_file_path"
         self.mock_self._configure_pool = lambda t: AzureBatchSubmission._configure_pool(self.mock_self, t)
+        self.mock_self._submit_threads = lambda: 6
         self.mock_self._check_plugins.return_value = []
         self.mock_self._get_os_flavor.return_value = OperatingSystem.windows
         self.mock_self.pool_manager.create_auto_pool.return_value = {'autoPool': 'auto-pool'}
@@ -151,20 +152,14 @@ class TestBatchSubmission(unittest.TestCase):
         self.mock_self._call = call
         mock_job = mock.create_autospec(models.ExtendedJobParameter)
         self.mock_self.batch.job.jobparameter_from_json.return_value = mock_job
-
-        self.mock_self.ui.get_pool.return_value = {1:"pool"}
         self.mock_self.asset_manager.upload.return_value = ("files", "maps", "thumbs", "workspace", mock_prog)
 
+        self.mock_self.ui.get_pool.return_value = {1: (4, 4)}
         AzureBatchSubmission.submit(self.mock_self)
-        self.assertEqual(mock_maya.error.call_count, 1)
+        self.assertEqual(mock_maya.error.call_count, 0)
         self.mock_self.renderer.disable.assert_called_with(True)
-
-        self.mock_self.ui.get_pool.return_value = {1:4}
-        AzureBatchSubmission.submit(self.mock_self)
-        self.assertEqual(mock_maya.error.call_count, 1)
-        self.mock_self.renderer.disable.assert_called_with(True)
-        self.mock_self.pool_manager.create_auto_pool.assert_called_with(4, "job name")
-        self.mock_self.batch.job.add.assert_called_with(mock_job)
+        self.mock_self.pool_manager.create_auto_pool.assert_called_with((4, 4), "job name")
+        self.mock_self.batch.job.add.assert_called_with(mock_job, threads=6)
         self.mock_self.batch.job.jobparameter_from_json.assert_called_with(
             {'commonEnvironmentSettings': [{'name': 'foo', 'value':'bar'}],
              'poolInfo': {'autoPool': 'auto-pool'},
@@ -179,9 +174,9 @@ class TestBatchSubmission(unittest.TestCase):
 
         self.mock_self.ui.get_pool.return_value = {2:4}
         AzureBatchSubmission.submit(self.mock_self)
-        self.assertEqual(mock_maya.error.call_count, 1)
+        self.assertEqual(mock_maya.error.call_count, 0)
         self.mock_self.renderer.disable.assert_called_with(True)
-        self.mock_self.batch.job.add.assert_called_with(mock_job)
+        self.mock_self.batch.job.add.assert_called_with(mock_job, threads=6)
         self.mock_self.batch.job.jobparameter_from_json.assert_called_with(
             {'commonEnvironmentSettings': [{'name': 'foo', 'value':'bar'}],
              'poolInfo': {'poolId': '4'},
@@ -196,17 +191,17 @@ class TestBatchSubmission(unittest.TestCase):
 
         self.mock_self._check_outputs.side_effect = ValueError("No camera")
         AzureBatchSubmission.submit(self.mock_self)
-        self.assertEqual(mock_maya.error.call_count, 2)
+        self.assertEqual(mock_maya.error.call_count, 1)
         self.mock_self._check_outputs.side_effect = None
 
-        self.mock_self.ui.get_pool.return_value = {3: 4}
+        self.mock_self.ui.get_pool.return_value = {3: (4, 4)}
         AzureBatchSubmission.submit(self.mock_self)
-        self.assertEqual(mock_maya.error.call_count, 2)
+        self.assertEqual(mock_maya.error.call_count, 1)
         self.mock_self.renderer.disable.assert_called_with(True)
 
-        self.mock_self.batch.job.add.assert_called_with(mock_job)
+        self.mock_self.batch.job.add.assert_called_with(mock_job, threads=6)
         self.mock_self.batch.job.add.call_count = 0
-        self.mock_self.pool_manager.create_pool.assert_called_with(4, 'job name')
+        self.mock_self.pool_manager.create_pool.assert_called_with((4, 4), 'job name')
 
         mock_prog.is_cancelled.side_effect = CancellationException("cancelled")
         AzureBatchSubmission.submit(self.mock_self)
@@ -217,6 +212,6 @@ class TestBatchSubmission(unittest.TestCase):
         mock_prog.is_cancelled.side_effect = None
         self.mock_self.pool_manager.create_pool.side_effect = ValueError("Bad data")
         AzureBatchSubmission.submit(self.mock_self)
-        self.assertEqual(mock_maya.error.call_count, 3)
+        self.assertEqual(mock_maya.error.call_count, 2)
         self.mock_self.renderer.disable.assert_called_with(True)
         self.assertEqual(self.mock_self.batch.job.add.call_count, 0)

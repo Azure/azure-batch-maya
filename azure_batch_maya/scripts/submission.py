@@ -37,6 +37,7 @@ class AzureBatchSubmission(object):
         self._log = logging.getLogger('AzureBatchMaya')
         self._call = call
         self._tab_index = index
+        self._submit_threads = None
 
         self.max_pool_size = 1000
         self.ui = SubmissionUI(self, frame)
@@ -174,7 +175,7 @@ class AzureBatchSubmission(object):
         pool_spec = self.ui.get_pool()
         if pool_spec.get(1):
             self._log.info("Using auto-pool.")
-            return self.pool_manager.create_auto_pool(int(pool_spec[1]), job_name)
+            return self.pool_manager.create_auto_pool(pool_spec[1], job_name)
         if pool_spec.get(2):
             self._log.info("Using existing pool.")
             pool_id = str(pool_spec[2])
@@ -183,7 +184,7 @@ class AzureBatchSubmission(object):
             return {'poolId' : pool_id}
         if pool_spec.get(3):
             self._log.info("Creating new pool.")
-            return self.pool_manager.create_pool(int(pool_spec[3]), job_name)
+            return self.pool_manager.create_pool(pool_spec[3], job_name)
 
     def start(self, session, assets, pools, env):
         """Load submission tab after plug-in has been authenticated.
@@ -203,6 +204,7 @@ class AzureBatchSubmission(object):
         self.pool_manager = pools
         self.env_manager = env
         self.data_path = session.path
+        self._submit_threads = session.get_threads
         if self.renderer:
             self.renderer.delete()
         self._configure_renderer()
@@ -285,7 +287,9 @@ class AzureBatchSubmission(object):
             progress.is_cancelled()
             self.ui.submit_status("Submitting...")
             progress.status("Submitting...")
-            self._call(self.batch.job.add, new_job)
+            threads = self._submit_threads()
+            self._log.debug("Submitting using {} threads.".format(threads))
+            self._call(self.batch.job.add, new_job, threads=threads)
             maya.info("Job submitted successfully")
 
             if watch_job:

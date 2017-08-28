@@ -147,12 +147,19 @@ class AzureBatchPoolInfo(object):
         """
         maya.text(self._type, edit=True, label=" {0}".format(value))
 
-    def set_size(self, pool):
+    def set_dedicated_size(self, pool):
         """Set the number of instances in the pool, both current and target.
         :param int value: Size of the pool.
         """
-        maya.text(self._size, edit=True, label=" target: {} current: {}".format(
+        maya.text(self._dedicated_size, edit=True, label=" target: {} current: {}".format(
             pool.target_dedicated_nodes, pool.current_dedicated_nodes))
+
+    def set_low_pri_size(self, pool):
+        """Set the number of instances in the pool, both current and target.
+        :param int value: Size of the pool.
+        """
+        maya.text(self._low_pri_size, edit=True, label=" target: {} current: {}".format(
+            pool.target_low_priority_nodes, pool.current_low_priority_nodes))
 
     def set_created(self, value):
         """Set the date/time the pool was created.
@@ -214,7 +221,8 @@ class AzureBatchPoolInfo(object):
         """
         self._id = self.display_data("ID:   ")
         self._type = self.display_info("Type:   ")
-        self._size = self.display_info("Size:   ")
+        self._dedicated_size = self.display_info("Dedicated VMs:   ")
+        self._low_pri_size = self.display_info("Low Priority VMs:   ")
         self._created = self.display_info("Created:   ")
         self._state = self.display_info("State:   ")
         self._image = self.display_info("Image:   ")
@@ -224,21 +232,40 @@ class AzureBatchPoolInfo(object):
         self.base.pool_selected(self)
         auto = self.base.is_auto_pool()
         if not auto:
+            self.content.append(maya.col_layout(
+                numberOfColumns=5,
+                columnWidth=((1, 80), (2, 100), (3, 45), (4, 80), (5, 45)),
+                rowSpacing=(1, 10),
+                parent=self.layout))
             self.resize_button = utils.ProcButton(
-                "Resize Pool", "Resizing...", self.resize_pool,
-                parent=self.listbox, align="center")
-            self.resize_int = maya.int_slider(
-                value=self.base.get_pool_size(),
+                "Resize Pool",
+                "Resizing...",
+                self.resize_pool,
+                parent=self.content[-1],
+                align="center")
+            self.dedicated_label = maya.text(
+                label="Dedicated VMs",
+                parent=self.content[-1])
+            self.resize_dedicated = maya.int_field(
+                value=self.base.get_pool_size()[0],
                 minValue=0,
                 maxValue=1000,
-                fieldMinValue=0,
-                fieldMaxValue=100,
-                field=True,
-                width=230,
-                parent=self.listbox,
-                annotation="Number of instances to work in pool.")
+                parent=self.content[-1],
+                annotation="Number of dedicated VMs in pool.")
+            self.low_pri_label = maya.text(
+                label="Low-pri VMs",
+                parent=self.content[-1])
+            self.resize_low_pri = maya.int_field(
+                value=self.base.get_pool_size()[1],
+                minValue=0,
+                maxValue=1000,
+                parent=self.content[-1],
+                annotation="Number of Low-priority VMs in pool.")
             self.content.append(self.resize_button.display)
-            self.content.append(self.resize_int)
+            self.content.append(self.dedicated_label)
+            self.content.append(self.resize_dedicated)
+            self.content.append(self.low_pri_label)
+            self.content.append(self.resize_low_pri)
         self.delete_button = utils.ProcButton("Delete Pool", "Deleting...",
             self.delete_pool, parent=self.layout, align="center")
         self.content.append(self.delete_button.display)
@@ -295,7 +322,8 @@ class AzureBatchPoolInfo(object):
     def resize_pool(self, *args):
         """Resize the specified pool."""
         self.resize_button.start()
-        resize = maya.int_slider(self.resize_int, query=True, value=True)
-        self.base.resize_pool(resize)
+        resize_dedicated = maya.int_field(self.resize_dedicated, query=True, value=True)
+        resize_low_pri = maya.int_field(self.resize_low_pri, query=True, value=True)
+        self.base.resize_pool(resize_dedicated, resize_low_pri)
         self.base.update_pool(self.index)
         self.resize_button.finish()

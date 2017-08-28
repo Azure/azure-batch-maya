@@ -30,7 +30,6 @@ from default import AzureBatchRenderAssets
 SYS_SEARCHPATHS = []
 USR_SEARCHPATHS = []
 BYTES = 1024
-UPLOAD_THREADS = 10
 
 
 class AzureBatchAssets(object):
@@ -49,6 +48,7 @@ class AzureBatchAssets(object):
         self._session = None
         self._assets = None
         self._tab_index = index
+        self._upload_threads = None
 
         self.batch = None
         self.modules = self._collect_modules()
@@ -199,11 +199,13 @@ class AzureBatchAssets(object):
         return Asset(map_file, [], self.batch, self._log)
 
     def _upload_all(self, to_upload, progress, total, project):
-        """Upload all selected assets in 10 threads."""
+        """Upload all selected assets in configured number of threads."""
         uploads_running = []
         progress_queue = Queue()
-        for i in range(0, len(to_upload), UPLOAD_THREADS):
-            for index, asset in enumerate(to_upload[i:i + UPLOAD_THREADS]):
+        threads = self._upload_threads()
+        self._log.debug("Uploading assets in {} threads.".format(threads))
+        for i in range(0, len(to_upload), threads):
+            for index, asset in enumerate(to_upload[i:i + threads]):
                 self._log.debug("Starting thread for asset: {}".format(asset.path))
                 upload = threading.Thread(
                     target=asset.upload, args=(index, progress, progress_queue, project))
@@ -249,6 +251,7 @@ class AzureBatchAssets(object):
         Called on successful authentication.
         """
         self._session = session
+        self._upload_threads = session.get_threads
         self.batch = self._session.batch
         self._set_searchpaths()
         self._assets = Assets(self.batch)
