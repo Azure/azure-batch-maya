@@ -146,10 +146,10 @@ def _authenticate(cfg_path):
             endpoint_suffix="core.windows.net")
         try:
             concurrent_downloads = cfg.get("AzureBatch", "threads")
-        except ConfigParser.NoSectionError:
+        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError) as exp:
             concurrent_downloads = 20
     except (EnvironmentError, ConfigParser.NoOptionError, ConfigParser.NoSectionError) as exp:
-        raise ValueError("Failed to authenticate using Maya configuration {0}".format(cfg_path))
+        raise ValueError("Failed to authenticate using Maya configuration {0}, Exception: {1}".format(cfg_path, exp))
 
 
 if __name__ == "__main__":
