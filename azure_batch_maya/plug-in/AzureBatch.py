@@ -43,7 +43,8 @@ NAMESPACE_PACKAGES = {
     "azure-mgmt-storage==1.0.0": "azure.mgmt.storage",
     "azure-batch==3.0.0": "azure.batch",
     "azure-storage==0.32.0": "azure.storage",
-    "azure-batch-extensions==0.2.0": "azure.batch_extensions"
+    "azure-batch-extensions==0.2.0": "azure.batch_extensions",
+    "futures==3.1.1": "concurrent.futures"
 }
 
 VERSION = "0.10.0"
