@@ -35,7 +35,7 @@ REQUIREMENTS = [
     "pathlib==1.0.1",
 ]
 
-NAMESPACE_PACAKGES = [
+NAMESPACE_PACKAGES = [
     "azure-mgmt-batch==4.0.0",
     "azure-mgmt-storage==1.0.0",
     "azure-common==1.1.5",
