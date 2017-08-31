@@ -413,7 +413,7 @@ def initializePlugin(obj):
     for package in REQUIREMENTS:
         if not dependency_installed(package):
             missing_libs.append(package)
-    for package in NAMESPACE_PACAKGES:
+    for package in NAMESPACE_PACKAGES:
         if not dependency_installed(package):
             missing_libs.append(package)
     if missing_libs:
@@ -446,7 +446,7 @@ def initializePlugin(obj):
             print("Installing dependencies")
             for package in missing_libs:
                 install_pkg(package)
-                if package in NAMESPACE_PACAKGES:
+                if package in NAMESPACE_PACKAGES:
                     package_path = package.split('==')[0].split('-')
                     install_namespace_pkg(package, os.path.join(*package_path))
         except:
