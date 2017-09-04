@@ -82,13 +82,12 @@
     }
   },
   "jobPreparationTask": {
+    "userIdentity": {
+      "autoUser": {
+        "elevationLevel": "admin"
+      }
+    },
     "resourceFiles": [
-      {
-        "source": {
-          "fileGroup": "[parameters('projectData')]"
-        },
-        "filePath": "assets\\"
-      },
       {
         "blobSource": "[parameters('assetScript')]",
         "filePath": "scripts\\renderPrep.mel"
@@ -102,7 +101,7 @@
         "filePath": "workspace.mel"
       }
     ],
-    "commandLine": "dir"
+    "commandLine": "azcopy /source:\"[parameters('storageURL')]\" /dest:\"%AZ_BATCH_JOB_PREP_WORKING_DIR%\\assets\" /S"
   },
   "taskFactory": {
     "type": "parametricSweep",
