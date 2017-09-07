@@ -42,8 +42,8 @@ MAYA_IMAGES = {
         {
             'node_sku_id': 'batch.node.centos 7',
             'publisher': 'batch',
-            'offer': 'autodesk-maya-arnold-centos73',
-            'sku': 'maya-arnold-2017',
+            'offer': 'rendering-centos73-preview',
+            'sku': 'rendering',
             'version': 'latest'
         },
 }
