@@ -16,6 +16,8 @@ import tempfile
 import pathlib
 from Queue import Queue
 
+from azure.batch_extensions import _file_utils as fileutils
+
 from api import MayaAPI as maya
 from api import MayaCallbacks as callback
 
@@ -256,6 +258,18 @@ class AzureBatchAssets(object):
         self._set_searchpaths()
         self._assets = Assets(self.batch)
 
+    def generate_sas_token(self, file_group):
+        """Generate SAS token for file group container with read and list
+        permissions.
+        TODO: Move this into BatchExtensions file utils.
+        """
+        container_name = fileutils.get_container_name(file_group)
+        container_url = fileutils.generate_container_sas_token(
+            container_name,
+            self.batch.file.get_storage_client(),
+            permission='rl')
+        return container_url
+        
     def set_assets(self):
         """Gather the asset references of the scene for display in the
         asset tab. Called on loading and refreshing the asset tab.

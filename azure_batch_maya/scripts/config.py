@@ -13,8 +13,8 @@ from ui_config import ConfigUI
 from api import MayaAPI as maya
 
 import azure.storage.blob as storage
-import batch_extensions as batch
-from batch_extensions.batch_auth import SharedKeyCredentials
+import azure.batch_extensions as batch
+from azure.batch.batch_auth import SharedKeyCredentials
 
 
 LOG_LEVELS = {
@@ -156,6 +156,8 @@ class AzureBatchConfig(object):
             self.ui.threads = self._cfg.getint('AzureBatch', 'threads')
         except ConfigParser.NoOptionError:
             self.ui.threads = 20
+        finally:
+            self._client.threads = self.ui.threads
         self.ui.set_authenticate(self._auth)
 
     def _auto_authentication(self):
@@ -190,6 +192,7 @@ class AzureBatchConfig(object):
         :param int threads: The specified number of threads.
         """
         self._cfg.set('AzureBatch', 'threads', threads)
+        self._client.threads = threads
         self._save_config()
 
     def save_changes(self):
@@ -219,7 +222,7 @@ class AzureBatchConfig(object):
     
     def get_threads(self):
         """Attempt to retrieve number of threads configured for the plugin."""
-        return self.ui.threads
+        return self._client.threads
 
     def get_cached_vm_sku(self):
         """Attempt to retrieve a selected VM SKU from a previous session."""

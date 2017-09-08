@@ -11,9 +11,9 @@ import uuid
 from environment import MAYA_IMAGES
 import utils
 
-import batch_extensions as batch
-from batch_extensions import models
-from batch_extensions.batch_auth import SharedKeyCredentials
+import azure.batch_extensions as batch
+from azure.batch_extensions import models
+from azure.batch.batch_auth import SharedKeyCredentials
 from azure.storage.blob.blockblobservice import BlockBlobService
 
 STORAGE_ACCOUNT = os.environ['AZURE_STORAGE_ACCOUNT']

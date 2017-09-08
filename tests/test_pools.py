@@ -21,8 +21,8 @@ except ImportError:
 from ui_pools import PoolsUI, AzureBatchPoolInfo
 from pools import AzureBatchPools
 from environment import AzureBatchEnvironment
-import batch_extensions as batch
-from batch_extensions import models
+import azure.batch_extensions as batch
+from azure.batch_extensions import models
 
 
 class AzureTestBatchPools(unittest.TestCase):

@@ -17,6 +17,7 @@ import glob
 import webbrowser
 import subprocess
 from distutils.version import StrictVersion
+from distutils import dir_util
 
 from maya import mel
 from maya import cmds
@@ -31,17 +32,20 @@ INSTALL_DIR = os.path.normpath(
     os.path.join(cmds.internalVar(userScriptDir=True), 'azure-batch-libs'))
 sys.path.append(INSTALL_DIR)
 
-REQUIREMENTS = [
-    "pathlib==1.0.1",
-]
+REQUIREMENTS = {
+    "pathlib==1.0.1": "pathlib",
+    "msrestazure==0.4.11": "msrestazure",
+    "azure-common==1.1.8": "azure.common",
+}
 
-NAMESPACE_PACKAGES = [
-    "azure-mgmt-batch==4.0.0",
-    "azure-mgmt-storage==1.0.0",
-    "azure-common==1.1.5",
-    "azure-batch==3.0.0",
-    "azure-storage==0.32.0",
-]
+NAMESPACE_PACKAGES = {
+    "azure-mgmt-batch==4.0.0": "azure.mgmt.batch",
+    "azure-mgmt-storage==1.0.0": "azure.mgmt.storage",
+    "azure-batch==3.0.0": "azure.batch",
+    "azure-storage==0.32.0": "azure.storage",
+    "azure-batch-extensions==0.2.0": "azure.batch_extensions",
+    "futures==3.1.1": "concurrent.futures"
+}
 
 VERSION = "0.10.0"
 EULA_PREF = "AzureBatch_EULA"
@@ -327,20 +331,21 @@ def remove_ui(clientData):
         print("Failed to load", (str(e)))
 
 
-def dependency_installed(package):
+def dependency_installed(package, namespace):
     """Check if the specified package is installed and up-to-date.
     :param str package: A pip-formatted package reference.
     """
     try:
         package_ref = package.split('==')
-        module = importlib.import_module(package_ref[0].replace('-', '.'))
+        module = importlib.import_module(namespace)
         if hasattr(module, '__version__') and len(package_ref) > 1:
             if StrictVersion(package_ref[1]) > StrictVersion(getattr(module, '__version__')):
                 raise ImportError("Installed package out of date")
-    except ImportError:
-        print("Unable to load {}".format(package))
+    except ImportError as error:
+        print("Unable to load {}: {}".format(package, error))
         return False
     else:
+        print("Successfully loaded {} from path: {}".format(package, module.__file__))
         return True
 
 
@@ -351,15 +356,19 @@ def install_pkg(package):
     TODO: Check if there's a better way to bypass the verification error.
     TODO: Check if this works for package upgrades
     """
+    if not os.path.isdir(INSTALL_DIR):
+        os.makedirs(INSTALL_DIR)
     pip_cmds = ['mayapy', os.path.join(INSTALL_DIR, 'pip'), 
                 'install', package, 
                 '--target', INSTALL_DIR,
                 '--index-url', 'http://pypi.python.org/simple/',
                 '--trusted-host', 'pypi.python.org']
     print(pip_cmds)
-    installer = subprocess.Popen(pip_cmds)
+    installer = subprocess.Popen(pip_cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     installer.wait()
     if installer.returncode != 0:
+        print(installer.stdout.read())
+        print(installer.stderr.read())
         raise RuntimeError("Failed to install package: {}".format(package))
 
 
@@ -372,23 +381,30 @@ def install_namespace_pkg(package, namespace):
     :param str namespace: The package namespace to unpack to.
     """
     temp_target = os.path.join(INSTALL_DIR, 'temp-target')
+    if not os.path.isdir(temp_target):
+        os.makedirs(temp_target)
     pip_cmds = ['mayapy', os.path.join(INSTALL_DIR, 'pip'),
                 'install', package, 
                 '--no-deps',
                 '--target', temp_target,
                 '--index-url', 'http://pypi.python.org/simple/',
                 '--trusted-host', 'pypi.python.org']
-    installer = subprocess.Popen(pip_cmds)
+    print(pip_cmds)
+    installer = subprocess.Popen(pip_cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     installer.wait()
     if installer.returncode == 0:
         try:
-            shutil.copytree(os.path.join(temp_target, namespace), os.path.join(INSTALL_DIR, namespace))
-        except Exception as e:
-            print(e)
+            dir_util.copy_tree(os.path.join(temp_target, namespace), os.path.join(INSTALL_DIR, namespace))
+        except Exception as exp:
+            print(exp)
         try:
             shutil.rmtree(temp_target)
-        except Exception as e:
-            print(e)
+        except Exception as exp:
+            print(exp)
+    else:
+        print(installer.stdout.read())
+        print(installer.stderr.read())
+        raise RuntimeError("Failed to install package: {}".format(package))
 
 
 def initializePlugin(obj):
@@ -410,11 +426,13 @@ def initializePlugin(obj):
 
     print("Checking for dependencies...")
     missing_libs = []
+    python_path = os.environ['PYTHONPATH'].lstrip(os.pathsep)
+    os.environ['PYTHONPATH'] = INSTALL_DIR + os.pathsep + python_path
     for package in REQUIREMENTS:
-        if not dependency_installed(package):
+        if not dependency_installed(package, REQUIREMENTS[package]):
             missing_libs.append(package)
     for package in NAMESPACE_PACKAGES:
-        if not dependency_installed(package):
+        if not dependency_installed(package, NAMESPACE_PACKAGES[package]):
             missing_libs.append(package)
     if missing_libs:
         message = ("One or more dependencies are missing or out-of-date."
@@ -433,11 +451,13 @@ def initializePlugin(obj):
 
         print("Attempting to install dependencies via Pip.")
         try:
-            os.environ['PYTHONPATH'] = INSTALL_DIR + os.pathsep + os.environ['PYTHONPATH']
             install_script = os.path.normpath(os.path.join( os.environ['AZUREBATCH_TOOLS'], 'install_pip.py'))
-            installer = subprocess.Popen(["mayapy", install_script, '--target', INSTALL_DIR])
+            installer = subprocess.Popen(["mayapy", install_script, '--target', INSTALL_DIR],
+                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             installer.wait()
             if installer.returncode != 0:
+                print(installer.stdout.read())
+                print(installer.stderr.read())
                 raise RuntimeError("Failed to install pip")
         except BaseException as exp:
             print("Failed to install Pip. Please install dependencies manually to continue.")
@@ -445,10 +465,12 @@ def initializePlugin(obj):
         try:
             print("Installing dependencies")
             for package in missing_libs:
-                install_pkg(package)
                 if package in NAMESPACE_PACKAGES:
-                    package_path = package.split('==')[0].split('-')
+                    package_path = NAMESPACE_PACKAGES[package].split('.')
                     install_namespace_pkg(package, os.path.join(*package_path))
+                else:
+                    install_pkg(package)
+            shutil.copy(os.path.join(INSTALL_DIR, 'azure', '__init__.py'), os.path.join(INSTALL_DIR, 'azure', 'mgmt', '__init__.py'))
         except:
             error = "Failed to install dependencies - please install manually"
             cmds.confirmDialog(message=error, button='OK')

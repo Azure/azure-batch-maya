@@ -14,7 +14,7 @@ from ui_environment import EnvironmentUI
 
 
 MAYA_IMAGES = {
-    'Window 2016':
+    'Windows 2016':
         {
             'node_sku_id': 'batch.node.windows amd64',
             'publisher': 'batch',
@@ -30,7 +30,7 @@ MAYA_IMAGES = {
             'sku': 'rendering',
             'version': 'latest'
         },
-    'Window 2016 (Preview)':
+    'Windows 2016 (Preview)':
         {
             'node_sku_id': 'batch.node.windows amd64',
             'publisher': 'batch',
@@ -152,10 +152,12 @@ class AzureBatchEnvironment(object):
                 return utils.OperatingSystem.linux
             else:
                 raise ValueError('Selected pool is not using a valid Maya image.')
-
-        if utils.OperatingSystem.windows.value in self.ui.get_image():
+        image = self.ui.get_image()
+        if utils.OperatingSystem.windows.value in image:
+            self._log.debug("Detected windows: {}".format(image))
             return utils.OperatingSystem.windows
         else:
+            self._log.debug("Detected centos: {}".format(image))
             return utils.OperatingSystem.linux
 
     def get_environment_settings(self):
