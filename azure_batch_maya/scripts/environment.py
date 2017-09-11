@@ -49,7 +49,8 @@ MAYA_IMAGES = {
 }
 LICENSES = [
     {'label': 'Maya', 'id': 'maya', 'plugin': None },
-    {'label': 'Arnold', 'id': 'arnold', 'plugin': 'mtoa' }
+    {'label': 'Arnold', 'id': 'arnold', 'plugin': 'mtoa' },
+    {'label': 'V-Ray (Preview)', 'id': 'vray', 'plugin': 'vrayformaya' }
 ]
 #
 
