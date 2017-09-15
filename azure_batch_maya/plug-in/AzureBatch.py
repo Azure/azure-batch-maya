@@ -36,6 +36,7 @@ REQUIREMENTS = {
     "pathlib==1.0.1": "pathlib",
     "msrestazure==0.4.11": "msrestazure",
     "azure-common==1.1.8": "azure.common",
+    "futures==3.1.1": "concurrent.futures",
 }
 
 NAMESPACE_PACKAGES = {
@@ -44,10 +45,9 @@ NAMESPACE_PACKAGES = {
     "azure-batch==3.0.0": "azure.batch",
     "azure-storage==0.32.0": "azure.storage",
     "azure-batch-extensions==0.2.0": "azure.batch_extensions",
-    "futures==3.1.1": "concurrent.futures"
 }
 
-VERSION = "0.10.0"
+VERSION = "0.13.0"
 EULA_PREF = "AzureBatch_EULA"
 SHELF_FILE = "shelf_AzureBatch.mel"
 cmd_name = "AzureBatch"
