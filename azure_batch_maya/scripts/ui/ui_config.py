@@ -3,9 +3,9 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 
-import utils
+import azurebatchutils as utils
 
-from api import MayaAPI as maya
+from azurebatchmayaapi import MayaAPI as maya
 
 
 class ConfigUI(object):

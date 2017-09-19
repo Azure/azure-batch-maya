@@ -14,12 +14,12 @@ import uuid
 import traceback
 
 from azure.batch_extensions import models
-from api import MayaAPI as maya
-from api import MayaCallbacks as callback
+from azurebatchmayaapi import MayaAPI as maya
+from azurebatchmayaapi import MayaCallbacks as callback
 
 from ui_submission import SubmissionUI
 from exception import CancellationException, PoolException
-import utils
+import azurebatchutils as utils
 from default import AzureBatchRenderJob
 
 

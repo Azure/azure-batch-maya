@@ -7,9 +7,9 @@ import os
 import logging
 import json
 
-from api import MayaAPI as maya
-from api import MayaCallbacks as callback
-import utils
+from azurebatchmayaapi import MayaAPI as maya
+from azurebatchmayaapi import MayaCallbacks as callback
+import azurebatchutils as utils
 from ui_environment import EnvironmentUI
 
 

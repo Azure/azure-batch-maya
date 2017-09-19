@@ -4,9 +4,9 @@
 # --------------------------------------------------------------------------------------------
 
 import os
-import utils
+import azurebatchutils as utils
 
-from api import MayaAPI as maya
+from azurebatchmayaapi import MayaAPI as maya
 
 
 class AssetsUI(object):

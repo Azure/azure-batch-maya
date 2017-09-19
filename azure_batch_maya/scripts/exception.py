@@ -6,7 +6,7 @@
 import traceback
 import logging
 
-from api import MayaAPI as maya
+from azurebatchmayaapi import MayaAPI as maya
 
 LOG = logging.getLogger('AzureBatchMaya')
 

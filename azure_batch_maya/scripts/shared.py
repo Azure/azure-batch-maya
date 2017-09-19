@@ -16,7 +16,7 @@ from assets import AzureBatchAssets
 from pools import AzureBatchPools
 from environment import AzureBatchEnvironment
 
-from api import MayaAPI as maya
+from azurebatchmayaapi import MayaAPI as maya
 from azure.batch.models import BatchErrorException
 
 

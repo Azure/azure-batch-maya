@@ -10,8 +10,8 @@ import datetime
 
 from azure.batch import models
 
-import utils
-from api import MayaAPI as maya
+import azurebatchutils
+from azurebatchmayaapi import MayaAPI as maya
 from ui_pools import PoolsUI
 
 

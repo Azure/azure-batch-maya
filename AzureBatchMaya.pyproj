@@ -30,9 +30,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="azure_batch_maya\modules\maya_software.py" />
-    <Compile Include="azure_batch_maya\scripts\api.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="azure_batch_maya\scripts\assets.py">
       <SubType>Code</SubType>
     </Compile>
@@ -48,6 +45,7 @@
     <Compile Include="azure_batch_maya\scripts\jobhistory.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="azure_batch_maya\scripts\azurebatchmayaapi.py" />
     <Compile Include="azure_batch_maya\scripts\submission.py" />
     <Compile Include="azure_batch_maya\scripts\pools.py">
       <SubType>Code</SubType>
@@ -78,7 +76,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="azure_batch_maya\scripts\ui\ui_submission.py" />
-    <Compile Include="azure_batch_maya\scripts\utils.py">
+    <Compile Include="azure_batch_maya\scripts\azurebatchutils.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="azure_batch_maya\plug-in\AzureBatch.py" />

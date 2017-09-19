@@ -23,7 +23,7 @@ from azure import batch_extensions
 from ui_assets import AssetsUI
 from assets import Asset, Assets, AzureBatchAssets
 from exception import FileUploadException
-from utils import ProgressBar, ProcButton
+from azurebatchutils import ProgressBar, ProcButton
 
 
 class TestAsset(unittest.TestCase):

@@ -9,7 +9,7 @@ import logging
 import platform
 import pathlib
 
-from api import MayaAPI as maya
+from azurebatchmayaapi import MayaAPI as maya
 from exception import CancellationException, FileUploadException
 
 

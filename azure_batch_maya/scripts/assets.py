@@ -18,11 +18,11 @@ from Queue import Queue
 
 from azure.batch_extensions import _file_utils as fileutils
 
-from api import MayaAPI as maya
-from api import MayaCallbacks as callback
+from azurebatchmayaapi import MayaAPI as maya
+from azurebatchmayaapi import MayaCallbacks as callback
 
-import utils
-from utils import ProgressBar
+import azurebatchutils as utils
+from azurebatchutils import ProgressBar
 from exception import CancellationException, FileUploadException
 
 from ui_assets import AssetsUI

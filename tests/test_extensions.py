@@ -18,6 +18,7 @@ from azure.batch_extensions import operations
 from azure.batch_extensions import _template_utils as utils
 from azure.batch_extensions import _pool_utils as pool_utils
 from azure.batch_extensions import _file_utils as file_utils
+import azurebatchutils as utils
 
 
 class TestBatchExtensions(unittest.TestCase):

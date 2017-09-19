@@ -16,7 +16,7 @@ try:
 except ImportError:
     import mock
 
-from utils import ProgressBar
+from azurebatchutils import ProgressBar
 from ui_submission import SubmissionUI
 from ui_shared import AzureBatchUI
 from submission import AzureBatchSubmission, AzureBatchRenderJob
@@ -25,7 +25,7 @@ from pools import AzureBatchPools
 from environment import AzureBatchEnvironment
 from shared import AzureBatchSettings
 from exception import CancellationException
-from utils import OperatingSystem
+from azurebatchutils import OperatingSystem
 
 from azure.batch_extensions import BatchExtensionsClient
 from azure.batch.batch_auth import SharedKeyCredentials

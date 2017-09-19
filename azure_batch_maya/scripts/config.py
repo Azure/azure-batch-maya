@@ -10,7 +10,7 @@ import sys
 import traceback
 
 from ui_config import ConfigUI
-from api import MayaAPI as maya
+from azurebatchmayaapi import MayaAPI as maya
 
 import azure.storage.blob as storage
 import azure.batch_extensions as batch

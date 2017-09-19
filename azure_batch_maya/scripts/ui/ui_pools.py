@@ -5,9 +5,9 @@
 
 import os
 
-from api import MayaAPI as maya
+from azurebatchmayaapi import MayaAPI as maya
 
-import utils
+import azurebatchutils as utils
 
 class PoolsUI(object):
     """Class to create the 'Pools' tab in the plug-in UI"""

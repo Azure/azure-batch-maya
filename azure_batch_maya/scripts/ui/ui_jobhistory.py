@@ -6,8 +6,8 @@
 import os
 import webbrowser
 
-from api import MayaAPI as maya
-import utils
+from azurebatchmayaapi import MayaAPI as maya
+import azurebatchutils as utils
 
 
 class JobHistoryUI(object):

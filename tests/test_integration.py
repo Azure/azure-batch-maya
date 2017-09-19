@@ -9,7 +9,7 @@ import time
 import uuid
 
 from environment import MAYA_IMAGES
-import utils
+import azurebatchutils as utils
 
 import azure.batch_extensions as batch
 from azure.batch_extensions import models

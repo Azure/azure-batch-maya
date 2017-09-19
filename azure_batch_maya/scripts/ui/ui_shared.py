@@ -5,7 +5,7 @@
 
 import os
 
-from api import MayaAPI as maya
+from azurebatchmayaapi import MayaAPI as maya
 
 
 class AzureBatchUI(object):

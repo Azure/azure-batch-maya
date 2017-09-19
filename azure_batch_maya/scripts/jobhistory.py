@@ -13,7 +13,7 @@ import string
 import shutil
 import re
 
-from api import MayaAPI as maya
+from azurebatchmayaapi import MayaAPI as maya
 from ui_jobhistory import JobHistoryUI
 
 import azure.batch as batch
