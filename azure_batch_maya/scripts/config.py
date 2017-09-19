@@ -157,7 +157,8 @@ class AzureBatchConfig(object):
         except ConfigParser.NoOptionError:
             self.ui.threads = 20
         finally:
-            self._client.threads = self.ui.threads
+            if self._client != None:
+                self._client.threads = self.ui.threads
         self.ui.set_authenticate(self._auth)
 
     def _auto_authentication(self):
