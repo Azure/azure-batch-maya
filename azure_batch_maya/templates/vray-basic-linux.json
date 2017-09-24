@@ -1,6 +1,6 @@
 {
   "templateMetadata": {
-    "description": "Application template for working with Maya and Arnold on CentOS."
+    "description": "Application template for working with Maya and VRay on CentOS."
   },
   "parameters": {
     "sceneFile": {

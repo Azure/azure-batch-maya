@@ -1,6 +1,6 @@
 # Azure Batch for Maya
 
-This project demonstrates cloud rendering using the Azure Batch service with integrated licensing for Maya and Arnold.
+This project demonstrates cloud rendering using the Azure Batch service with integrated licensing for Maya, VRay and Arnold.
 
 Please note that the Azure Batch licensing service for Maya is currently in preview.
 For more information and to register your interest, please see [rendering.azure.com](rendering.azure.com).

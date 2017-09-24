@@ -30,6 +30,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="azure_batch_maya\modules\maya_software.py" />
+    <Compile Include="azure_batch_maya\modules\vray_renderer.py" />
     <Compile Include="azure_batch_maya\scripts\assets.py">
       <SubType>Code</SubType>
     </Compile>
@@ -144,6 +145,8 @@
     <Content Include="azure_batch_maya\templates\arnold-basic-linux.json" />
     <Content Include="azure_batch_maya\templates\mayaSoftware-basic-linux.json" />
     <Content Include="azure_batch_maya\templates\mayaSoftware-basic-windows.json" />
+    <Content Include="azure_batch_maya\templates\vray-basic-linux.json" />
+    <Content Include="azure_batch_maya\templates\vray-basic-windows.json" />
     <Content Include="CHANGES.txt" />
     <Content Include="CONTRIBUTING.md">
       <SubType>Code</SubType>

@@ -57,7 +57,7 @@ If there are referenced files that you wish to exclude from uploading, simply un
 
 The `Env` tab will allow you to configure the VMs to be deployed when you create a pool. You can select the image to be run (Windows or CentOS) and the VM type. You can see a list
 of VM types and their descriptions in [this article](https://azure.microsoft.com/pricing/details/virtual-machines/series/).
-You can also select whether you wish to have the pool licensed for Maya and Arnold. Maya licensing will be enabled by default, whereas Arnold licensing will be enabled if Arnold
+You can also select whether you wish to have the pool licensed for Maya, VRay Arnold. Maya licensing will be enabled by default, whereas VRay or Arnold licensing will be enabled if either
 is detected as the active render engine (you may need to click `Refresh` to get the latest scene settings).
 If you wish to render using your own license server, you can deselet the license options and configure your license end point be adding the applicable environment variables in the table.
 Note that you will be billed for the licensing of applications for the entire up-time of VMs running in the pool, regardless of whether they are being used for rendering.
