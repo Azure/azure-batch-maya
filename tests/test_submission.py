@@ -153,13 +153,15 @@ class TestBatchSubmission(unittest.TestCase):
         mock_job = mock.create_autospec(models.ExtendedJobParameter)
         self.mock_self.batch.job.jobparameter_from_json.return_value = mock_job
         self.mock_self.asset_manager.upload.return_value = ("files", "maps", "thumbs", "workspace", mock_prog)
+        self.mock_self.asset_manager.generate_sas_token.return_value = "0123456789ABCDEF"
+        self.mock_self.batch.threads = 6
 
         self.mock_self.ui.get_pool.return_value = {1: (4, 4)}
         AzureBatchSubmission.submit(self.mock_self)
         self.assertEqual(mock_maya.error.call_count, 0)
         self.mock_self.renderer.disable.assert_called_with(True)
         self.mock_self.pool_manager.create_auto_pool.assert_called_with((4, 4), "job name")
-        self.mock_self.batch.job.add.assert_called_with(mock_job, threads=6)
+        self.mock_self.batch.job.add.assert_called_with(mock_job)
         self.mock_self.batch.job.jobparameter_from_json.assert_called_with(
             {'commonEnvironmentSettings': [{'name': 'foo', 'value':'bar'}],
              'poolInfo': {'autoPool': 'auto-pool'},
@@ -167,7 +169,7 @@ class TestBatchSubmission(unittest.TestCase):
              'id': mock.ANY,
              'applicationTemplateInfo': {
                  'parameters': {'sceneFile': 'test_file_path', 'outputs': mock.ANY, 'assetScript': 'maps', 'foo': 'bar',
-                                'projectData': 'files', 'thumbScript': 'thumbs', 'workspace': 'workspace'},
+                                'projectData': 'files', 'thumbScript': 'thumbs', 'storageURL': '0123456789ABCDEF', 'workspace': 'workspace'},
                  'filePath': os.path.join(os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-windows.json')},
              'metadata': [{'name': 'JobType', 'value': 'Maya'}]})
 
@@ -176,7 +178,7 @@ class TestBatchSubmission(unittest.TestCase):
         AzureBatchSubmission.submit(self.mock_self)
         self.assertEqual(mock_maya.error.call_count, 0)
         self.mock_self.renderer.disable.assert_called_with(True)
-        self.mock_self.batch.job.add.assert_called_with(mock_job, threads=6)
+        self.mock_self.batch.job.add.assert_called_with(mock_job)
         self.mock_self.batch.job.jobparameter_from_json.assert_called_with(
             {'commonEnvironmentSettings': [{'name': 'foo', 'value':'bar'}],
              'poolInfo': {'poolId': '4'},
@@ -184,7 +186,7 @@ class TestBatchSubmission(unittest.TestCase):
              'id': mock.ANY,
              'applicationTemplateInfo': {
                  'parameters': {'sceneFile': 'test_file_path', 'outputs': mock.ANY, 'assetScript': 'maps', 'foo': 'bar',
-                                'projectData': 'files', 'thumbScript': 'thumbs', 'workspace': 'workspace'},
+                                'projectData': 'files', 'thumbScript': 'thumbs', 'storageURL': '0123456789ABCDEF', 'workspace': 'workspace'},
                  'filePath': os.path.join(os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-windows.json')},
              'metadata': [{'name': 'JobType', 'value': 'Maya'}]})
 
@@ -199,7 +201,7 @@ class TestBatchSubmission(unittest.TestCase):
         self.assertEqual(mock_maya.error.call_count, 1)
         self.mock_self.renderer.disable.assert_called_with(True)
 
-        self.mock_self.batch.job.add.assert_called_with(mock_job, threads=6)
+        self.mock_self.batch.job.add.assert_called_with(mock_job)
         self.mock_self.batch.job.add.call_count = 0
         self.mock_self.pool_manager.create_pool.assert_called_with((4, 4), 'job name')
 
