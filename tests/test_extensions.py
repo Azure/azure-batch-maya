@@ -18,8 +18,6 @@ from azure.batch_extensions import operations
 from azure.batch_extensions import _template_utils as template_utils
 from azure.batch_extensions import _pool_utils as pool_utils
 from azure.batch_extensions import _file_utils as file_utils
-import azurebatchutils as utils
-
 
 class TestBatchExtensions(unittest.TestCase):
     # pylint: disable=attribute-defined-outside-init,no-member,too-many-public-methods
@@ -247,8 +245,8 @@ class TestBatchExtensions(unittest.TestCase):
         job_ops = operations.ExtendedJobOperations(None, None, None, self._serialize, self._deserialize, None)
         resolved = job_ops.expand_template(template_file, parameter_file)
         self.assertTrue(resolved)
-        self.assertEqual(resolved['id'], "helloworld")
-        self.assertEqual(resolved['poolInfo']['poolId'], "xplatTestPool")
+        self.assertEqual(resolved['properties']['id'], "helloworld")
+        self.assertEqual(resolved['properties']['poolInfo']['poolId'], "xplatTestPool")
         self.assertFalse('[parameters(' in json.dumps(resolved))
 
     def test_batch_extensions_replace_parametric_sweep_command(self):
