@@ -15,7 +15,7 @@ import azure.batch_extensions as batch
 from azure.batch.batch_auth import SharedKeyCredentials
 from azure.batch_extensions import models
 from azure.batch_extensions import operations
-from azure.batch_extensions import _template_utils as utils
+from azure.batch_extensions import _template_utils as template_utils
 from azure.batch_extensions import _pool_utils as pool_utils
 from azure.batch_extensions import _file_utils as file_utils
 import azurebatchutils as utils
@@ -45,42 +45,42 @@ class TestBatchExtensions(unittest.TestCase):
         definition = {'value': "['evaluateMe']"}
         template = json.dumps(definition)
         parameters = {}
-        result = utils._parse_template(template, definition, parameters)  # pylint:disable=protected-access
+        result = template_utils._parse_template(template, definition, parameters)  # pylint:disable=protected-access
         self.assertEqual(result['value'], 'evaluateMe')
 
         # It should replace an expression within a string
         definition = {'value': "prequel ['alpha'] sequel"}
         template = json.dumps(definition)
         parameters = {}
-        result = utils._parse_template(template, definition, parameters)  # pylint:disable=protected-access
+        result = template_utils._parse_template(template, definition, parameters)  # pylint:disable=protected-access
         self.assertEqual(result['value'], 'prequel alpha sequel')
 
         # It should replace multiple expressions within a string
         definition = {'value': "prequel ['alpha'] interquel ['beta'] sequel"}
         template = json.dumps(definition)
         parameters = {}
-        result = utils._parse_template(template, definition, parameters)  # pylint:disable=protected-access
+        result = template_utils._parse_template(template, definition, parameters)  # pylint:disable=protected-access
         self.assertEqual(result['value'], 'prequel alpha interquel beta sequel')
 
         # It should unescape an escaped expression
         definition = {'value': "prequel [['alpha'] sequel"}
         template = json.dumps(definition)
         parameters = {}
-        result = utils._parse_template(template, definition, parameters)  # pylint:disable=protected-access
+        result = template_utils._parse_template(template, definition, parameters)  # pylint:disable=protected-access
         self.assertEqual(result['value'], "prequel ['alpha'] sequel")
 
         # It should not choke on JSON containing string arrays
         definition = {'values': ["alpha", "beta", "gamma", "[43]"]}
         template = json.dumps(definition)
         parameters = {}
-        result = utils._parse_template(template, definition, parameters)  # pylint:disable=protected-access
+        result = template_utils._parse_template(template, definition, parameters)  # pylint:disable=protected-access
         self.assertEqual(result['values'], ["alpha", "beta", "gamma", "43"])
 
         # It should not choke on JSON containing number arrays
         definition = {'values': [1, 1, 2, 3, 5, 8, 13]}
         template = json.dumps(definition)
         parameters = {}
-        result = utils._parse_template(template, definition, parameters)  # pylint:disable=protected-access
+        result = template_utils._parse_template(template, definition, parameters)  # pylint:disable=protected-access
         self.assertEqual(result['values'], [1, 1, 2, 3, 5, 8, 13])
 
     def test_batch_extensions_parameters(self):
@@ -94,12 +94,12 @@ class TestBatchExtensions(unittest.TestCase):
         }
         temaplate_string = json.dumps(template)
         parameters = {'code': 'stringValue'}
-        resolved = utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+        resolved = template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
         self.assertEqual(resolved['result'], "stringValue")
 
         # It should replace numeric value for string parameter as a string
         parameters = {'code': 42}
-        resolved = utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+        resolved = template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
         self.assertEqual(resolved['result'], "42")
 
         # It should replace int value for int parameter
@@ -111,12 +111,12 @@ class TestBatchExtensions(unittest.TestCase):
         }
         temaplate_string = json.dumps(template)
         parameters = {'code': 42}
-        resolved = utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+        resolved = template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
         self.assertEqual(resolved['result'], 42)
 
         # It should replace string value for int parameter as int
         parameters = {'code': "42"}
-        resolved = utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+        resolved = template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
         self.assertEqual(resolved['result'], 42)
 
         # It should replace int values for int parameters in nested expressions
@@ -129,7 +129,7 @@ class TestBatchExtensions(unittest.TestCase):
         }
         temaplate_string = json.dumps(template)
         parameters = {'width': 1920, 'height': 1080}
-        resolved = utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+        resolved = template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
         self.assertEqual(resolved['framesize'], "Framesize is (1920x1080)")
 
         # It should replace bool value for bool parameter
@@ -141,12 +141,12 @@ class TestBatchExtensions(unittest.TestCase):
         }
         temaplate_string = json.dumps(template)
         parameters = {'code': True}
-        resolved = utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+        resolved = template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
         self.assertEqual(resolved['result'], True)
 
         # It should replace string value for bool parameter as bool value
         parameters = {'code': 'true'}
-        resolved = utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+        resolved = template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
         self.assertEqual(resolved['result'], True)
 
         # It should report an error for an unsupported parameter type
@@ -159,7 +159,7 @@ class TestBatchExtensions(unittest.TestCase):
         temaplate_string = json.dumps(template)
         parameters = {'code': True}
         with self.assertRaises(TypeError):
-            utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+            template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
 
     def test_batch_extensions_variables(self):
 
@@ -172,7 +172,7 @@ class TestBatchExtensions(unittest.TestCase):
         }
         temaplate_string = json.dumps(template)
         parameters = {}
-        resolved = utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+        resolved = template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
         self.assertEqual(resolved['result'], "enigmatic")
 
         # It should replace function result for a variable
@@ -183,7 +183,7 @@ class TestBatchExtensions(unittest.TestCase):
             }
         }
         temaplate_string = json.dumps(template)
-        resolved = utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+        resolved = template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
         self.assertEqual(resolved['result'], "this&that")
 
     def test_batch_extensions_concat(self):
@@ -194,7 +194,7 @@ class TestBatchExtensions(unittest.TestCase):
         }
         temaplate_string = json.dumps(template)
         parameters = {}
-        resolved = utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+        resolved = template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
         self.assertEqual(resolved['result'], "alphabetagamma")
 
         # It should handle strings and numbers
@@ -202,7 +202,7 @@ class TestBatchExtensions(unittest.TestCase):
             "result": "[concat('alpha', 42, 'beta', 3, '.', 1415, 'gamma')]"
         }
         temaplate_string = json.dumps(template)
-        resolved = utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+        resolved = template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
         self.assertEqual(resolved['result'], "alpha42beta3.1415gamma")
 
         # It should handle strings containing commas correctly
@@ -210,7 +210,7 @@ class TestBatchExtensions(unittest.TestCase):
             "result": "[concat('alpha', ', ', 'beta', ', ', 'gamma')]"
         }
         temaplate_string = json.dumps(template)
-        resolved = utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+        resolved = template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
         self.assertEqual(resolved['result'], "alpha, beta, gamma")
 
         # It should handle strings containing square brackets correctly
@@ -218,7 +218,7 @@ class TestBatchExtensions(unittest.TestCase):
             "result": "[concat('alpha', '[', 'beta', ']', 'gamma')]"
         }
         temaplate_string = json.dumps(template)
-        resolved = utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+        resolved = template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
         self.assertEqual(resolved['result'], "alpha[beta]gamma")
 
         # It should handle nested concat function calls
@@ -226,7 +226,7 @@ class TestBatchExtensions(unittest.TestCase):
             "result": "[concat('alpha ', concat('this', '&', 'that'), ' gamma')]"
         }
         temaplate_string = json.dumps(template)
-        resolved = utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+        resolved = template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
         self.assertEqual(resolved['result'], "alpha this&that gamma")
 
         # It should handle nested parameters() function calls
@@ -238,7 +238,7 @@ class TestBatchExtensions(unittest.TestCase):
         }
         parameters = {"name": "Frodo"}
         temaplate_string = json.dumps(template)
-        resolved = utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
+        resolved = template_utils._parse_template(temaplate_string, template, parameters)  # pylint:disable=protected-access
         self.assertEqual(resolved['result'], "alpha Frodo gamma")
 
     def test_batch_extensions_expand_template_with_parameter_file(self):
@@ -253,45 +253,45 @@ class TestBatchExtensions(unittest.TestCase):
 
     def test_batch_extensions_replace_parametric_sweep_command(self):
         test_input = Mock(value="cmd {{{0}}}.mp3 {1}.mp3")
-        utils._replacement_transform(utils._transform_sweep_str,  # pylint:disable=protected-access
+        template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                      test_input, "value", [5, 10])
         self.assertEqual(test_input.value, 'cmd {5}.mp3 10.mp3')
         test_input.value = "cmd {{{0}}}.mp3 {{{1}}}.mp3"
-        utils._replacement_transform(utils._transform_sweep_str,  # pylint:disable=protected-access
+        template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                      test_input, "value", [5, 10])
         self.assertEqual(test_input.value, 'cmd {5}.mp3 {10}.mp3')
         test_input.value = "cmd {{0}}.mp3 {1}.mp3"
-        utils._replacement_transform(utils._transform_sweep_str,  # pylint:disable=protected-access
+        template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                      test_input, "value", [5, 10])
         self.assertEqual(test_input.value, 'cmd {0}.mp3 10.mp3')
         test_input.value = "cmd {0}.mp3 {1}.mp3"
-        utils._replacement_transform(utils._transform_sweep_str,  # pylint:disable=protected-access
+        template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                      test_input, "value", [5, 10])
         self.assertEqual(test_input.value, 'cmd 5.mp3 10.mp3')
         test_input.value = "cmd {0}{1}.mp3 {1}.mp3"
-        utils._replacement_transform(utils._transform_sweep_str,  # pylint:disable=protected-access
+        template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                      test_input, "value", [5, 10])
         self.assertEqual(test_input.value, 'cmd 510.mp3 10.mp3')
         test_input.value = "cmd {0}.mp3 {0}.mp3"
-        utils._replacement_transform(utils._transform_sweep_str,  # pylint:disable=protected-access
+        template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                      test_input, "value", [5, 10])
         self.assertEqual(test_input.value, 'cmd 5.mp3 5.mp3')
         test_input.value = "cmd {0:3}.mp3 {0}.mp3"
-        utils._replacement_transform(utils._transform_sweep_str,  # pylint:disable=protected-access
+        template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                      test_input, "value", [5, 10])
         self.assertEqual(test_input.value, 'cmd 005.mp3 5.mp3')
         test_input.value = "cmd {0:3}.mp3 {1:3}.mp3"
-        utils._replacement_transform(utils._transform_sweep_str,  # pylint:disable=protected-access
+        template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                      test_input, "value", [5, 1234])
         self.assertEqual(test_input.value, 'cmd 005.mp3 1234.mp3')
         test_input.value = "cmd {{}}.mp3"
-        utils._replacement_transform(utils._transform_sweep_str,  # pylint:disable=protected-access
+        template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                      test_input, "value", [5, 1234])
         self.assertEqual(test_input.value, 'cmd {}.mp3')
         test_input.value = ("gs -dQUIET -dSAFER -dBATCH -dNOPAUSE -dNOPROMPT -sDEVICE=pngalpha "
                                "-sOutputFile={0}-%03d.png -r250 {0}.pdf && for f in *.png;"
                                " do tesseract $f ${{f%.*}};done")
-        utils._replacement_transform(utils._transform_sweep_str,  # pylint:disable=protected-access
+        template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                      test_input, "value", [5])
         self.assertEqual(
             test_input.value,
@@ -303,23 +303,23 @@ class TestBatchExtensions(unittest.TestCase):
 
         test_input = Mock(value="cmd {0}.mp3 {2}.mp3")
         with self.assertRaises(ValueError):
-            utils._replacement_transform(utils._transform_sweep_str,  # pylint:disable=protected-access
+            template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                          test_input, "value", [5, 10])
         test_input.value = "cmd {}.mp3 {2}.mp3"
         with self.assertRaises(ValueError):
-            utils._replacement_transform(utils._transform_sweep_str,  # pylint:disable=protected-access
+            template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                          test_input, "value", [5, 10])
         test_input.value = "cmd {{0}}}.mp3 {1}.mp3"
         with self.assertRaises(ValueError):
-            utils._replacement_transform(utils._transform_sweep_str,  # pylint:disable=protected-access
+            template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                          test_input, "value", [5, 10])
         test_input.value = "cmd {0:3}.mp3 {1}.mp3"
         with self.assertRaises(ValueError):
-            utils._replacement_transform(utils._transform_sweep_str,  # pylint:disable=protected-access
+            template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                          test_input, "value", [-5, 10])
         test_input.value = "cmd {0:-3}.mp3 {1}.mp3"
         with self.assertRaises(ValueError):
-            utils._replacement_transform(utils._transform_sweep_str,  # pylint:disable=protected-access
+            template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                          test_input, "value", [5, 10])
 
     def test_batch_extensions_replace_file_iteration_command(self):
@@ -330,23 +330,23 @@ class TestBatchExtensions(unittest.TestCase):
             "fileNameWithoutExtension": "blob"
         }
         test_input = Mock(value="cmd {{{url}}}.mp3 {filePath}.mp3")
-        utils._replacement_transform(utils._transform_file_str,  # pylint:disable=protected-access
+        template_utils._replacement_transform(template_utils._transform_file_str,  # pylint:disable=protected-access
                                      test_input, "value", file_info)
         self.assertEqual(test_input.value,
                          'cmd {http://someurl/container/path/blob.ext}.mp3 path/blob.ext.mp3')
         test_input.value = "cmd {{{fileName}}}.mp3 {{{fileNameWithoutExtension}}}.mp3"
-        utils._replacement_transform(utils._transform_file_str,  # pylint:disable=protected-access
+        template_utils._replacement_transform(template_utils._transform_file_str,  # pylint:disable=protected-access
                                      test_input, "value", file_info)
         self.assertEqual(test_input.value, 'cmd {blob.ext}.mp3 {blob}.mp3')
         test_input.value = "cmd {{fileName}}.mp3 {fileName}.mp3"
-        utils._replacement_transform(utils._transform_file_str,  # pylint:disable=protected-access
+        template_utils._replacement_transform(template_utils._transform_file_str,  # pylint:disable=protected-access
                                     test_input, "value", file_info)
         self.assertEqual(test_input.value, 'cmd {fileName}.mp3 blob.ext.mp3')
         test_input.value = (
             "gs -dQUIET -dSAFER -dBATCH -dNOPAUSE -dNOPROMPT -sDEVICE=pngalpha "
             "-sOutputFile={fileNameWithoutExtension}-%03d.png -r250 "
             "{fileNameWithoutExtension}.pdf && for f in *.png; do tesseract $f ${{f%.*}};done")
-        utils._replacement_transform(utils._transform_file_str,  # pylint:disable=protected-access
+        template_utils._replacement_transform(template_utils._transform_file_str,  # pylint:disable=protected-access
                                      test_input, "value", file_info)
         self.assertEqual(
             test_input.value,
@@ -363,27 +363,27 @@ class TestBatchExtensions(unittest.TestCase):
         }
         test_input = Mock(value="cmd {url}.mp3 {fullNameWithSome}.mp3")
         with self.assertRaises(ValueError):
-            utils._replacement_transform(utils._transform_file_str,  # pylint:disable=protected-access
+            template_utils._replacement_transform(template_utils._transform_file_str,  # pylint:disable=protected-access
                                          test_input, "value", file_info)
         test_input.value = "cmd {}.mp3 {url}.mp3"
         with self.assertRaises(ValueError):
-            utils._replacement_transform(utils._transform_file_str,  # pylint:disable=protected-access
+            template_utils._replacement_transform(template_utils._transform_file_str,  # pylint:disable=protected-access
                                          test_input, "value", file_info)
         test_input.value = "cmd {{url}}}.mp3 {filePath}.mp3"
         with self.assertRaises(ValueError):
-            utils._replacement_transform(utils._transform_file_str,  # pylint:disable=protected-access
+            template_utils._replacement_transform(template_utils._transform_file_str,  # pylint:disable=protected-access
                                          test_input, "value", file_info)
 
     def test_batch_extensions_parse_parameter_sets(self):
-        parsed = utils._parse_parameter_sets([models.ParameterSet(start=1, end=2)])  # pylint:disable=protected-access
+        parsed = template_utils._parse_parameter_sets([models.ParameterSet(start=1, end=2)])  # pylint:disable=protected-access
         self.assertEqual(list(parsed), [(1,), (2,)])
-        parsed = utils._parse_parameter_sets([models.ParameterSet(start=1, end=1)])  # pylint:disable=protected-access
+        parsed = template_utils._parse_parameter_sets([models.ParameterSet(start=1, end=1)])  # pylint:disable=protected-access
         self.assertEqual(list(parsed), [(1,)])
-        parsed = utils._parse_parameter_sets([  # pylint:disable=protected-access
+        parsed = template_utils._parse_parameter_sets([  # pylint:disable=protected-access
             models.ParameterSet(start=1, end=2),
             models.ParameterSet(start=-1, end=-3, step=-1)])
         self.assertEqual(list(parsed), [(1, -1), (1, -2), (1, -3), (2, -1), (2, -2), (2, -3)])
-        parsed = utils._parse_parameter_sets([  # pylint:disable=protected-access
+        parsed = template_utils._parse_parameter_sets([  # pylint:disable=protected-access
             models.ParameterSet(start=1, end=2),
             models.ParameterSet(start=-1, end=-3, step=-1),
             models.ParameterSet(start=-5, end=5, step=3)])
@@ -393,42 +393,42 @@ class TestBatchExtensions(unittest.TestCase):
                                         (2, -1, -5), (2, -1, -2), (2, -1, 1), (2, -1, 4),
                                         (2, -2, -5), (2, -2, -2), (2, -2, 1), (2, -2, 4),
                                         (2, -3, -5), (2, -3, -2), (2, -3, 1), (2, -3, 4)])
-        parsed = utils._parse_parameter_sets([  # pylint:disable=protected-access
+        parsed = template_utils._parse_parameter_sets([  # pylint:disable=protected-access
             models.ParameterSet(start=1, end=2, step=2000),
             models.ParameterSet(start=-1, end=-3, step=-1),
             models.ParameterSet(start=-5, end=5, step=3)])
         self.assertEqual(list(parsed), [(1, -1, -5), (1, -1, -2), (1, -1, 1), (1, -1, 4),
                                         (1, -2, -5), (1, -2, -2), (1, -2, 1), (1, -2, 4),
                                         (1, -3, -5), (1, -3, -2), (1, -3, 1), (1, -3, 4)])
-        parsed = list(utils._parse_parameter_sets([models.ParameterSet(start=1, end=2000)]))  # pylint:disable=protected-access,redefined-variable-type
+        parsed = list(template_utils._parse_parameter_sets([models.ParameterSet(start=1, end=2000)]))  # pylint:disable=protected-access,redefined-variable-type
         self.assertEqual(len(parsed), 2000)
         self.assertEqual(len(parsed[0]), 1)
 
     def test_batch_extensions_parse_invalid_parameter_set(self):
         with self.assertRaises(ValueError):
-            utils._parse_parameter_sets([])  # pylint:disable=protected-access
+            template_utils._parse_parameter_sets([])  # pylint:disable=protected-access
         with self.assertRaises(ValueError):
-            utils._parse_parameter_sets([Mock(start=2, end=1, step=1)])  # pylint:disable=protected-access
+            template_utils._parse_parameter_sets([Mock(start=2, end=1, step=1)])  # pylint:disable=protected-access
         with self.assertRaises(ValueError):
             models.ParameterSet(start=2, end=1)
         with self.assertRaises(ValueError):
-            utils._parse_parameter_sets([Mock(start=1, end=3, step=-1)])  # pylint:disable=protected-access
+            template_utils._parse_parameter_sets([Mock(start=1, end=3, step=-1)])  # pylint:disable=protected-access
         with self.assertRaises(ValueError):
             models.ParameterSet(start=1, end=3, step=-1)
         with self.assertRaises(ValueError):
-            utils._parse_parameter_sets([Mock(start=1, end=3, step=0)])  # pylint:disable=protected-access
+            template_utils._parse_parameter_sets([Mock(start=1, end=3, step=0)])  # pylint:disable=protected-access
         with self.assertRaises(ValueError):
             models.ParameterSet(start=1, end=3, step=0)
         with self.assertRaises(ValueError):
-            utils._parse_parameter_sets([Mock(start=None, end=3, step=1)])  # pylint:disable=protected-access
+            template_utils._parse_parameter_sets([Mock(start=None, end=3, step=1)])  # pylint:disable=protected-access
         with self.assertRaises(ValueError):
             models.ParameterSet(start=None, end=3, step=1)
         with self.assertRaises(ValueError):
-            utils._parse_parameter_sets([Mock(start=3, end=None, step=1)])  # pylint:disable=protected-access
+            template_utils._parse_parameter_sets([Mock(start=3, end=None, step=1)])  # pylint:disable=protected-access
         with self.assertRaises(ValueError):
             models.ParameterSet(start=3, end=None, step=1)
         with self.assertRaises(ValueError):
-            utils._parse_parameter_sets([Mock(start=1, end=2, step=1), Mock(start=None, end=None, step=1)])  # pylint:disable=protected-access
+            template_utils._parse_parameter_sets([Mock(start=1, end=2, step=1), Mock(start=None, end=None, step=1)])  # pylint:disable=protected-access
         with self.assertRaises(ValueError):
             models.ParameterSet(start=None, end=None)
 
@@ -455,7 +455,7 @@ class TestBatchExtensions(unittest.TestCase):
                                 upload_condition=models.OutputFileUploadCondition.task_completion))
                     ])
             ])
-        result = utils._expand_task_collection(template)  # pylint: disable=protected-access
+        result = template_utils._expand_task_collection(template)  # pylint: disable=protected-access
         self.assertEqual(result, template.tasks)        
 
     def test_batch_extensions_parse_parametricsweep_factory(self):
@@ -465,7 +465,7 @@ class TestBatchExtensions(unittest.TestCase):
                 models.ParameterSet(3, 5)
             ],
             repeat_task= models.RepeatTask("cmd {0}.mp3 {1}.mp3"))
-        result = utils._expand_parametric_sweep(template)  # pylint:disable=protected-access
+        result = template_utils._expand_parametric_sweep(template)  # pylint:disable=protected-access
         expected = [
             models.ExtendedTaskParameter('0', 'cmd 1.mp3 3.mp3'),
             models.ExtendedTaskParameter('1', 'cmd 1.mp3 4.mp3'),
@@ -543,7 +543,7 @@ class TestBatchExtensions(unittest.TestCase):
                         upload_condition=models.OutputFileUploadCondition.task_success
                     ))]),
         ]
-        result = utils._expand_parametric_sweep(template)  # pylint: disable=protected-access
+        result = template_utils._expand_parametric_sweep(template)  # pylint: disable=protected-access
         for index, task in enumerate(result):
             self.assertEqual(expected[index].command_line, task.command_line)
             self.assertEqual(expected[index].resource_files[1].blob_source, task.resource_files[1].blob_source)
@@ -563,7 +563,7 @@ class TestBatchExtensions(unittest.TestCase):
             models.ExtendedTaskParameter('merge', 'summary.exe',
                 depends_on=models.TaskDependencies(task_id_ranges=models.TaskIdRange(0, 2)))
         ]
-        result = utils._expand_parametric_sweep(template)  # pylint: disable=protected-access
+        result = template_utils._expand_parametric_sweep(template)  # pylint: disable=protected-access
         for index, task in enumerate(result):
             self.assertEqual(expected[index].command_line, task.command_line)
         self.assertEqual(result[-1].id, 'merge')
@@ -573,9 +573,9 @@ class TestBatchExtensions(unittest.TestCase):
     def test_batch_extensions_parse_invalid_parametricsweep(self):
 
         with self.assertRaises(ValueError):
-            utils._expand_parametric_sweep(Mock(parameter_sets=None, repeat_task=models.RepeatTask('cmd {0}.mp3')))  # pylint: disable=protected-access
+            template_utils._expand_parametric_sweep(Mock(parameter_sets=None, repeat_task=models.RepeatTask('cmd {0}.mp3')))  # pylint: disable=protected-access
         with self.assertRaises(ValueError):
-            utils._expand_parametric_sweep(Mock(parameter_sets=[models.ParameterSet(1, 3)], repeat_task=None))  # pylint: disable=protected-access
+            template_utils._expand_parametric_sweep(Mock(parameter_sets=[models.ParameterSet(1, 3)], repeat_task=None))  # pylint: disable=protected-access
         template = models.ParametricSweepTaskFactory(
             parameter_sets=[
                 models.ParameterSet(1, 3)
@@ -593,7 +593,7 @@ class TestBatchExtensions(unittest.TestCase):
             )
         )
         with self.assertRaises(ValueError):
-            utils._expand_parametric_sweep(template)  # pylint: disable=protected-access
+            template_utils._expand_parametric_sweep(template)  # pylint: disable=protected-access
         template = models.ParametricSweepTaskFactory(
             parameter_sets=[
                 models.ParameterSet(1, 3)
@@ -610,7 +610,7 @@ class TestBatchExtensions(unittest.TestCase):
                 ]
             )
         )
-        utils._expand_parametric_sweep(template)  # pylint: disable=protected-access
+        template_utils._expand_parametric_sweep(template)  # pylint: disable=protected-access
 
     def test_batch_extensions_preserve_resourcefiles(self):
         fileutils = file_utils.FileUtils(None)
@@ -620,7 +620,7 @@ class TestBatchExtensions(unittest.TestCase):
                     blob_source='abc',
                     file_path='xyz')
             ])
-        transformed = utils.post_processing(request, fileutils, pool_utils.PoolOperatingSystemFlavor.LINUX)
+        transformed = template_utils.post_processing(request, fileutils, pool_utils.PoolOperatingSystemFlavor.LINUX)
         self.assertEqual(transformed, request)
         request = Mock(
             common_resource_files=[
@@ -636,17 +636,17 @@ class TestBatchExtensions(unittest.TestCase):
                 ]
             )
         )
-        transformed = utils.post_processing(request, fileutils, pool_utils.PoolOperatingSystemFlavor.WINDOWS)
+        transformed = template_utils.post_processing(request, fileutils, pool_utils.PoolOperatingSystemFlavor.WINDOWS)
         self.assertEqual(transformed, request)
         request = [  # pylint: disable=redefined-variable-type
             Mock(resource_files=[Mock(blob_source='abc', file_path='xyz')]),
             Mock(resource_files=[Mock(blob_source='abc', file_path='xyz')])
         ]
-        transformed = utils.post_processing(request, fileutils, pool_utils.PoolOperatingSystemFlavor.WINDOWS)
+        transformed = template_utils.post_processing(request, fileutils, pool_utils.PoolOperatingSystemFlavor.WINDOWS)
         self.assertEqual(transformed, request)
         request = Mock(resource_files=[Mock(blob_source='abc', file_path=None)])
         with self.assertRaises(ValueError):
-            utils.post_processing(request, fileutils, pool_utils.PoolOperatingSystemFlavor.WINDOWS)
+            template_utils.post_processing(request, fileutils, pool_utils.PoolOperatingSystemFlavor.WINDOWS)
 
     def test_batch_extensions_validate_parameter(self):
         content = {
@@ -678,36 +678,36 @@ class TestBatchExtensions(unittest.TestCase):
             }
         }
         # pylint: disable=protected-access
-        self.assertEqual(utils._validate_parameter('a', content['a'], 3), 3)
-        self.assertEqual(utils._validate_parameter('a', content['a'], 5), 5)
+        self.assertEqual(template_utils._validate_parameter('a', content['a'], 3), 3)
+        self.assertEqual(template_utils._validate_parameter('a', content['a'], 5), 5)
         with self.assertRaises(ValueError):
-            utils._validate_parameter('a', content['a'], 1)
+            template_utils._validate_parameter('a', content['a'], 1)
         with self.assertRaises(ValueError):
-            utils._validate_parameter('a', content['a'], 10)
+            template_utils._validate_parameter('a', content['a'], 10)
         with self.assertRaises(TypeError):
-            utils._validate_parameter('a', content['a'], 3.1)
-        self.assertEqual(utils._validate_parameter('b', content['b'], 'abcd'), 'abcd')
+            template_utils._validate_parameter('a', content['a'], 3.1)
+        self.assertEqual(template_utils._validate_parameter('b', content['b'], 'abcd'), 'abcd')
         with self.assertRaises(ValueError):
-            utils._validate_parameter('b', content['b'], 'a')
+            template_utils._validate_parameter('b', content['b'], 'a')
         with self.assertRaises(ValueError):
-            utils._validate_parameter('b', content['b'], 'abcdeffg')
+            template_utils._validate_parameter('b', content['b'], 'abcdeffg')
         with self.assertRaises(ValueError):
-            utils._validate_parameter('b', content['b'], 1)
-        self.assertEqual(utils._validate_parameter('b', content['b'], 100), '100')
-        self.assertEqual(utils._validate_parameter('c', content['c'],
+            template_utils._validate_parameter('b', content['b'], 1)
+        self.assertEqual(template_utils._validate_parameter('b', content['b'], 100), '100')
+        self.assertEqual(template_utils._validate_parameter('c', content['c'],
                                                    'STANDARD_A1'), 'STANDARD_A1')
         with self.assertRaises(ValueError):
-            utils._validate_parameter('c', content['c'], 'STANDARD_C1')
+            template_utils._validate_parameter('c', content['c'], 'STANDARD_C1')
         with self.assertRaises(ValueError):
-            utils._validate_parameter('c', content['c'], 'standard_a1')
-        self.assertEqual(utils._validate_parameter('d', content['d'], True), True)
-        self.assertEqual(utils._validate_parameter('d', content['d'], False), False)
-        self.assertEqual(utils._validate_parameter('d', content['d'], 'true'), True)
-        self.assertEqual(utils._validate_parameter('d', content['d'], 'false'), False)
+            template_utils._validate_parameter('c', content['c'], 'standard_a1')
+        self.assertEqual(template_utils._validate_parameter('d', content['d'], True), True)
+        self.assertEqual(template_utils._validate_parameter('d', content['d'], False), False)
+        self.assertEqual(template_utils._validate_parameter('d', content['d'], 'true'), True)
+        self.assertEqual(template_utils._validate_parameter('d', content['d'], 'false'), False)
         with self.assertRaises(TypeError):
-            utils._validate_parameter('d', content['d'], 'true1')
+            template_utils._validate_parameter('d', content['d'], 'true1')
         with self.assertRaises(TypeError):
-            utils._validate_parameter('d', content['d'], 3)
+            template_utils._validate_parameter('d', content['d'], 3)
 
     def test_batch_extensions_simple_linux_package_manager(self):
         pool = models.ExtendedPoolParameter(
@@ -729,8 +729,8 @@ class TestBatchExtensions(unittest.TestCase):
                 models.AptPackageReference("apache2", "12.34")
             ]
         )
-        commands = [utils.process_pool_package_references(pool)]
-        pool.start_task = models.StartTask(**utils.construct_setup_task(
+        commands = [template_utils.process_pool_package_references(pool)]
+        pool.start_task = models.StartTask(**template_utils.construct_setup_task(
             pool.start_task, commands,
             pool_utils.PoolOperatingSystemFlavor.LINUX))
         self.assertEqual(pool.start_task.command_line,
@@ -759,8 +759,8 @@ class TestBatchExtensions(unittest.TestCase):
                 models.ChocolateyPackageReference("testpkg", "12.34", True)
             ]
         )
-        commands = [utils.process_pool_package_references(pool)]
-        pool.start_task = models.StartTask(**utils.construct_setup_task(
+        commands = [template_utils.process_pool_package_references(pool)]
+        pool.start_task = models.StartTask(**template_utils.construct_setup_task(
             pool.start_task, commands,
             pool_utils.PoolOperatingSystemFlavor.WINDOWS))
         self.assertEqual(
@@ -807,8 +807,8 @@ class TestBatchExtensions(unittest.TestCase):
                 models.AptPackageReference("apache2", "12.34")
             ]
         )
-        commands = [utils.process_pool_package_references(pool)]
-        pool.start_task = models.StartTask(**utils.construct_setup_task(
+        commands = [template_utils.process_pool_package_references(pool)]
+        pool.start_task = models.StartTask(**template_utils.construct_setup_task(
             pool.start_task, commands,
             pool_utils.PoolOperatingSystemFlavor.LINUX))
         self.assertEqual(pool.vm_size, 'STANDARD_A1')
@@ -836,12 +836,12 @@ class TestBatchExtensions(unittest.TestCase):
                 )
             )
         )
-        collection = utils.expand_task_factory(job, None)
+        collection = template_utils.expand_task_factory(job, None)
         commands = []
-        commands.append(utils.process_task_package_references(
+        commands.append(template_utils.process_task_package_references(
             collection, pool_utils.PoolOperatingSystemFlavor.LINUX))
         commands.append(None)
-        job.job_preparation_task = models.JobPreparationTask(**utils.construct_setup_task(
+        job.job_preparation_task = models.JobPreparationTask(**template_utils.construct_setup_task(
             job.job_preparation_task, commands,
             pool_utils.PoolOperatingSystemFlavor.LINUX))
         self.assertIsNone(job.task_factory)
@@ -859,12 +859,12 @@ class TestBatchExtensions(unittest.TestCase):
                 repeat_task=models.RepeatTask("cmd {0}.mp3 {1}.mp3")
             )
         )
-        collection = utils.expand_task_factory(job, None)
+        collection = template_utils.expand_task_factory(job, None)
         commands = []
-        commands.append(utils.process_task_package_references(
+        commands.append(template_utils.process_task_package_references(
             collection, pool_utils.PoolOperatingSystemFlavor.LINUX))
         commands.append(None)
-        job.job_preparation_task = utils.construct_setup_task(
+        job.job_preparation_task = template_utils.construct_setup_task(
             job.job_preparation_task, commands,
             pool_utils.PoolOperatingSystemFlavor.LINUX)
         self.assertIsNone(job.task_factory)
@@ -892,16 +892,16 @@ class TestBatchExtensions(unittest.TestCase):
         )
         pool.package_references[0].type = "newPackage"
         with self.assertRaises(ValueError):
-            utils.process_pool_package_references(pool)
+            template_utils.process_pool_package_references(pool)
 
         pool.package_references[0] = models.ChocolateyPackageReference("ffmpeg")
         with self.assertRaises(ValueError):
-            utils.process_pool_package_references(pool)
+            template_utils.process_pool_package_references(pool)
 
         pool.package_references = [models.AptPackageReference("ffmpeg", "12.34")]
         pool.package_references[0].id = None
         with self.assertRaises(ValueError):
-            utils.process_pool_package_references(pool)
+            template_utils.process_pool_package_references(pool)
 
 
     def test_batch_extensions_validate_job_requesting_app_template(self):
@@ -928,7 +928,7 @@ class TestBatchExtensions(unittest.TestCase):
         # should return empty metadata when no metadata supplied
         alpha = None
         beta = None
-        result = utils._merge_metadata(alpha, beta)  # pylint: disable=protected-access
+        result = template_utils._merge_metadata(alpha, beta)  # pylint: disable=protected-access
         self.assertEqual(result, [])
 
         # should return base metadata when only base metadata supplied
@@ -942,7 +942,7 @@ class TestBatchExtensions(unittest.TestCase):
                 'value': 'old'
             }]
         beta = None
-        result = utils._merge_metadata(alpha, beta)  # pylint: disable=protected-access
+        result = template_utils._merge_metadata(alpha, beta)  # pylint: disable=protected-access
         self.assertEqual(result, alpha)
 
         # should return more metadata when only more metadata supplied
@@ -951,7 +951,7 @@ class TestBatchExtensions(unittest.TestCase):
             name='gender',
             value='unspecified'
         )]
-        result = utils._merge_metadata(alpha, beta)  # pylint: disable=protected-access
+        result = template_utils._merge_metadata(alpha, beta)  # pylint: disable=protected-access
         self.assertEqual(result, [{'name':'gender', 'value':'unspecified'}])
 
         # should throw an error if the two collections overlap
@@ -974,7 +974,7 @@ class TestBatchExtensions(unittest.TestCase):
                 value='unspecified'
             )]
         with self.assertRaises(ValueError) as ve:
-            utils._merge_metadata(alpha, beta)  # pylint: disable=protected-access
+            template_utils._merge_metadata(alpha, beta)  # pylint: disable=protected-access
         self.assertIn('name', ve.exception.args[0],
                       'Expect metadata \'name\' to be mentioned')
 
@@ -1006,7 +1006,7 @@ class TestBatchExtensions(unittest.TestCase):
                 'name': 'gender',
                 'value': 'unspecified'
             }]
-        result = utils._merge_metadata(alpha, beta)  # pylint: disable=protected-access
+        result = template_utils._merge_metadata(alpha, beta)  # pylint: disable=protected-access
         self.assertEqual(result, expected)
 
     def test_batch_extensions_generate_job(self):
@@ -1019,7 +1019,7 @@ class TestBatchExtensions(unittest.TestCase):
             'usesTaskDependencies': True
         }
         with self.assertRaises(ValueError) as ve:
-            utils._validate_generated_job(job)  # pylint: disable=protected-access
+            template_utils._validate_generated_job(job)  # pylint: disable=protected-access
         self.assertIn('applicationTemplateInfo', ve.exception.args[0],
                       'Expect property \'applicationTemplateInfo\' to be mentioned')
 
@@ -1030,7 +1030,7 @@ class TestBatchExtensions(unittest.TestCase):
             'displayName': 'display this name'
         }
         with self.assertRaises(ValueError) as ve:
-            utils._validate_generated_job(template)  # pylint: disable=protected-access
+            template_utils._validate_generated_job(template)  # pylint: disable=protected-access
         self.assertIn('displayName', ve.exception.args[0],
                       'Expect property \'displayName\' to be mentioned')
 
@@ -1040,7 +1040,7 @@ class TestBatchExtensions(unittest.TestCase):
             'vendor': 'origin'
         }
         with self.assertRaises(ValueError) as ve:
-            utils._validate_generated_job(template)  # pylint: disable=protected-access
+            template_utils._validate_generated_job(template)  # pylint: disable=protected-access
         self.assertIn('vendor', ve.exception.args[0],
                       'Expect property \'vendor\' to be mentioned')
 
@@ -1053,12 +1053,12 @@ class TestBatchExtensions(unittest.TestCase):
             application_template_info=models.ApplicationTemplateInfo(self.static_apptemplate_path))
         job.application_template_info.file_path = None
         with self.assertRaises(ValueError):
-            utils.expand_application_template(job, self._deserialize)
+            template_utils.expand_application_template(job, self._deserialize)
 
         # should merge a template with no parameters
         job = models.ExtendedJobParameter("jobid", None,
             application_template_info=models.ApplicationTemplateInfo(self.static_apptemplate_path))
-        result = utils.expand_application_template(job, self._deserialize)
+        result = template_utils.expand_application_template(job, self._deserialize)
         self.assertIsNotNone(job.job_manager_task,
             "expect the template to have provided jobManagerTask.")
 
@@ -1067,7 +1067,7 @@ class TestBatchExtensions(unittest.TestCase):
             priority=500,
             application_template_info=models.ApplicationTemplateInfo(self.static_apptemplate_path))
         
-        result = utils.expand_application_template(job, self._deserialize)
+        result = template_utils.expand_application_template(job, self._deserialize)
         self.assertEqual(job.id, 'importantjob')
         self.assertEqual(job.priority, 500)
 
@@ -1080,7 +1080,7 @@ class TestBatchExtensions(unittest.TestCase):
                     'keyValue': "yale"
                 }))
         job_ref = models.ExtendedJobParameter(**job.__dict__)
-        utils.expand_application_template(job, self._deserialize)
+        template_utils.expand_application_template(job, self._deserialize)
         self.assertIsNone(job.application_template_info)
         self.assertEqual(job.job_manager_task.resource_files[1].file_path,
                          job_ref.application_template_info.parameters['blobName'])
@@ -1098,7 +1098,7 @@ class TestBatchExtensions(unittest.TestCase):
                     'keyValue': "yale"
                 }))
         with self.assertRaises(ValueError) as ve:
-            utils.expand_application_template(job, self._deserialize)
+            template_utils.expand_application_template(job, self._deserialize)
         self.assertIn('blobName', ve.exception.args[0],
                       'Expect parameter \'blobName\' to be mentioned')
 
@@ -1106,21 +1106,21 @@ class TestBatchExtensions(unittest.TestCase):
         job = models.ExtendedJobParameter("importantjob", None,
             priority=500,
             application_template_info=models.ApplicationTemplateInfo(self.static_apptemplate_path))
-        utils.expand_application_template(job, self._deserialize)
+        template_utils.expand_application_template(job, self._deserialize)
         self.assertIsNone(job.application_template_info)
 
         # should not copy templateMetadata to the expanded job
         job = models.ExtendedJobParameter("importantjob", None,
             priority=500,
             application_template_info=models.ApplicationTemplateInfo(self.static_apptemplate_path))
-        utils.expand_application_template(job, self._deserialize)
+        template_utils.expand_application_template(job, self._deserialize)
         self.assertFalse(hasattr(job, 'template_metadata'))
 
         # should not have a parameters property on the expanded job
         job = models.ExtendedJobParameter("importantjob", None,
             priority=500,
             application_template_info=models.ApplicationTemplateInfo(self.static_apptemplate_path))
-        utils.expand_application_template(job, self._deserialize)
+        template_utils.expand_application_template(job, self._deserialize)
         self.assertFalse(hasattr(job, 'parameters'))
 
         # should throw error if application template specifies \'id\' property
@@ -1129,7 +1129,7 @@ class TestBatchExtensions(unittest.TestCase):
         job = models.ExtendedJobParameter("jobid", None,
             application_template_info=models.ApplicationTemplateInfo(templateFilePath))
         with self.assertRaises(ValueError) as ve:
-            utils.expand_application_template(job, self._deserialize)
+            template_utils.expand_application_template(job, self._deserialize)
         self.assertIn('id', ve.exception.args[0], 'Expect property \'id\' to be mentioned')
 
         # should throw error if application template specifies \'poolInfo\' property
@@ -1138,7 +1138,7 @@ class TestBatchExtensions(unittest.TestCase):
         job = models.ExtendedJobParameter("jobid", None,
             application_template_info=models.ApplicationTemplateInfo(templateFilePath))
         with self.assertRaises(ValueError) as ve:
-            utils.expand_application_template(job, self._deserialize)
+            template_utils.expand_application_template(job, self._deserialize)
         self.assertIn('poolInfo', ve.exception.args[0],
                       'Expect property \'poolInfo\' to be mentioned')
 
@@ -1148,7 +1148,7 @@ class TestBatchExtensions(unittest.TestCase):
         job = models.ExtendedJobParameter("jobid", None,
             application_template_info=models.ApplicationTemplateInfo(templateFilePath))
         with self.assertRaises(ValueError) as ve:
-            utils.expand_application_template(job, self._deserialize)
+            template_utils.expand_application_template(job, self._deserialize)
         self.assertIn('applicationTemplateInfo', ve.exception.args[0],
                       'Expect property \'applicationTemplateInfo\' to be mentioned')
 
@@ -1158,7 +1158,7 @@ class TestBatchExtensions(unittest.TestCase):
         job = models.ExtendedJobParameter("jobid", None,
             application_template_info=models.ApplicationTemplateInfo(templateFilePath))
         with self.assertRaises(ValueError) as ve:
-            utils.expand_application_template(job, self._deserialize)
+            template_utils.expand_application_template(job, self._deserialize)
         self.assertIn('priority', ve.exception.args[0],
                       'Expect property \'priority\' to be mentioned')
 
@@ -1168,7 +1168,7 @@ class TestBatchExtensions(unittest.TestCase):
         job = models.ExtendedJobParameter("jobid", None,
             application_template_info=models.ApplicationTemplateInfo(templateFilePath))
         with self.assertRaises(ValueError) as ve:
-            utils.expand_application_template(job, self._deserialize)
+            template_utils.expand_application_template(job, self._deserialize)
         self.assertIn('fluxCapacitorModel', ve.exception.args[0],
                       'Expect property \'fluxCapacitorModel\' to be mentioned')
 
@@ -1183,7 +1183,7 @@ class TestBatchExtensions(unittest.TestCase):
                     'keyValue': 'yale'
                 }))
         
-        utils.expand_application_template(job, self._deserialize)
+        template_utils.expand_application_template(job, self._deserialize)
         self.assertTrue(job.metadata)
         self.assertTrue([m for m in job.metadata if m.name=='author' and m.value=='batman'])
 
@@ -1198,7 +1198,7 @@ class TestBatchExtensions(unittest.TestCase):
                     'keyValue': 'yale'
                 }))
         
-        utils.expand_application_template(job, self._deserialize)
+        template_utils.expand_application_template(job, self._deserialize)
         self.assertTrue(job.metadata)
         self.assertTrue([m for m in job.metadata if m.name=='myproperty' and m.value=='yale'])
 
@@ -1206,7 +1206,7 @@ class TestBatchExtensions(unittest.TestCase):
         job = models.ExtendedJobParameter("importantjob", None,
             priority=500,
             application_template_info=models.ApplicationTemplateInfo(self.static_apptemplate_path))
-        utils.expand_application_template(job, self._deserialize)
+        template_utils.expand_application_template(job, self._deserialize)
         self.assertTrue(job.metadata)
         self.assertTrue([m for m in job.metadata 
                          if m.name=='az_batch:template_filepath' and m.value==self.static_apptemplate_path])
@@ -1219,7 +1219,7 @@ class TestBatchExtensions(unittest.TestCase):
                 self.static_apptemplate_path))
 
         with self.assertRaises(ValueError) as ve:
-            utils.expand_application_template(job, self._deserialize)
+            template_utils.expand_application_template(job, self._deserialize)
         self.assertIn('az_batch:property', ve.exception.args[0],
                       'Expect metadata \'az_batch:property\' to be mentioned')
 
@@ -1233,7 +1233,7 @@ class TestBatchExtensions(unittest.TestCase):
             }
         }
         with self.assertRaises(ValueError) as ve:
-            utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
+            template_utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
         self.assertIn('name', ve.exception.args[0],
                       'Expect parameter \'name\' to be mentioned')
 
@@ -1248,7 +1248,7 @@ class TestBatchExtensions(unittest.TestCase):
             }
         }
         with self.assertRaises(ValueError) as ve:
-            utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
+            template_utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
         self.assertIn('age', ve.exception.args[0],
                       'Expect parameter \'age\' to be mentioned')
 
@@ -1261,7 +1261,7 @@ class TestBatchExtensions(unittest.TestCase):
                 'defaultValue': 11
             }
         }
-        utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
+        template_utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
 
         # should not throw an error if the default value provided for an int
         # parameter is not an integer
@@ -1273,7 +1273,7 @@ class TestBatchExtensions(unittest.TestCase):
             }
         }
         with self.assertRaises(ValueError) as ve:
-            utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
+            template_utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
         self.assertIn('age', ve.exception.args[0], 'Expect parameter \'age\' to be mentioned')
 
         # should throw an error if the value provided for an bool parameter is
@@ -1287,7 +1287,7 @@ class TestBatchExtensions(unittest.TestCase):
             }
         }
         with self.assertRaises(ValueError) as ve:
-            utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
+            template_utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
         self.assertIn('isMember', ve.exception.args[0],
                       'Expect parameter \'isMember\' to be mentioned')
 
@@ -1303,7 +1303,7 @@ class TestBatchExtensions(unittest.TestCase):
             }
         }
         with self.assertRaises(ValueError) as ve:
-            utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
+            template_utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
         self.assertIn('membership', ve.exception.args[0],
                       'Expect parameter \'membership\' to be mentioned')
 
@@ -1311,7 +1311,7 @@ class TestBatchExtensions(unittest.TestCase):
         # parameters
         parameters = None
         definitions = None
-        utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
+        template_utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
         # Pass implied by no Error
 
         # should accept having no job parameters if all template parameters
@@ -1323,7 +1323,7 @@ class TestBatchExtensions(unittest.TestCase):
                 'defaultValue': 'peasant'
             }
         }
-        utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
+        template_utils._validate_parameter_usage(parameters, definitions)  # pylint: disable=protected-access
         # Pass implied by no Error
 
         # should throw an error if a parameter does not declare a specific type
@@ -1333,7 +1333,7 @@ class TestBatchExtensions(unittest.TestCase):
             }
         }
         with self.assertRaises(ValueError) as ve:
-            utils._validate_parameter_usage(None, definitions)  # pylint: disable=protected-access
+            template_utils._validate_parameter_usage(None, definitions)  # pylint: disable=protected-access
         self.assertIn('name', ve.exception.args[0],
                       'Expect parameter \'name\' to be mentioned')
 
@@ -1346,7 +1346,7 @@ class TestBatchExtensions(unittest.TestCase):
             }
         }
         with self.assertRaises(ValueError) as ve:
-            utils._validate_parameter_usage(None, definitions)  # pylint: disable=protected-access
+            template_utils._validate_parameter_usage(None, definitions)  # pylint: disable=protected-access
         self.assertIn('name', ve.exception.args[0],
                       'Expect parameter \'name\' to be mentioned')
 
