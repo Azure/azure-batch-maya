@@ -54,6 +54,12 @@ In order to retrieve this information:
 - [Managing Pools](./docs/submitting_jobs.md#managing-pools)
 - [Monitoring jobs](./docs/submitting_jobs.md#monitoring-jobs)
 
+
+## Supported Maya Versions
+Earlier versions of the code and releases were supported on Maya2017-Update3 only. 
+
+Release v0.14.0 adds support for Maya2017-Update4 and Maya2018.
+
 ## License
 
 This project is licensed under the MIT License.
