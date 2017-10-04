@@ -59,8 +59,7 @@ class AzureBatchPools(object):
         all_pools = self._call(self.batch.pool.list)
         self.pools = []
         for pool in all_pools:
-            if pool.virtual_machine_configuration and \
-                    pool.virtual_machine_configuration.image_reference.publisher == 'batch':
+            if pool.virtual_machine_configuration:
                 self.pools.append(pool)
         self.pools.sort(key=lambda x: x.creation_time, reverse=True)
         self.count = len(self.pools)
