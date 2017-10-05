@@ -4,11 +4,9 @@
 # --------------------------------------------------------------------------------------------
 
 try:
-    print "Importing maya"
     from maya import cmds, mel, utils
     import maya.OpenMaya as om
     import maya.OpenMayaMPx as omp
-    print "Imported maya"
 except ImportError:
     print("No maya module found.")
 import os

@@ -127,6 +127,10 @@
           "value": "/mnt/resource/batch/tasks/workitems/[parameters('outputs')]/job-1/jobpreparation/wd/scripts"
         },
         {
+          "name": "LANG",
+          "value": "en_US.iso88591"
+        },
+        {
           "name": "FLEXLM_TIMEOUT",
           "value": "5000000"
         }

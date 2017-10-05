@@ -3,6 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 
+from __future__ import unicode_literals
+
 import os
 import sys
 import gzip
@@ -11,6 +13,11 @@ import json
 from maya import cmds, mel
 
 from default import AzureBatchRenderJob, AzureBatchRenderAssets
+
+try:
+    str = unicode
+except NameError:
+    pass
 
 
 class AzureBatchMayaJob(AzureBatchRenderJob):

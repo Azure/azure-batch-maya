@@ -4,6 +4,8 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 
+from __future__ import unicode_literals
+
 import webbrowser
 import ConfigParser
 import time
@@ -12,6 +14,10 @@ import os
 import re
 import threading
 
+try:
+    str = unicode
+except NameError:
+    pass
 batch_client = None
 storage_client = None
 header_line_length = 50
@@ -151,15 +157,16 @@ def _authenticate(cfg_path):
 
 if __name__ == "__main__":
     try:
-        sys.path.append(sys.argv[4])
-        print("Appending path {0}".format(sys.argv[4]))
+        lib_path = sys.argv[4].decode('utf-8')
+        sys.path.append(lib_path)
+        print("Appending path {0}".format(lib_path))
 
         import azure.storage.blob as storage
         import azure.batch_extensions as batch
         from azure.batch.batch_auth import SharedKeyCredentials
-        data_path = sys.argv[1]
+        data_path = sys.argv[1].decode('utf-8')
         job_id = sys.argv[2]
-        download_dir = sys.argv[3]
+        download_dir = sys.argv[3].decode('utf-8')
 
         _check_valid_dir(download_dir)
         _authenticate(data_path) 

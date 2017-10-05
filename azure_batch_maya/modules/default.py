@@ -3,9 +3,16 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 
+from __future__ import unicode_literals
+
 import os
 
 from maya import cmds, mel
+
+try:
+    str = unicode
+except NameError:
+    pass
 
 
 class AzureBatchRenderJob(object):

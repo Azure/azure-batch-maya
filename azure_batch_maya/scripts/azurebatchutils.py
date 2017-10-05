@@ -7,7 +7,6 @@ from enum import Enum
 import os
 import logging
 import platform
-import pathlib
 
 from azurebatchmayaapi import MayaAPI as maya
 from exception import CancellationException, FileUploadException
@@ -94,6 +93,21 @@ def get_os():
     :returns: The OS platform (str).
     """
     return platform.system()
+
+
+def is_windows():
+    """Check whether Maya is currently running
+    on Windows.
+    :returns: bool.
+    """
+    return get_os() == 'Windows'
+
+
+def get_root_dir():
+    """Get the project root directory - by default relative paths in Maya
+    should be relative to this directory.
+    """
+    return maya.workspace(query=True, rootDirectory=True)
 
 
 class OperatingSystem(Enum):
@@ -458,7 +472,7 @@ class JobWatcher(object):
                 maya.warning("Existing process running with current job ID. "
                              "Job watching already in action.")
         except Exception as e:
-            maya.warning(e)
+            maya.warning(str(e))
 
     def check_existing_process(self):
         """Check whether a job watcher for the specified job is already running.
@@ -494,8 +508,8 @@ class JobWatcher(object):
         """
         prepared_args = []
         for arg in args:
-            arg = os.path.normpath(arg).replace('\\', '\\\\')
-            prepared_args.append(self.quotes + str(arg) + self.quotes)
+            arg = os.path.normpath(arg).replace('\\', '\\\\').encode('utf-8')
+            prepared_args.append(self.quotes + arg + self.quotes)
         self._log.debug("Cleaned up commandline arguments: {0}, {1}, "
                         "{2}, {3}, {4}".format(*prepared_args))
         return prepared_args

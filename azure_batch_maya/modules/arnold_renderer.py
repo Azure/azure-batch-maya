@@ -3,6 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 
+from __future__ import unicode_literals
+
 import os
 import sys
 import gzip
@@ -14,6 +16,11 @@ import maya.OpenMaya as om
 import maya.OpenMayaMPx as omp
 
 from default import AzureBatchRenderJob, AzureBatchRenderAssets
+
+try:
+    str = unicode
+except NameError:
+    pass
 
 
 class ArnoldRenderJob(AzureBatchRenderJob):

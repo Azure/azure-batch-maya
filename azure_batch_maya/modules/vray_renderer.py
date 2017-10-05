@@ -3,6 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 
+from __future__ import unicode_literals
+
 from maya import mel, cmds
 import maya.OpenMaya as om
 import maya.OpenMayaMPx as omp
@@ -14,6 +16,11 @@ import glob
 import tempfile
 
 from default import AzureBatchRenderJob, AzureBatchRenderAssets
+
+try:
+    str = unicode
+except NameError:
+    pass
 
 
 class VrayRenderJob(AzureBatchRenderJob):
