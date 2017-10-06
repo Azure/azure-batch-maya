@@ -30,22 +30,6 @@ MAYA_IMAGES = {
             'sku': 'rendering',
             'version': 'latest'
         },
-    'Windows 2016 (Preview)':
-        {
-            'node_sku_id': 'batch.node.windows amd64',
-            'publisher': 'batch',
-            'offer': 'rendering-windows2016-preview',
-            'sku': 'rendering',
-            'version': 'latest'
-        },
-    'Centos 73 (Preview)':
-        {
-            'node_sku_id': 'batch.node.centos 7',
-            'publisher': 'batch',
-            'offer': 'rendering-centos73-preview',
-            'sku': 'rendering',
-            'version': 'latest'
-        },
 }
 LICENSES = [
     {'label': 'Maya', 'id': 'maya', 'plugin': None },
