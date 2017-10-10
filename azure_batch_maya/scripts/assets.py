@@ -666,14 +666,10 @@ class Asset(object):
         asset list.
         """
         for file_ref in files:
-            try:
-                if os.path.samefile(file_ref.path, self.path):
-                    return True
-            except OSError:
-                this_path = self.path.lower() if utils.is_windows() else self.path
-                ref_path = file_ref.path.lower() if utils.is_windows() else file_ref.path
-                if this_path == ref_path:
-                    return True
+            this_path = self.path.lower() if utils.is_windows() else self.path
+            ref_path = file_ref.path.lower() if utils.is_windows() else file_ref.path
+            if this_path == ref_path:
+                return True
         return False
 
     def restore_label(self):
