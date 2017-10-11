@@ -163,7 +163,7 @@ class EnvironmentUI(object):
                 self.env_vars, cellIndex=(row, 1), query=True, cellValue=True)
             row_val = maya.table(
                 self.env_vars, cellIndex=(row, 2), query=True, cellValue=True)
-            vars[str(row_key[0])] = str(row_val[0])
+            vars[row_key[0]] = row_val[0]
         return vars
 
     def use_license_server(self, enabled):

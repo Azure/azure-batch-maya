@@ -3,6 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 
+from __future__ import unicode_literals
+
 import os
 import logging
 import uuid
@@ -13,7 +15,6 @@ from azure.batch import models
 import azurebatchutils
 from azurebatchmayaapi import MayaAPI as maya
 from ui_pools import PoolsUI
-
 
 
 class AzureBatchPools(object):

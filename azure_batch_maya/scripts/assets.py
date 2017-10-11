@@ -3,6 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 
+from __future__ import unicode_literals
+
 import logging
 from datetime import datetime
 import threading
@@ -13,7 +15,7 @@ import pkgutil
 import inspect
 import importlib
 import tempfile
-import pathlib
+import re
 from Queue import Queue
 
 from azure.batch_extensions import _file_utils as fileutils
@@ -32,6 +34,10 @@ from default import AzureBatchRenderAssets
 SYS_SEARCHPATHS = []
 USR_SEARCHPATHS = []
 BYTES = 1024
+try:
+    str = unicode
+except NameError:
+    pass
 
 
 class AzureBatchAssets(object):
@@ -108,7 +114,7 @@ class AzureBatchAssets(object):
         scene = os.path.abspath(maya.file(q=True, sn=True))
         if ((scene.endswith('.mb')) or (scene.endswith('.ma'))) and (os.path.exists(scene)):
             SYS_SEARCHPATHS.append(os.path.dirname(scene))
-        proj = maya.workspace(query=True, rootDirectory=True)
+        proj = utils.get_root_dir()
         SYS_SEARCHPATHS.append(proj)
         SYS_SEARCHPATHS.append(os.path.join(proj, "sourceimages"))
         SYS_SEARCHPATHS.append(maya.workspace(query=True, directory=True))
@@ -166,7 +172,8 @@ class AzureBatchAssets(object):
                     full_remote_path = "X:\\\\" + remote_path
                 else:
                     full_remote_path = "/X/" + remote_path
-                handle.write("workspace -fr \"{}\" \"{}\";\n".format(rule, full_remote_path))
+                mapped_dir = "workspace -fr \"{}\" \"{}\";\n".format(rule, full_remote_path)
+                handle.write(mapped_dir.encode('utf-8'))
         return Asset(proj_file, [], self.batch, self._log)
 
     def _create_path_map(self, plugins, os_flavor):
@@ -188,7 +195,7 @@ class AzureBatchAssets(object):
             handle.write("{\n")
             if plugins:
                 for plugin in plugins:
-                    handle.write("loadPlugin \"{}\";\n".format(plugin))
+                    handle.write("loadPlugin \"{}\";\n".format(plugin.encode('utf-8')))
             handle.write("dirmap -en true;\n")
             for local, remote in pathmap.items():
                 if os_flavor == utils.OperatingSystem.windows:
@@ -196,7 +203,8 @@ class AzureBatchAssets(object):
                 else:
                     full_remote_path = "/X/" + remote(os_flavor)
                 parsed_local = local.replace('\\', '\\\\')
-                handle.write("dirmap -m \"{}\" \"{}\";\n".format(parsed_local, full_remote_path))
+                map_cmd = "dirmap -m \"{}\" \"{}\";\n".format(parsed_local, full_remote_path)
+                handle.write(map_cmd.encode('utf-8'))
             handle.write("}")
         return Asset(map_file, [], self.batch, self._log)
 
@@ -283,7 +291,12 @@ class AzureBatchAssets(object):
         group.
         """
         project_path = maya.workspace(query=True, fullName=True)
-        return project_path.split('/')[-1]
+        name = project_path.split('/')[-1]
+        # Make lower case
+        name = name.lower()
+        # Remove any chars that aren't 'a-z', '0-9' or '-'
+        name = re.sub(r'\W+', '', name)
+        return name
 
     def get_assets(self):
         """Returns the current asset references for display. Called by the UI
@@ -373,6 +386,8 @@ class AzureBatchAssets(object):
         finally:
             # If part of job submission, errors and progress bar
             # will be handled back in submission.py
+            for index, asset in enumerate(asset_refs):
+                asset.restore_label()
             if not job_set:
                 progress_bar.end()
             self.ui.upload_button.finish()
@@ -561,7 +576,9 @@ class Asset(object):
 
     def __init__(self, filepath, parent, batch, log=None):
         self.batch = batch
-        self.path = os.path.normpath(filepath)
+        if not os.path.isabs(filepath):
+            filepath = os.path.join(utils.get_root_dir(), filepath)
+        self.path = os.path.realpath(os.path.normpath(filepath))
         self.label = "    {0}".format(os.path.basename(self.path))
         self.exists = os.path.exists(self.path)
         self.lastmodified = datetime.fromtimestamp(os.path.getmtime(self.path)) if self.exists else None
@@ -648,13 +665,19 @@ class Asset(object):
         """Check whether this file is already represented in the current
         asset list.
         """
-        return any(pathlib.Path(f.path) == pathlib.Path(self.path) for f in files)
+        for file_ref in files:
+            this_path = self.path.lower() if utils.is_windows() else self.path
+            ref_path = file_ref.path.lower() if utils.is_windows() else file_ref.path
+            if this_path == ref_path:
+                return True
+        return False
 
     def restore_label(self):
         """Restore the original UI display label after the file has been
         uploaded.
         """
-        maya.text(self.display_text, edit=True, label=self.label)
+        if self.display_text:
+            maya.text(self.display_text, edit=True, label=self.label)
 
     def make_visible(self, index):
         """Attempt to auto-scroll the asset display list so that the progress of
@@ -711,9 +734,9 @@ class Asset(object):
                     self.display_text, edit=True,
                     label="    Uploading 100% {0}".format(name)))
                 queue.put(maya.refresh)
-        self.log.debug("Finished asset upload: {}".format(self.path))
-        queue.put(self.restore_label)
-        queue.put(self.size)
+        finally:
+            self.log.debug("Finished asset upload: {}".format(self.path))
+            queue.put(self.size)
 
 
 class UploadProgress(object):

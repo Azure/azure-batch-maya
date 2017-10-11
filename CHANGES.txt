@@ -1,8 +1,32 @@
-2017-08-?? v0.11.0
+
+(unreleased) v0.15.0
+--------------------
+- Updated dependencies azure-batch (4.0.0) and azure-batch-extensions (1.0.0)
+- Better support for unicode
+
+2017-09-26 v0.14.0
+------------------
+- Support for Maya2017 Update4 and tentatively for Maya2018
+- Fix for crash when "threads" option is missing from config .ini file
+- Various test and .sln level fixes
+
+
+2017-09-14 v0.13.0
+------------------
+- Fix incorrect dependency install type for concurrent.futures
+
+
+2017-09-10 v0.12.0
+------------------
+- VRay Preview support in license picker for pools, Batch accounts will require whitelisting
+
+
+2017-09-07 v0.11.0
 ------------------
 - Support for V-ray for Maya
 - Dependency on new Batch Extensions module
 - Fixed asset file limitation
+
 
 2017-07-05 v0.10.0
 ------------------
