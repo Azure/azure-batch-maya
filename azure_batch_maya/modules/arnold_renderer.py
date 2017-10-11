@@ -123,7 +123,7 @@ class ArnoldRenderAssets(AzureBatchRenderAssets):
             - A single '#' character can represent multiple digits.
         """
         if '#' in path:
-            return self.replace_pattern('[0-9]*', path)
+            return self.replace_pattern.sub('[0-9]*', path)
         elif '<udim>' in path:
             return path.replace('<udim>', '[0-9][0-9][0-9][0-9]')
         elif '<tile>' in path:
