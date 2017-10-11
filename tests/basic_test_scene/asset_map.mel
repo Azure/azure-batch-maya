@@ -1,0 +1,4 @@
+global proc renderPrep()
+{
+dirmap -en true;
+}

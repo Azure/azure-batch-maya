@@ -71,10 +71,18 @@ def format_scene_path(scene_file, os_flavor):
     be on the render node.
     """
     scene_path = get_remote_file_path(scene_file)(os_flavor)
-    if os_flavor == OperatingSystem.windows:
-        return "X:\\\\" + scene_path + '\\\\' + os.path.basename(scene_file)
+    if  os_flavor == OperatingSystem.windows:
+        path = "X:\\\\" 
+        if scene_path:
+            path += scene_path + '\\\\'
+        path += os.path.basename(scene_file)
+        return path
     else:
-        return "/X/" + scene_path + '/' + os.path.basename(scene_file)
+        path = "/X/"
+        if scene_path:
+            path += scene_path + '/' 
+        path += os.path.basename(scene_file)
+        return path
 
 
 def get_default_output_path():
