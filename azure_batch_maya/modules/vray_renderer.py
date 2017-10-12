@@ -130,8 +130,9 @@ class VrayRenderAssets(AzureBatchRenderAssets):
             nodes = cmds.ls(type=node_type)
             for node in nodes:
                 for attr in attributes:
-                    collected.append(cmds.getAttr(node + "." + attr))
-
+                    path = cmds.getAttr(node + '.' + attr)
+                    if path:
+                        collected.append(path)
         for path in collected:
             self.assets.append(self.check_path(path))
         return self.assets
