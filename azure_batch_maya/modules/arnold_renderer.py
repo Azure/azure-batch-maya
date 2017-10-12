@@ -8,8 +8,8 @@ from __future__ import unicode_literals
 import os
 import sys
 import gzip
-import glob
 import json
+import re
 
 from maya import mel, cmds
 import maya.OpenMaya as om
@@ -102,16 +102,28 @@ class ArnoldRenderAssets(AzureBatchRenderAssets):
 
     assets = []
     render_engine = 'arnold'
+    replace_pattern = re.compile(r'#+')
     file_nodes = {
         'aiStandIn': ['dso'],
         'aiPhotometricLight': ['aiFilename'],
-        'aiVolume': ['dso', 'filename'],
+        'aiVolume': ['filename'],
         'aiImage': ['filename']
     }
 
     def check_path(self, path):
+        """
+        TODO: The pattern replacements are currently not strict enough,
+        for example:
+            'test.#.png' will match test.1.png, test.1001.png, test.1test.png, test.9.9.test.png
+            when we only want to match test.1.png and test.1001.png.
+        We need to replace with a proper regex match as glob is insufficient.
+        Other assumptions:
+            - Asset patterns will ONLY occur in the filename, not the path.
+            - A UDIM reference will always be 4 digits.
+            - A single '#' character can represent multiple digits.
+        """
         if '#' in path:
-            return path.replace('#', '[0-9]')
+            return self.replace_pattern.sub('[0-9]*', path)
         elif '<udim>' in path:
             return path.replace('<udim>', '[0-9][0-9][0-9][0-9]')
         elif '<tile>' in path:
