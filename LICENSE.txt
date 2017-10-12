@@ -1,5 +1,5 @@
 
-The Azure Batch Maya Sample ver. 0.15.0
+The Azure Batch Maya Sample
 
 Copyright (c) Microsoft Corporation
 All rights reserved. 

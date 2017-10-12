@@ -1,8 +1,13 @@
 
-(unreleased) v0.15.0
+2017.10.12 v0.15.0
 --------------------
-- Updated dependencies azure-batch (4.0.0) and azure-batch-extensions (1.0.0)
+- Updated dependencies azure-batch (4.0.0) and azure-batch-extensions (1.0.1)
 - Better support for unicode
+- Some fixes for render-specific asset detection:
+    - Filter out empty path references
+    - Correctly detect numbered volume cache data sets
+    - Removed older Arnold 'dso' volume reference
+
 
 2017-09-26 v0.14.0
 ------------------

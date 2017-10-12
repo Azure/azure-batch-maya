@@ -32,7 +32,20 @@ import subprocess
 import shutil
 import zipfile
 
-VERSION = "0.15.0"
+
+def find_version():
+    root_dir = os.path.dirname(os.path.realpath(__file__))
+    plugin_path = os.path.join(root_dir, 'azure_batch_maya', 'plug-in', 'AzureBatch.py')
+    plugin_version = ""
+    with open(plugin_path, 'r') as plugin_file:
+        for line in plugin_file:
+            if line.startswith('VERSION ='):
+                plugin_version = line[9:].strip('\n" \'')
+                break
+    if not plugin_version:
+        raise ValueError("Couldn't detect plugin version from {}".format(plugin_file))
+    return plugin_version
+
 
 def main():
     """Build Maya Plug-in package"""
@@ -47,7 +60,8 @@ def main():
             print("Cannot create build dir at path: {0}".format(package_dir))
             return
 
-    package = os.path.join(package_dir, "AzureBatch_Maya_Plugin-v{0}.zip".format(VERSION))
+    version = find_version()
+    package = os.path.join(package_dir, "AzureBatch_Maya_Plugin-v{0}.zip".format(version))
     source = os.path.abspath("azure_batch_maya")
 
     with zipfile.ZipFile(package, mode='w') as maya_zip:
