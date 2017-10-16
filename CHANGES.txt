@@ -1,6 +1,11 @@
 
+2017.10.16 v0.15.1
+------------------
+- Added back pathlib dependency that was mistakenly removed.
+
+
 2017.10.12 v0.15.0
---------------------
+------------------
 - Updated dependencies azure-batch (4.0.0) and azure-batch-extensions (1.0.1)
 - Better support for unicode
 - Some fixes for render-specific asset detection:
