@@ -263,13 +263,14 @@ class AzureBatchSubmission(object):
             self.ui.submit_status("Checking assets...")
             scene_file, renderer_data = self.renderer.get_jobdata()
             application_params['sceneFile'] = utils.format_scene_path(scene_file, pool_os)
-            file_group, map_url, thumb_url, workspace_url, progress = self.asset_manager.upload(
+            job_assets, progress = self.asset_manager.upload(
                 renderer_data, progress, job_id, plugins, pool_os)
-            application_params['projectData'] = file_group
-            application_params['assetScript'] = map_url
-            application_params['thumbScript'] = thumb_url
-            application_params['workspace'] = workspace_url
-            application_params['storageURL'] = self.asset_manager.generate_sas_token(file_group)
+
+            application_params['projectData'] = job_assets['project']
+            application_params['assetScript'] = job_assets['path_map']
+            application_params['thumbScript'] = job_assets['thumb_script']
+            application_params['workspace'] = job_assets['workspace']
+            application_params['storageURL'] = self.asset_manager.generate_sas_token(job_assets['project'])
             self._switch_tab()
 
             self.ui.submit_status("Configuring job...")
@@ -282,6 +283,9 @@ class AzureBatchSubmission(object):
             pool = self._configure_pool(self.renderer.get_title())
             batch_parameters['poolInfo'] = pool
             batch_parameters['commonEnvironmentSettings'] = self.env_manager.get_environment_settings()
+
+            self.ui.submit_status("Final renderer configuration...")
+            self.renderer.final_setup(batch_parameters, job_assets)
             
             self._log.debug(json.dumps(batch_parameters))
             new_job = self.batch.job.jobparameter_from_json(batch_parameters)

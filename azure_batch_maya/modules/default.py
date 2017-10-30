@@ -168,6 +168,9 @@ class AzureBatchRenderJob(object):
         if not output:
             return None
         cmds.textFieldButtonGrp(k, edit=True, text=str(output[0]))
+    
+    def final_setup(self, job_data, asset_data):
+        pass
 
 
 class AzureBatchRenderAssets(object):
@@ -177,3 +180,6 @@ class AzureBatchRenderAssets(object):
 
     def renderer_assets(self):
         return self.assets
+
+    def setup_script(self, script_handle, pathmap, searchpaths):
+        pass

@@ -87,6 +87,10 @@ class VrayRenderJob(AzureBatchRenderJob):
         params['frameStep'] = cmds.intField(self.step, query=True, value=True)
         params['renderer'] = self._renderer
         return params
+    
+    def final_setup(self, job_data, asset_data):
+        job_data['commonEnvironmentSettings'].append(
+            {'name': 'VRAY_ASSETS_PATH', 'value': asset_data['search_paths']})
 
 
 class VrayRenderAssets(AzureBatchRenderAssets):
