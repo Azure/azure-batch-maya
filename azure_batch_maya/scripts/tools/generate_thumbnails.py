@@ -11,6 +11,7 @@ SUPPORTED_FORMATS =  { ".png", ".bmp", ".jpg", ".tga", ".exr", ".jpeg" }
 
 if __name__ == '__main__':
     try:
+        cwd = os.getcwd()
         thumb_dir = os.path.join(cwd, 'thumbs')
         if not os.path.isdir(thumb_dir):
             print("Creating directory for thumbnail output.")
@@ -18,7 +19,7 @@ if __name__ == '__main__':
         
         render_exit_code = int(sys.argv[1])
         print("Render process exited with code: {}".format(render_exit_code))
-        cwd = os.getcwd()
+        
         job_outputs = os.path.join(cwd, 'images')
         if not os.path.isdir(job_outputs):
             raise Exception("Unable to locate output directory: {}".format(job_outputs))
