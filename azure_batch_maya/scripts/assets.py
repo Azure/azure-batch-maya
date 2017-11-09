@@ -180,6 +180,8 @@ class AzureBatchAssets(object):
         """Create the pre-render mel script to redirect all the asset reference
         directories for this render. Called on job submission, and the resulting
         file is uploaded as an asset to the current file group.
+        Also returns a formatted list of cloud destination directories as
+        search paths that can be used according to renderer.
 
         :param plugins: A list of the currently enabled plugins, so that these can
          also be enabled on the server.
@@ -190,6 +192,7 @@ class AzureBatchAssets(object):
         pathmap = dict(self._assets.pathmaps)
         for asset in self._assets.refs:
             pathmap.update(asset.pathmap)
+        cloud_paths = []
         with open(map_file, 'w') as handle:
             handle.write("global proc renderPrep()\n")
             handle.write("{\n")
@@ -203,10 +206,12 @@ class AzureBatchAssets(object):
                 else:
                     full_remote_path = "/X/" + remote(os_flavor)
                 parsed_local = local.replace('\\', '\\\\')
+                cloud_paths.append(full_remote_path)
                 map_cmd = "dirmap -m \"{}\" \"{}\";\n".format(parsed_local, full_remote_path)
                 handle.write(map_cmd.encode('utf-8'))
+            self.renderer.setup_script(handle, pathmap, cloud_paths)
             handle.write("}")
-        return Asset(map_file, [], self.batch, self._log)
+        return Asset(map_file, [], self.batch, self._log), ';'.join(cloud_paths)
 
     def _upload_all(self, to_upload, progress, total, project):
         """Upload all selected assets in configured number of threads."""
@@ -337,6 +342,7 @@ class AzureBatchAssets(object):
         :param os_flavor: The OS flavor of the rendering pool. Only set as part of the job
          submission process.
         """
+        asset_data = {}
         try:
             if not job_set:
                 progress_bar = ProgressBar(self._log)
@@ -349,12 +355,13 @@ class AzureBatchAssets(object):
             if job_set:
                 self._log.debug("Preparing job specific assets")
                 job_assets = [Asset(j, None, self.batch, self._log) for j in job_set]
-                path_map = self._create_path_map(load_plugins, os_flavor)
+                path_map, search_paths = self._create_path_map(load_plugins, os_flavor)
                 thumb_script = Asset(os.path.join(os.environ['AZUREBATCH_TOOLS'], 'generate_thumbnails.py'),
                                      [], self.batch, self._log)
                 workspace = self._create_remote_workspace(os_flavor)
                 asset_refs.extend(job_assets)
                 asset_refs.extend([path_map, thumb_script, workspace])
+                asset_data['search_paths'] = search_paths
 
             progress_bar.is_cancelled()
             progress_bar.status('Uploading files...')
@@ -365,11 +372,13 @@ class AzureBatchAssets(object):
             payload = self._total_data(asset_refs)
             self.ui.upload_status("Uploading {0}...".format(self._format_size(payload)))
             maya.refresh()
-            asset_project = self.ui.get_project()
-            self._upload_all(asset_refs, progress_bar, payload, asset_project)
+            asset_data['project'] = self.ui.get_project()
+            self._upload_all(asset_refs, progress_bar, payload, asset_data['project'])
             if job_set:
-                return asset_project, path_map.get_url(asset_project), thumb_script.get_url(asset_project), \
-                    workspace.get_url(asset_project), progress_bar
+                asset_data['path_map'] = path_map.get_url(asset_data['project'])
+                asset_data['thumb_script'] = thumb_script.get_url(asset_data['project'])
+                asset_data['workspace'] = workspace.get_url(asset_data['project'])
+                return asset_data, progress_bar
             else:
                 return None
 

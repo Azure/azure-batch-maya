@@ -11,9 +11,15 @@ SUPPORTED_FORMATS =  { ".png", ".bmp", ".jpg", ".tga", ".exr", ".jpeg" }
 
 if __name__ == '__main__':
     try:
+        cwd = os.getcwd()
+        thumb_dir = os.path.join(cwd, 'thumbs')
+        if not os.path.isdir(thumb_dir):
+            print("Creating directory for thumbnail output.")
+            os.makedirs(thumb_dir)
+        
         render_exit_code = int(sys.argv[1])
         print("Render process exited with code: {}".format(render_exit_code))
-        cwd = os.getcwd()
+        
         job_outputs = os.path.join(cwd, 'images')
         if not os.path.isdir(job_outputs):
             raise Exception("Unable to locate output directory: {}".format(job_outputs))
@@ -34,11 +40,6 @@ if __name__ == '__main__':
             if beauty_pass:
                 input_file = beauty_pass[0]
         print("Using output '{}' for thumbnail generation.".format(input_file))
-
-        thumb_dir = os.path.join(cwd, 'thumbs')
-        if not os.path.isdir(thumb_dir):
-            print("Creating directory for thumbnail output.")
-            os.makedirs(thumb_dir)
 
         task_id = os.environ['AZ_BATCH_TASK_ID']
         output_file = os.path.join(thumb_dir, task_id + '_thumb.png')

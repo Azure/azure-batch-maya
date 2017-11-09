@@ -144,3 +144,20 @@ class ArnoldRenderAssets(AzureBatchRenderAssets):
         for path in collected:
             self.assets.append(self.check_path(path))
         return self.assets
+    
+    def setup_script(self, script_handle, pathmap, searchpaths):
+        search_path = ';'.join(searchpaths).encode('utf-8')
+        script_handle.write("setAttr -type \"string\" defaultArnoldRenderOptions.procedural_searchpath \"{}\";\n".format(search_path))
+        script_handle.write("setAttr -type \"string\" defaultArnoldRenderOptions.plugin_searchpath \"{}\";\n".format(search_path))
+        script_handle.write("setAttr -type \"string\" defaultArnoldRenderOptions.texture_searchpath \"{}\";\n".format(search_path))
+        
+        # This kind of explicit asset re-direct is kinda ugly - so far
+        # it only seems to be needed on aiImage nodes, which appear to
+        # be bypassed by the 'dirmap' command. We may need to extend this
+        # to other ai node types.
+        script_handle.write("$aiImageNodes = `ls -type aiImage`;\n")
+        script_handle.write("for ( $aiImageNode in $aiImageNodes ) {\n")
+        script_handle.write("string $fullname = `getAttr ($aiImageNode + \".filename\")`;\n")
+        script_handle.write("string $basename = basename($fullname, \"\");\n")
+        script_handle.write("setAttr  -type \"string\" ($aiImageNode + \".filename\") $basename;\n")
+        script_handle.write("}\n")
