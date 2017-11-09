@@ -360,9 +360,7 @@ def install_pkg(package):
         os.makedirs(INSTALL_DIR)
     pip_cmds = ['mayapy', os.path.join(INSTALL_DIR, 'pip'), 
                 'install', package, 
-                '--target', INSTALL_DIR,
-                '--index-url', 'http://pypi.python.org/simple/',
-                '--trusted-host', 'pypi.python.org']
+                '--target', INSTALL_DIR]
     print(pip_cmds)
     installer = subprocess.Popen(pip_cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     installer.wait()
@@ -386,9 +384,7 @@ def install_namespace_pkg(package, namespace):
     pip_cmds = ['mayapy', os.path.join(INSTALL_DIR, 'pip'),
                 'install', package, 
                 '--no-deps',
-                '--target', temp_target,
-                '--index-url', 'http://pypi.python.org/simple/',
-                '--trusted-host', 'pypi.python.org']
+                '--target', temp_target]
     print(pip_cmds)
     installer = subprocess.Popen(pip_cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     installer.wait()
