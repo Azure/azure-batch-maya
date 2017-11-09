@@ -1,4 +1,15 @@
 
+2017.10.16 v0.16.0
+------------------
+- Asset path redirection updates
+    Better renderer-specific control on both asset pre-render scripting and job settings
+    Fixed bug in thumbnail script where if the render fails and there's no outputs, no "thumbs" directory gets created which causes an output file upload error.
+    Better Vray file redirection by adding env variable search path list. 
+    Added back use of the pre-render MEL as the errors in this seem to be resolved in the latest releases.
+    Better Arnold file redirection by stripping full path from aiImage node paths in pre-render MEL.
+- Update pip install command to match new pypi.org format
+
+
 2017.10.16 v0.15.1
 ------------------
 - Added back pathlib dependency that was mistakenly removed.
