@@ -10,8 +10,10 @@
     <OutputPath>.</OutputPath>
     <Name>Maya.Client</Name>
     <RootNamespace>Maya.Client</RootNamespace>
-    <InterpreterId>{a76b797f-9426-4cd7-a078-9af9c9e4b437}</InterpreterId>
-    <InterpreterVersion>2.7</InterpreterVersion>
+    <InterpreterId>
+    </InterpreterId>
+    <InterpreterVersion>
+    </InterpreterVersion>
     <SearchPath>azure_batch_maya\scripts\;azure_batch_maya\scripts\ui\;tests\data\;tests\data\modules\</SearchPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -158,19 +160,6 @@
     <Content Include="requirements.txt">
       <SubType>Code</SubType>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Interpreter Include="env\">
-      <Id>{a76b797f-9426-4cd7-a078-9af9c9e4b437}</Id>
-      <BaseInterpreter>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</BaseInterpreter>
-      <Version>2.7</Version>
-      <Description>env (Python 64-bit 2.7)</Description>
-      <InterpreterPath>Scripts\python.exe</InterpreterPath>
-      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
-      <LibraryPath>Lib\</LibraryPath>
-      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
-      <Architecture>Amd64</Architecture>
-    </Interpreter>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

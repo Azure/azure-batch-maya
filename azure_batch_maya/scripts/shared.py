@@ -49,7 +49,16 @@ class AzureBatchSettings(object):
         self._log = logging.getLogger('AzureBatchMaya')
         try:
             self.frame = AzureBatchUI(self)
-            self.config = AzureBatchConfig(self.tab_index['AUTH'], self.frame, self.start)
+            self.config = AzureBatchConfig(self.tab_index['AUTH'], self, self.frame, self.start, self.call)
+        except Exception as exp:
+            if (maya.window("AzureBatch", q=1, exists=1)):
+                maya.delete_ui("AzureBatch")
+            message = "Batch Plugin Failed to Start: {0}".format(exp)
+            maya.error(message)
+            raise
+
+    def init_after_account_selected(self):
+        try:
             self.submission = AzureBatchSubmission(self.tab_index['SUBMIT'], self.frame, self.call)
             self.assets = AzureBatchAssets(self.tab_index['ASSETS'], self.frame, self.call)
             self.pools = AzureBatchPools(self.tab_index['POOLS'], self.frame, self.call)
@@ -70,16 +79,12 @@ class AzureBatchSettings(object):
         """
         try:
             self._log.debug("Starting AzureBatchShared...")
-            if self.config.auth:
-                self.frame.is_logged_in()
-                self.env.configure(self.config)
-                self.jobhistory.configure(self.config)
-                self.assets.configure(self.config)
-                self.pools.configure(self.config, self.env)
-                self.submission.start(self.config, self.assets, self.pools, self.env)
-            else:
-                self.frame.is_logged_out()
-        except Exception as exp:
+            self.frame.is_logged_in()
+            self.env.configure(self.config)
+            self.jobhistory.configure(self.config)
+            self.assets.configure(self.config)
+            self.pools.configure(self.config, self.env)
+            self.submission.start(self.config, self.assets, self.pools, self.env)
             self._log.warning(exp)
             if (maya.window("AzureBatch", q=1, exists=1)):
                 maya.delete_ui("AzureBatch")

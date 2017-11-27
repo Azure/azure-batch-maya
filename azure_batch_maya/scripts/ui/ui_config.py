@@ -11,7 +11,7 @@ from azurebatchmayaapi import MayaAPI as maya
 class ConfigUI(object):
     """Class to create the 'Config' tab in the plug-in UI"""
 
-    def __init__(self, base, frame):
+    def __init__(self, base, settings, frame):
         """Create 'Config' tab and add to UI frame.
 
         :param base: The base class for handling configuration and
@@ -21,78 +21,111 @@ class ConfigUI(object):
         :type frame: :class:`.AzureBatchUI`
         """
         self.base = base
+        self.settings = settings
         self.label = "Config"
         self.ready = False
         self.page = maya.form_layout()
+        self.frame = frame
 
-        with utils.ScrollLayout(height=520, parent=self.page) as scroll:
-            self.heading = maya.text(label="Authenticating plug-in...",
-                                        align="center", font="boldLabelFont")
-            with utils.Row(2, 2, (70,260), ("left","left"),
-                           [(1, "top", 15),(2,"top",15)]):
-                maya.text(label="Status: ", align="left")
-                self.auth_status = maya.text(label="", align="left")
-            
-            with utils.Row(2, 2, (70,260), ("left","left")):
-                maya.text(label="Service:    ", align="left")
-                self._endpoint = maya.text_field(height=25, enable=True)
-            
-            #TODO: Allow set to 0 to disable threads
-            with utils.Row(2, 2, (70,260), ("left","left")):
-                maya.text(label="Threads:    ", align="left")
-                self._threads = maya.int_field(
-                    changeCommand=self.set_threads,
-                    height=25,
-                    minValue=1,
-                    maxValue=40,
-                    enable=True,
-                    value=20)
-            
-            with utils.Row(2, 2, (70,260), ("left","center"),
-                           [(1, "bottom", 20),(2,"bottom",15)]):
-                maya.text(label="Logging:    ", align="left")
-                with utils.Dropdown(self.set_logging) as log_settings:
-                    self._logging = log_settings
-                    self._logging.add_item("Debug")
-                    self._logging.add_item("Info")
-                    self._logging.add_item("Warning")
-                    self._logging.add_item("Error")
+        with utils.ScrollLayout(height=520, parent=self.page, width=325) as auth_layout:
+            self.auth_layout = auth_layout
+            self.heading = maya.text(label="Authenticating plug-in...", align="center", font="boldLabelFont", wordWrap=True)
+            frame.add_tab(self)
+            maya.form_layout(self.page, edit=True, enable=False)
+            maya.refresh()
+    
+    def init_post_auth(self):
+        maya.delete_ui(self.auth_layout)
+        with utils.ScrollLayout(height=520, parent=self.page, width=325) as scroll:
+            box_label = "Batch Account Settings"
+            with utils.FrameLayout(label=box_label, collapsable=True) as account_settings_frame:
+                self.account_settings_frame = account_settings_frame
+                with utils.Row(2, 2, (90,210), ("left","left"),
+                                [(1, "top", 15),(2,"top",15)]):
+                    maya.text(label="Status: ", align="left")
+                    self.auth_status = maya.text(label="", align="left")
 
-            box_label = "Azure Authentication Settings"
-            with utils.FrameLayout(label=box_label, collapsable=True):
-                with utils.Row(2, 2, (140, 180), ("right","center"),
-                               [(1, "top", 20),(2, "top", 15)]):
-                    maya.text(label="Batch Account:   ", align="right")
-                    self._account = maya.text_field(height=25, enable=True)
+                with utils.Row(2, 2, (90,210), ("left","left")) as subscriptionRow:
+                    maya.text(label="Subscription:    ", align="left")
 
-                with utils.Row(2, 2, (140, 180), ("right","center"),
-                               [(1, "bottom", 20),(2,"bottom",15)]):
-                    maya.text(label="Batch Key:   ", align="right")
-                    self._key = maya.text_field(height=25, enable=True)
+                    with utils.Dropdown(self.select_subscription_in_dropdown) as subscription_dropdown:
+                        self._subscription_dropdown = subscription_dropdown
+                        subscriptions = self.base.available_subscriptions()
+                        self.subscriptions_by_displayname = dict([ (sub.display_name, sub) for sub in subscriptions ])
+                        for sub in subscriptions:
+                            self._subscription_dropdown.add_item(sub.display_name)
 
-                with utils.Row(2, 2, (140, 180), ("right","center"),
-                               [(1, "bottom", 20),(2,"bottom",15)]):
-                    maya.text(label="Storage Account:   ", align="right")
-                    self._storage = maya.text_field(height=25, enable=True)
-
-                with utils.Row(2, 2, (140, 180), ("right","center"),
-                               [(1, "bottom", 20),(2,"bottom",15)]):
-                    maya.text(label="Storage Key:   ", align="right")
-                    self._storage_key = maya.text_field(height=25, enable=True)
-
-        with utils.Row(1, 1, 355, "center", (1, "bottom",0)) as btn:
-            self._authenticate = maya.button(label="Authenticate",
-                                             command=self.authenticate,
-                                             enable=True)
-        maya.form_layout(self.page, edit=True,
-                         attachForm=[(scroll, 'top', 5),
-                                     (scroll, 'left', 5), (scroll, 'right', 5),
-                                     (btn, 'bottom', 5),
-                                     (btn, 'left', 0), (btn, 'right', 0)],
-                         attachControl=(scroll, "bottom", 5, btn))
-        frame.add_tab(self)
-        maya.form_layout(self.page, edit=True, enable=False)
+        self.disable(True)
+        maya.form_layout(self.page, edit=True, enable=True)
         maya.refresh()
+
+    def init_after_subscription_selected(self, selected_subscription):
+        maya.delete_ui(self.batchAccountRow)
+        with utils.Row(2, 2, (90,210), ("left","left"), parent=self.account_settings_frame) as batchAccountRow:
+            self.batchAccountRow = batchAccountRow
+            maya.text(label="Batch Account:    ", align="left")
+            maya.refresh()
+            with utils.Dropdown(self.select_account_in_dropdown) as account_dropdown:
+                self._account_dropdown = account_dropdown
+                accounts = self.base.available_batch_accounts()
+                self.accounts_by_name = dict([ (account.name, account) for account in accounts ])
+                for account in accounts:
+                    self._account_dropdown.add_item(account.name)
+
+    def init_after_batch_account_selected(self):
+        maya.delete_ui(self.account_ui_elements)
+        self.account_ui_elements = []
+        with utils.Row(2, 2, (90, 210), ("left","left"),[(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as storageAccountRow:
+            self.account_ui_elements.append(storageAccountRow)
+            maya.text(label="Storage Account:   ", align="right")
+            self.storage_account_field = maya.text_field(height=25, enable=True, editable=False, text=self.base.storage_account)
+
+        #TODO: Allow set to 0 to disable threads
+        with utils.Row(2, 2, (90,210), ("left","left"), parent=self.account_settings_frame) as threadsRow:
+            self.account_ui_elements.append(storageAccountRow)
+            maya.text(label="Threads:    ", align="left")
+            self._threads = maya.int_field(
+                changeCommand=self.set_threads,
+                height=25,
+                minValue=1,
+                maxValue=40,
+                enable=True,
+                value=20)
+            
+        with utils.Row(2, 2, (90,210), ("left","center"),
+                        [(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as loggingRow:
+            self.account_ui_elements.append(loggingRow)
+            maya.text(label="Logging:    ", align="left")
+            with utils.Dropdown(self.set_logging) as log_settings:
+                self._logging = log_settings
+                self._logging.add_item("Debug")
+                self._logging.add_item("Info")
+                self._logging.add_item("Warning")
+                self._logging.add_item("Error")
+        
+        self.settings.init_after_account_selected()
+
+    def get_selected_subscription_from_dropdown(self):
+        """Retrieve the currently selected image name."""
+        return self._subscription_dropdown.value()
+
+    def select_subscription_in_dropdown(self, sub_displayname):
+        """Select the cached image value if available."""
+        # TODO: Check value against current lists. 
+        if sub_displayname:
+            self._subscription_dropdown.select(sub_displayname)
+            self.selected_subscription = self.subscriptions_by_displayname[sub_displayname]
+            self.base.store_subscription(sub_displayname)
+            self.base.init_after_subscription_selected(self.selected_subscription.subscription_id)
+            self.init_after_subscription_selected(self.selected_subscription)
+        
+    def select_account_in_dropdown(self, account_displayName):
+        if account_displayName:
+            self._account_dropdown.select(account_displayName)
+            self.selected_batchaccount = self.accounts_by_name[account_displayName]
+            self.base.store_batch_account(account_displayName)
+            self.base.init_after_batch_account_selected(self.selected_batchaccount, self.selected_subscription.subscription_id)
+            self.init_after_batch_account_selected()
 
     @property
     def endpoint(self):
@@ -123,16 +156,6 @@ class ConfigUI(object):
     def account(self, value):
         """AzureBatch Unattended Account ID. Sets contents of text field."""
         maya.text_field(self._account, edit=True, text=str(value))
-
-    @property
-    def key(self):
-        """AzureBatch Unattended Account Key. Retrieves contents of text field."""
-        return maya.text_field(self._key, query=True, text=True)
-
-    @key.setter
-    def key(self, value):
-        """AzureBatch Unattended Account Key. Sets contents of text field."""
-        maya.text_field(self._key, edit=True, text=str(value))
 
     @property
     def storage(self):
@@ -189,6 +212,12 @@ class ConfigUI(object):
             self.heading, edit=True, label="Authentication Configuration")
         maya.form_layout(self.page, edit=True, enable=True)
 
+    def prompt_for_login(self, value):
+        """Called when the plug-in is prompting for authentication login. Sets heading text."""
+        maya.text(
+            self.heading, edit=True, label=value)
+        maya.form_layout(self.page, edit=True, enable=True)
+
     def prepare(self):
         """Prepare Config tab contents - nothing needs to be done here as all
         loaded on plug-in start up.
@@ -224,4 +253,11 @@ class ConfigUI(object):
         """
         self.base.save_changes()
         self.base.authenticate()
-            
+    
+    def disable(self, enabled):
+        """Disable the tab from user interaction. Used during long running
+        processes like upload, and when plug-in is unauthenticated.
+        :param bool enabled: Whether to enable the display. False will
+         disable the display.
+        """
+        maya.form_layout(self.page, edit=True, enable=enabled)
