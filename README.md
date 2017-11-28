@@ -60,6 +60,8 @@ Earlier versions of the code and releases were supported on Maya2017-Update3 onl
 
 Release v0.14.0 adds support for Maya2017-Update4 and Maya2018.
 
+Release v0.16.0 supports Maya2017-Update5
+
 ## License
 
 This project is licensed under the MIT License.
