@@ -85,6 +85,7 @@ class AzureBatchSettings(object):
             self.assets.configure(self.config)
             self.pools.configure(self.config, self.env)
             self.submission.start(self.config, self.assets, self.pools, self.env)
+        except Exception as exp:
             self._log.warning(exp)
             if (maya.window("AzureBatch", q=1, exists=1)):
                 maya.delete_ui("AzureBatch")

@@ -26,6 +26,8 @@ class ConfigUI(object):
         self.ready = False
         self.page = maya.form_layout()
         self.frame = frame
+        self.batchAccountRow = None
+        self.account_ui_elements = None
 
         with utils.ScrollLayout(height=520, parent=self.page, width=325) as auth_layout:
             self.auth_layout = auth_layout
@@ -115,15 +117,14 @@ class ConfigUI(object):
         if sub_displayname:
             self._subscription_dropdown.select(sub_displayname)
             self.selected_subscription = self.subscriptions_by_displayname[sub_displayname]
-            self.base.store_subscription(sub_displayname)
-            self.base.init_after_subscription_selected(self.selected_subscription.subscription_id)
+            self.subscription = sub_displayname
+            self.base.init_after_subscription_selected(self.selected_subscription.subscription_id, sub_displayname)
             self.init_after_subscription_selected(self.selected_subscription)
-        
+
     def select_account_in_dropdown(self, account_displayName):
         if account_displayName:
             self._account_dropdown.select(account_displayName)
             self.selected_batchaccount = self.accounts_by_name[account_displayName]
-            self.base.store_batch_account(account_displayName)
             self.base.init_after_batch_account_selected(self.selected_batchaccount, self.selected_subscription.subscription_id)
             self.init_after_batch_account_selected()
 
@@ -193,7 +194,10 @@ class ConfigUI(object):
     @property
     def logging(self):
         """Plug-in logging level. Retrieves selected level from dropdown."""
-        return self._logging.selected() * 10
+        try:
+            return self._logging.selected() * 10
+        except AttributeError:
+            return self.base.default_logging()
 
     @logging.setter
     def logging(self, value):

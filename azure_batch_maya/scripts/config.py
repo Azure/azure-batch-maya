@@ -89,7 +89,11 @@ class AzureBatchConfig(object):
 
     @property
     def batch_auth_token(self):
-        return self._batch_auth_token
+        try:
+            return self._batch_auth_token
+        except AttributeError:
+            self._batch_auth_token = None
+            return self._batch_auth_token
 
     @batch_auth_token.setter
     def batch_auth_token(self, value):
@@ -97,7 +101,11 @@ class AzureBatchConfig(object):
 
     @property
     def mgmt_auth_token(self):
-        return self._mgmt_auth_token
+        try:
+            return self._mgmt_auth_token
+        except AttributeError:
+            self._mgmt_auth_token = None
+            return self._mgmt_auth_token
 
     @mgmt_auth_token.setter
     def mgmt_auth_token(self, value):
@@ -120,54 +128,37 @@ class AzureBatchConfig(object):
         config_file = os.path.join(self._data_dir, self._ini_file)
         if not os.path.exists(config_file):
             self._log = self._configure_logging(LOG_LEVELS['debug'])
-            return
-        try:
-            self._cfg.read(config_file)
+        else:
+            try:
+                self._cfg.read(config_file)
 
-            self.ui.disable(True)
+                self.ui.disable(True)
 
-            self._read_config_file()
+                self._read_config_file()
 
-        except Exception as exp:
-            # We should only worry about this if it happens when authenticating
-            # using the UI, otherwise it's expected.
-            if from_auth_button:
-                raise ValueError("Invalid Configuration: {}".format(exp))
-            else:
-                # We'll need a place holder logger
-                self._log = self._configure_logging(LOG_LEVELS['debug'])
+            except Exception as exp:
+                # We should only worry about this if it happens when authenticating
+                # using the UI, otherwise it's expected.
+                if from_auth_button:
+                    raise ValueError("Invalid Configuration: {}".format(exp))
+                else:
+                    # We'll need a place holder logger
+                    self._log = self._configure_logging(LOG_LEVELS['debug'])
 
         if(not self.mgmt_auth_token or not self.batch_auth_token):
             self.obtain_aad_tokens()
         else:
             if self.need_to_refresh_auth_tokens([self.mgmt_auth_token, self.batch_auth_token]):
                 self.refresh_auth_tokens(self.mgmt_auth_token, self.batch_auth_token)
+            self._configure_post_auth()
 
+    def _configure_post_auth(self):
         self.mgmtCredentials = AADTokenCredentials(self.mgmt_auth_token)
         self.batchCredentials = AADTokenCredentials(self.batch_auth_token)
-
-        self.store_mgmt_auth_token(self.mgmt_auth_token)
-        self.store_batch_auth_token(self.batch_auth_token)
 
         self.subscription_client = SubscriptionClient(self.mgmtCredentials)
 
         self.ui.init_post_auth()
-
-    def _configure_batch_client(self):
-        self._client = batch.BatchExtensionsClient(
-            batchCredentials, base_url=self._cfg.get('AzureBatch', 'batch_url'),
-            storage_client=self._storage)
-
-        self._client.config.add_user_agent(self._user_agent)
-        self._log = self._configure_logging(
-            self._cfg.get('AzureBatch', 'logging'))
-        self._auth = self._auto_authentication()
-
-        self._storage = storage.BlockBlobService(
-                self._cfg.get('AzureBatch', 'storage_account'),
-                self._cfg.get('AzureBatch', 'storage_key'))
-
-        self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
 
     def need_to_refresh_auth_tokens(self, auth_token_list):
 
@@ -198,7 +189,7 @@ class AzureBatchConfig(object):
 
         context = adal.AuthenticationContext(self.aadAuthorityHostUrl + '/' + self.aadTenant, api_version=None)
 
-        code = context.acquire_user_code(self.batchAadResource, self.aadClientId)
+        code = context.acquire_user_code(self.mgmtAadResource, self.aadClientId)
 
         self.ui.prompt_for_login(code['message'])
         maya.refresh()
@@ -244,6 +235,10 @@ class AzureBatchConfig(object):
         except ConfigParser.DuplicateSectionError:
             pass
         try:
+            self.ui.storage_key = self._cfg.get('AzureBatch', 'storage_key')
+        except ConfigParser.NoOptionError:
+            self.ui.storage_key = ""
+        try:
             self._batch_auth_token = json.loads(self._cfg.get('AzureBatch', 'batch_auth_token'))
         except ConfigParser.NoOptionError:
             self._batch_auth_token = ""
@@ -255,6 +250,10 @@ class AzureBatchConfig(object):
             self._subscription_id = self._cfg.get('AzureBatch', 'subscription_id')
         except ConfigParser.NoOptionError:
             self._subscription_id = ""
+        try:
+            self._subscription_name = self._cfg.get('AzureBatch', 'subscription_name')
+        except ConfigParser.NoOptionError:
+            self._subscription_name = ""
         try:
             self.ui.endpoint = self._cfg.get('AzureBatch', 'batch_url')
         except ConfigParser.NoOptionError:
@@ -274,7 +273,7 @@ class AzureBatchConfig(object):
         try:
             self.ui.logging = self._cfg.getint('AzureBatch', 'logging')
         except ConfigParser.NoOptionError:
-            self.ui.logging = 10
+            self.ui.logging = self.default_logging()
         try:
             self.ui.threads = self._cfg.getint('AzureBatch', 'threads')
         except ConfigParser.NoOptionError:
@@ -308,7 +307,7 @@ class AzureBatchConfig(object):
         :param str level: The specified logging level.
         """
         self._log.setLevel(level)
-        self._cfg.set('AzureBatch', 'logging', level)
+        self._cfg.set('AzureBatch', 'logging', str(level))
         self._save_config()
 
     def set_threads(self, threads):
@@ -321,17 +320,23 @@ class AzureBatchConfig(object):
 
     def save_changes(self):
         """Persist auth config changes to file for future sessions."""
+        self.ensure_azurebatch_config_section_exists()
+        self._cfg.set('AzureBatch', 'batch_url', self.batch_url)
+        self._cfg.set('AzureBatch', 'batch_account', self.batch_account)
+        self._cfg.set('AzureBatch', 'subscription_id', self.subscription_id)
+        self._cfg.set('AzureBatch', 'subscription_name', self.subscription_name)
+        self._cfg.set('AzureBatch', 'storage_account', self.storage_account)
+        self._cfg.set('AzureBatch', 'storage_key', self.storage_key)
+        self._cfg.set('AzureBatch', 'logging', str(self.ui.logging))
+        self._cfg.set('AzureBatch', 'mgmt_auth_token', json.dumps(self.mgmt_auth_token))
+        self._cfg.set('AzureBatch', 'batch_auth_token', json.dumps(self.batch_auth_token))
+        self._save_config()
+
+    def ensure_azurebatch_config_section_exists(self):
         try:
             self._cfg.add_section('AzureBatch')
         except ConfigParser.DuplicateSectionError:
             pass
-        self._cfg.set('AzureBatch', 'batch_url', self.batch_url)
-        self._cfg.set('AzureBatch', 'batch_account', self.batch_account)
-        self._cfg.set('AzureBatch', 'storage_account', self.storage_account)
-        self._cfg.set('AzureBatch', 'storage_key', self.storage_key)
-        self._cfg.set('AzureBatch', 'mgmt_auth_token', json.dumps(self.mgmt_auth_token))
-        self._cfg.set('AzureBatch', 'batch_auth_token', json.dumps(self.batch_auth_token))
-        self._save_config()
 
     def authenticate(self):
         """Begin authentication - initiated by the UI button."""
@@ -373,32 +378,17 @@ class AzureBatchConfig(object):
         self._cfg.set('AzureBatch', 'image', image)
         self._save_config()
 
-    def store_mgmt_auth_token(self, mgmt_auth_token):
-        """Cache selected image for later sessions."""
-        self._cfg.set('AzureBatch', 'mgmt_auth_token', json.dumps(mgmt_auth_token))
-        self._save_config()
-    
-    def store_batch_auth_token(self, batch_auth_token):
-        """Cache selected image for later sessions."""
-        self._cfg.set('AzureBatch', 'batch_auth_token', json.dumps(batch_auth_token))
-        self._save_config()
-
     def get_cached_subscription(self):
         """Attempt to retrieve a selected subscription from a previous session."""
         try:
-            return self._cfg.get('AzureBatch', 'subscription')
+            return self._cfg.get('AzureBatch', 'subscription_id')
         except ConfigParser.NoOptionError:
             return None
-
-    def store_subscription(self, subscription):
-        """Cache selected subscription for later sessions."""
-        self._cfg.set('AzureBatch', 'subscription', subscription)
-        self._save_config()
 
     def get_cached_batch_account(self):
         """Attempt to retrieve a selected batch account from a previous session."""
         try:
-            return self._cfg.get('AzureBatch', 'subscription')
+            return self._cfg.get('AzureBatch', 'batch_account')
         except ConfigParser.NoOptionError:
             return None
 
@@ -426,11 +416,13 @@ class AzureBatchConfig(object):
         all_subscriptions = self._call(self.subscription_client.subscriptions.list)
         self.subscriptions = []
         for subscription in all_subscriptions:
-                self.subscriptions.append(subscription)
+            self.subscriptions.append(subscription)
         self.count = len(self.subscriptions)
         return self.subscriptions
 
-    def init_after_subscription_selected(self, subscription_id):
+    def init_after_subscription_selected(self, subscription_id, subscription_name):
+        self.subscription_id = subscription_id
+        self.subscription_name = subscription_name
         self.batch_mgmt_client = BatchManagementClient(self.mgmtCredentials, str(subscription_id))
         batch_accounts = self._call(self.batch_mgmt_client.batch_account.list)
         accounts = []
@@ -463,7 +455,13 @@ class AzureBatchConfig(object):
             storage_client=self._storage)
 
         self._client.config.add_user_agent(self._user_agent)
-        self._log = self._configure_logging(self._cfg.get('AzureBatch', 'logging'))
+        self.save_changes()
+        logging_level = self._cfg.getint('AzureBatch', 'logging')
+        self._log = self._configure_logging(logging_level)
+
+        self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
+
+        self._auth = self._auto_authentication()
 
         self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
 
@@ -472,3 +470,6 @@ class AzureBatchConfig(object):
         the account selection drop down.
         """
         return self._available_batch_accounts
+
+    def default_logging(self):
+        return 10
