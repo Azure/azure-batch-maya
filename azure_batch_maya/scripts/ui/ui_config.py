@@ -26,7 +26,8 @@ class ConfigUI(object):
         self.ready = False
         self.page = maya.form_layout()
         self.frame = frame
-        self.batchAccountRow = None
+        self.subscription_row = None
+        self.batch_account_row = None
         self.account_ui_elements = None
 
         with utils.ScrollLayout(height=520, parent=self.page, width=325) as auth_layout:
@@ -35,8 +36,8 @@ class ConfigUI(object):
             frame.add_tab(self)
             maya.form_layout(self.page, edit=True, enable=False)
             maya.refresh()
-    
-    def init_post_auth(self):
+
+    def init_from_config(self):
         maya.delete_ui(self.auth_layout)
         with utils.ScrollLayout(height=520, parent=self.page, width=325) as scroll:
             box_label = "Batch Account Settings"
@@ -49,9 +50,68 @@ class ConfigUI(object):
 
                 with utils.Row(2, 2, (90,210), ("left","left")) as subscriptionRow:
                     maya.text(label="Subscription:    ", align="left")
+                    self._selected_subscription_text_field = maya.text_field(height=25, enable=True, editable=False, text=self.base.subscription_name)
+                    self.subscription_row = subscriptionRow
 
+                with utils.Row(2, 2, (90,210), ("left","left"), parent=self.account_settings_frame) as batchAccountRow:
+                    self.batchAccountRow = batchAccountRow
+                    maya.text(label="Batch Account:    ", align="left")
+                    maya.refresh()
+                    self.selected_batch_account_textfield = maya.text_field(height=25, enable=True, editable=False, text=self.base.batch_account)
+
+                self.account_ui_elements = []
+                with utils.Row(2, 2, (90, 210), ("left","left"),[(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as storageAccountRow:
+                    self.account_ui_elements.append(storageAccountRow)
+                    maya.text(label="Storage Account:   ", align="right")
+                    self.storage_account_field = maya.text_field(height=25, enable=True, editable=False, text=self.base.storage_account)
+
+                #TODO: Allow set to 0 to disable threads
+                with utils.Row(2, 2, (90,210), ("left","left"), parent=self.account_settings_frame) as threadsRow:
+                    self.account_ui_elements.append(threadsRow)
+                    maya.text(label="Threads:    ", align="left")
+                    self._threads = maya.int_field(
+                        changeCommand=self.set_threads,
+                        height=25,
+                        minValue=1,
+                        maxValue=40,
+                        enable=True,
+                        value=20)
+            
+                with utils.Row(2, 2, (90,210), ("left","center"),
+                                [(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as loggingRow:
+                    self.account_ui_elements.append(loggingRow)
+                    maya.text(label="Logging:    ", align="left")
+                    with utils.Dropdown(self.set_logging) as log_settings:
+                        self._logging = log_settings
+                        self._logging.add_item("Debug")
+                        self._logging.add_item("Info")
+                        self._logging.add_item("Warning")
+                        self._logging.add_item("Error")
+
+        self.disable(True)
+        maya.form_layout(self.page, edit=True, enable=True)
+        maya.refresh()
+
+    def init_post_auth(self):
+        maya.delete_ui(self.auth_layout)
+        if self.subscription_ui_elements is not None and not self.subscription_ui_elements.count() == 0:
+            maya.delete_ui(self.subscription_ui_elements)
+        self.subscription_ui_elements = []
+        with utils.ScrollLayout(height=520, parent=self.page, width=325) as scroll:
+            box_label = "Batch Account Settings"
+            with utils.FrameLayout(label=box_label, collapsable=True) as account_settings_frame:
+                self.account_settings_frame = account_settings_frame
+                with utils.Row(2, 2, (90,210), ("left","left"),
+                                [(1, "top", 15),(2,"top",15)]):
+                    maya.text(label="Status: ", align="left")
+                    self.auth_status = maya.text(label="", align="left")
+
+                with utils.Row(2, 2, (90,210), ("left","left")) as subscriptionRow:
+                    maya.text(label="Subscription:    ", align="left")
                     with utils.Dropdown(self.select_subscription_in_dropdown) as subscription_dropdown:
                         self._subscription_dropdown = subscription_dropdown
+                        self.subscription_ui_elements.append(self._subscription_dropdown)
+                        
                         subscriptions = self.base.available_subscriptions()
                         self.subscriptions_by_displayname = dict([ (sub.display_name, sub) for sub in subscriptions ])
                         for sub in subscriptions:
@@ -61,8 +121,9 @@ class ConfigUI(object):
         maya.form_layout(self.page, edit=True, enable=True)
         maya.refresh()
 
-    def init_after_subscription_selected(self, selected_subscription):
-        maya.delete_ui(self.batchAccountRow)
+    def init_after_subscription_selected(self):
+        if self.batchAccountRow is not None:
+            maya.delete_ui(self.batchAccountRow)
         with utils.Row(2, 2, (90,210), ("left","left"), parent=self.account_settings_frame) as batchAccountRow:
             self.batchAccountRow = batchAccountRow
             maya.text(label="Batch Account:    ", align="left")
@@ -74,8 +135,9 @@ class ConfigUI(object):
                 for account in accounts:
                     self._account_dropdown.add_item(account.name)
 
-    def init_after_batch_account_selected(self):
-        maya.delete_ui(self.account_ui_elements)
+    def init_after_batch_account_selected(self, callback_to_init_settings):
+        if self.account_ui_elements is not None and not self.account_ui_elements.count() == 0:
+            maya.delete_ui(self.account_ui_elements)
         self.account_ui_elements = []
         with utils.Row(2, 2, (90, 210), ("left","left"),[(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as storageAccountRow:
             self.account_ui_elements.append(storageAccountRow)
@@ -84,7 +146,7 @@ class ConfigUI(object):
 
         #TODO: Allow set to 0 to disable threads
         with utils.Row(2, 2, (90,210), ("left","left"), parent=self.account_settings_frame) as threadsRow:
-            self.account_ui_elements.append(storageAccountRow)
+            self.account_ui_elements.append(threadsRow)
             maya.text(label="Threads:    ", align="left")
             self._threads = maya.int_field(
                 changeCommand=self.set_threads,
@@ -104,39 +166,28 @@ class ConfigUI(object):
                 self._logging.add_item("Info")
                 self._logging.add_item("Warning")
                 self._logging.add_item("Error")
-        
+
         self.settings.init_after_account_selected()
 
     def get_selected_subscription_from_dropdown(self):
         """Retrieve the currently selected image name."""
         return self._subscription_dropdown.value()
 
-    def select_subscription_in_dropdown(self, sub_displayname):
-        """Select the cached image value if available."""
+    def select_subscription_in_dropdown(self, selected_subscription_name):
         # TODO: Check value against current lists. 
-        if sub_displayname:
-            self._subscription_dropdown.select(sub_displayname)
-            self.selected_subscription = self.subscriptions_by_displayname[sub_displayname]
-            self.subscription = sub_displayname
-            self.base.init_after_subscription_selected(self.selected_subscription.subscription_id, sub_displayname)
-            self.init_after_subscription_selected(self.selected_subscription)
+        if selected_subscription_name:
+            self._subscription_dropdown.select(selected_subscription_name)
+            self.selected_subscription_id = self.subscriptions_by_displayname[selected_subscription_name].subscription_id
+            self.subscription = selected_subscription_name
+            self.base.init_after_subscription_selected(self.selected_subscription_id, selected_subscription_name)
+            self.init_after_subscription_selected()
 
     def select_account_in_dropdown(self, account_displayName):
         if account_displayName:
             self._account_dropdown.select(account_displayName)
             self.selected_batchaccount = self.accounts_by_name[account_displayName]
-            self.base.init_after_batch_account_selected(self.selected_batchaccount, self.selected_subscription.subscription_id)
+            self.base.init_after_batch_account_selected(self.selected_batchaccount.name, self. self.selected_subscription_id)
             self.init_after_batch_account_selected()
-
-    @property
-    def endpoint(self):
-        """AzureBatch Service Endpoint. Retrieves contents of text field."""
-        return maya.text_field(self._endpoint, query=True, text=True)
-
-    @endpoint.setter
-    def endpoint(self, value):
-        """AzureBatch Service Endpoint. Sets contents of text field."""
-        maya.text_field(self._endpoint, edit=True, text=str(value))
 
     @property
     def threads(self):
@@ -167,16 +218,6 @@ class ConfigUI(object):
     def storage(self, value):
         """AzureBatch AAD Client ID. Sets contents of text field."""
         maya.text_field(self._storage, edit=True, text=str(value))
-
-    @property
-    def storage_key(self):
-        """AzureBatch AAD Tenant. Retrieves contents of text field."""
-        return maya.text_field(self._storage_key, query=True, text=True)
-
-    @storage_key.setter
-    def storage_key(self, value):
-        """AzureBatch AAD Tenant. Sets contents of text field."""
-        maya.text_field(self._storage_key, edit=True, text=str(value))
 
     @property
     def status(self):

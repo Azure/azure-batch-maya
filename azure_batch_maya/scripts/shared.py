@@ -50,6 +50,10 @@ class AzureBatchSettings(object):
         try:
             self.frame = AzureBatchUI(self)
             self.config = AzureBatchConfig(self.tab_index['AUTH'], self, self.frame, self.start, self.call)
+
+            if(self.config.can_init_from_config):
+                self.init_after_account_selected()
+
         except Exception as exp:
             if (maya.window("AzureBatch", q=1, exists=1)):
                 maya.delete_ui("AzureBatch")

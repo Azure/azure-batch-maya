@@ -7,6 +7,7 @@ import ConfigParser
 import os
 import json
 import datetime
+import dateutil.tz
 import logging
 import sys
 import traceback
@@ -68,6 +69,7 @@ class AzureBatchConfig(object):
         self._storage = None
         self._credentials = None
         self._call = call
+        self.can_init_from_config = False
         self.ui = ConfigUI(self, settings, frame)
         self._configure_plugin(False)
 
@@ -110,6 +112,30 @@ class AzureBatchConfig(object):
     @mgmt_auth_token.setter
     def mgmt_auth_token(self, value):
         self._mgmt_auth_token = value
+
+    @property
+    def subscription_name(self):
+        try:
+            return self._subscription_name
+        except AttributeError:
+            self._subscription_name = None
+            return self._subscription_name
+
+    @subscription_name.setter
+    def subscription_name(self, value):
+        self._subscription_name = value
+
+    @property
+    def batch_account(self):
+        try:
+            return self._batch_account
+        except AttributeError:
+            self._batch_account = None
+            return self._batch_account
+
+    @batch_account.setter
+    def batch_account(self, value):
+        self._batch_account = value
 
     @property
     def auth(self):
@@ -156,18 +182,21 @@ class AzureBatchConfig(object):
         self.mgmtCredentials = AADTokenCredentials(self.mgmt_auth_token)
         self.batchCredentials = AADTokenCredentials(self.batch_auth_token)
 
-        self.subscription_client = SubscriptionClient(self.mgmtCredentials)
+        if self.can_init_from_config:
+            self.init_from_config()
 
-        self.ui.init_post_auth()
+        else:
+            self.subscription_client = SubscriptionClient(self.mgmtCredentials)
+            self.ui.init_post_auth() 
 
     def need_to_refresh_auth_tokens(self, auth_token_list):
 
-        currentTimeUtc = datetime.datetime.utcnow()
+        currentTime = datetime.datetime.now()
 
         tokenRefreshThresholdSeconds = 5 * 60
 
         for token in auth_token_list:
-            if (dateparse(token['expiresOn']) - currentTimeUtc).total_seconds() < tokenRefreshThresholdSeconds:
+            if (dateparse(token['expiresOn']) - currentTime).total_seconds() < tokenRefreshThresholdSeconds:
                 return True
         return False
 
@@ -186,7 +215,6 @@ class AzureBatchConfig(object):
             self.batchAadResource)
 
     def obtain_aad_tokens(self):
-
         context = adal.AuthenticationContext(self.aadAuthorityHostUrl + '/' + self.aadTenant, api_version=None)
 
         code = context.acquire_user_code(self.mgmtAadResource, self.aadClientId)
@@ -235,45 +263,44 @@ class AzureBatchConfig(object):
         except ConfigParser.DuplicateSectionError:
             pass
         try:
-            self.ui.storage_key = self._cfg.get('AzureBatch', 'storage_key')
-        except ConfigParser.NoOptionError:
-            self.ui.storage_key = ""
-        try:
             self._batch_auth_token = json.loads(self._cfg.get('AzureBatch', 'batch_auth_token'))
+            self.convert_utc_expireson_to_local_timezone_naive(self._batch_auth_token)
         except ConfigParser.NoOptionError:
             self._batch_auth_token = ""
         try:
             self._mgmt_auth_token = json.loads(self._cfg.get('AzureBatch', 'mgmt_auth_token'))
+            self.convert_utc_expireson_to_local_timezone_naive(self._mgmt_auth_token)
         except ConfigParser.NoOptionError:
             self._mgmt_auth_token = ""
         try:
-            self._subscription_id = self._cfg.get('AzureBatch', 'subscription_id')
+            self.subscription_id = self._cfg.get('AzureBatch', 'subscription_id')
         except ConfigParser.NoOptionError:
-            self._subscription_id = ""
+            self.subscription_id = ""
         try:
             self._subscription_name = self._cfg.get('AzureBatch', 'subscription_name')
         except ConfigParser.NoOptionError:
             self._subscription_name = ""
         try:
-            self.ui.endpoint = self._cfg.get('AzureBatch', 'batch_url')
+            self.batch_url = self._cfg.get('AzureBatch', 'batch_url')
         except ConfigParser.NoOptionError:
-            self.ui.endpoint = ""
+            self.batch_url = ""
         try:
-            self.ui.account = self._cfg.get('AzureBatch', 'batch_account')
+            self.batch_account = self._cfg.get('AzureBatch', 'batch_account')
+            self.can_init_from_config = True
         except ConfigParser.NoOptionError:
-            self.ui.account = ""
+            self.batch_account = ""
         try:
-            self.ui.storage = self._cfg.get('AzureBatch', 'storage_account')
+            self.storage_account_resource_id = self._cfg.get('AzureBatch', 'storage_account_resource_id')
         except ConfigParser.NoOptionError:
-            self.ui.storage = ""
+            self.storage_account_resource_id = ""
         try:
-            self.ui.storage_key = self._cfg.get('AzureBatch', 'storage_key')
+            self.storage_key = self._cfg.get('AzureBatch', 'storage_key')
         except ConfigParser.NoOptionError:
-            self.ui.storage_key = ""
+            self.storage_key = ""
         try:
-            self.ui.logging = self._cfg.getint('AzureBatch', 'logging')
+            self.logging_level = self._cfg.getint('AzureBatch', 'logging')
         except ConfigParser.NoOptionError:
-            self.ui.logging = self.default_logging()
+            self.logging_level = self.default_logging()
         try:
             self.ui.threads = self._cfg.getint('AzureBatch', 'threads')
         except ConfigParser.NoOptionError:
@@ -325,9 +352,13 @@ class AzureBatchConfig(object):
         self._cfg.set('AzureBatch', 'batch_account', self.batch_account)
         self._cfg.set('AzureBatch', 'subscription_id', self.subscription_id)
         self._cfg.set('AzureBatch', 'subscription_name', self.subscription_name)
-        self._cfg.set('AzureBatch', 'storage_account', self.storage_account)
+        self._cfg.set('AzureBatch', 'storage_account_resource_id', self.storage_account_resource_id)
         self._cfg.set('AzureBatch', 'storage_key', self.storage_key)
-        self._cfg.set('AzureBatch', 'logging', str(self.ui.logging))
+        self._cfg.set('AzureBatch', 'logging', self.logging_level)
+
+        self.convert_timezone_naive_expireson_to_utc(self.mgmt_auth_token)
+        self.convert_timezone_naive_expireson_to_utc(self.batch_auth_token)
+
         self._cfg.set('AzureBatch', 'mgmt_auth_token', json.dumps(self.mgmt_auth_token))
         self._cfg.set('AzureBatch', 'batch_auth_token', json.dumps(self.batch_auth_token))
         self._save_config()
@@ -440,7 +471,7 @@ class AzureBatchConfig(object):
 
         parsedStorageAccountId = msrestazuretools.parse_resource_id(storageAccountId)
 
-        self.storage_account = parsedStorageAccountId['name']
+        self.storage_account_resource_id = storageAccountId
 
         self.storage_mgmt_client = StorageManagementClient(self.mgmtCredentials, str(subscription_id))
 
@@ -456,14 +487,42 @@ class AzureBatchConfig(object):
 
         self._client.config.add_user_agent(self._user_agent)
         self.save_changes()
-        logging_level = self._cfg.getint('AzureBatch', 'logging')
-        self._log = self._configure_logging(logging_level)
+        self._log = self._configure_logging(self.logging_level)
 
         self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
 
         self._auth = self._auto_authentication()
 
         self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
+
+    def init_from_config(self):
+
+        parsedStorageAccountId = msrestazuretools.parse_resource_id(self.storage_account_resource_id)
+        self.storage_account = parsedStorageAccountId['name']
+
+        self.storage_mgmt_client = StorageManagementClient(self.mgmtCredentials, str(self.subscription_id))
+
+        self.storage_key = self._call(self.storage_mgmt_client.storage_accounts.list_keys, parsedStorageAccountId['resource_group'], self.storage_account).keys[0].value
+        
+        self._storage = storage.BlockBlobService(
+            self.storage_account,
+            self.storage_key)
+
+        self._client = batch.BatchExtensionsClient(self.batchCredentials, 
+            base_url=self.batch_url,
+            storage_client=self._storage)
+
+        self._client.config.add_user_agent(self._user_agent)
+        self.save_changes()
+        self._log = self._configure_logging(self.logging_level)
+
+        self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
+
+        self._auth = self._auto_authentication()
+
+        self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
+
+        self.ui.init_from_config()
 
     def available_batch_accounts(self):
         """Retrieve the currently available batch accounts to populate
@@ -473,3 +532,19 @@ class AzureBatchConfig(object):
 
     def default_logging(self):
         return 10
+
+    def convert_timezone_naive_expireson_to_utc(self, token):
+        # we want to store token expiry times as UTC for consistency
+        expireson_local = dateparse(token['expiresOn']).replace(tzinfo=dateutil.tz.tzlocal())
+        expireson_utc = expireson_local.astimezone(dateutil.tz.gettz('UTC'))
+        token['expiresOnUTC'] = str(expireson_utc)
+        del token['expiresOn']
+
+    def convert_utc_expireson_to_local_timezone_naive(self, token):
+        #the standard token expireson format which the various AAD libraries expect / return is a vanilla datetime string, in local time and timezone naive (no tz specified)
+        localtz = dateutil.tz.tzlocal()
+        expireson_utc = dateparse(token['expiresOnUTC']).replace(tzinfo = dateutil.tz.gettz('UTC'))
+        expireson_local = expireson_utc.astimezone(dateutil.tz.tzlocal())
+        expireson_local_tz_naive = expireson_local.replace(tzinfo = None)
+        token['expiresOn'] = str(expireson_local_tz_naive)
+        del token['expiresOnUTC']
