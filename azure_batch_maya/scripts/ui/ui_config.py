@@ -29,44 +29,47 @@ class ConfigUI(object):
         self.subscription_row = None
         self.batch_account_row = None
         self.account_ui_elements = None
+        self.subscription_ui_elements = None
 
-        with utils.ScrollLayout(height=520, parent=self.page, width=325) as auth_layout:
+        self.auth_layout_elements = []
+        with utils.ScrollLayout(height=520, parent=self.page, width=375) as auth_layout:
             self.auth_layout = auth_layout
+            self.auth_layout_elements.append(auth_layout)
             self.heading = maya.text(label="Authenticating plug-in...", align="center", font="boldLabelFont", wordWrap=True)
-            frame.add_tab(self)
-            maya.form_layout(self.page, edit=True, enable=False)
-            maya.refresh()
+        maya.form_layout(self.page, edit=True, enable=False)
+        frame.add_tab(self)
+        maya.refresh()
 
     def init_from_config(self):
         maya.delete_ui(self.auth_layout)
-        with utils.ScrollLayout(height=520, parent=self.page, width=325) as scroll:
+        with utils.ScrollLayout(height=520, parent=self.page, width=375) as scroll:
             box_label = "Batch Account Settings"
-            with utils.FrameLayout(label=box_label, collapsable=True) as account_settings_frame:
+            with utils.FrameLayout(label=box_label, collapsable=True, width=325) as account_settings_frame:
                 self.account_settings_frame = account_settings_frame
-                with utils.Row(2, 2, (90,210), ("left","left"),
+                with utils.Row(2, 2, (100,200), ("left","left"),
                                 [(1, "top", 15),(2,"top",15)]):
                     maya.text(label="Status: ", align="left")
-                    self.auth_status = maya.text(label="", align="left")
+                    self.auth_status = maya.text(label="", align="center")
 
-                with utils.Row(2, 2, (90,210), ("left","left")) as subscriptionRow:
+                with utils.Row(2, 2, (100,200), ("left","left")) as subscriptionRow:
                     maya.text(label="Subscription:    ", align="left")
                     self._selected_subscription_text_field = maya.text_field(height=25, enable=True, editable=False, text=self.base.subscription_name)
                     self.subscription_row = subscriptionRow
 
-                with utils.Row(2, 2, (90,210), ("left","left"), parent=self.account_settings_frame) as batchAccountRow:
-                    self.batchAccountRow = batchAccountRow
+                with utils.Row(2, 2, (100,200), ("left","left"), parent=self.account_settings_frame) as batch_account_row:
+                    self.batch_account_row = batch_account_row
                     maya.text(label="Batch Account:    ", align="left")
                     maya.refresh()
                     self.selected_batch_account_textfield = maya.text_field(height=25, enable=True, editable=False, text=self.base.batch_account)
 
                 self.account_ui_elements = []
-                with utils.Row(2, 2, (90, 210), ("left","left"),[(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as storageAccountRow:
+                with utils.Row(2, 2, (100, 200), ("left","left"),[(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as storageAccountRow:
                     self.account_ui_elements.append(storageAccountRow)
-                    maya.text(label="Storage Account:   ", align="right")
+                    maya.text(label="Storage Account:   ", align="left")
                     self.storage_account_field = maya.text_field(height=25, enable=True, editable=False, text=self.base.storage_account)
 
                 #TODO: Allow set to 0 to disable threads
-                with utils.Row(2, 2, (90,210), ("left","left"), parent=self.account_settings_frame) as threadsRow:
+                with utils.Row(2, 2, (100,200), ("left","left"), parent=self.account_settings_frame) as threadsRow:
                     self.account_ui_elements.append(threadsRow)
                     maya.text(label="Threads:    ", align="left")
                     self._threads = maya.int_field(
@@ -77,7 +80,7 @@ class ConfigUI(object):
                         enable=True,
                         value=20)
             
-                with utils.Row(2, 2, (90,210), ("left","center"),
+                with utils.Row(2, 2, (100,200), ("left","center"),
                                 [(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as loggingRow:
                     self.account_ui_elements.append(loggingRow)
                     maya.text(label="Logging:    ", align="left")
@@ -88,6 +91,7 @@ class ConfigUI(object):
                         self._logging.add_item("Warning")
                         self._logging.add_item("Error")
 
+        self.status = "Authenticated"
         self.disable(True)
         maya.form_layout(self.page, edit=True, enable=True)
         maya.refresh()
@@ -104,8 +108,8 @@ class ConfigUI(object):
                 with utils.Row(2, 2, (90,210), ("left","left"),
                                 [(1, "top", 15),(2,"top",15)]):
                     maya.text(label="Status: ", align="left")
-                    self.auth_status = maya.text(label="", align="left")
-
+                    self.auth_status = maya.text(label="", align="center")
+                    self.status = "Please select Subscription"
                 with utils.Row(2, 2, (90,210), ("left","left")) as subscriptionRow:
                     maya.text(label="Subscription:    ", align="left")
                     with utils.Dropdown(self.select_subscription_in_dropdown) as subscription_dropdown:
@@ -122,10 +126,14 @@ class ConfigUI(object):
         maya.refresh()
 
     def init_after_subscription_selected(self):
-        if self.batchAccountRow is not None:
-            maya.delete_ui(self.batchAccountRow)
-        with utils.Row(2, 2, (90,210), ("left","left"), parent=self.account_settings_frame) as batchAccountRow:
-            self.batchAccountRow = batchAccountRow
+        if self.batch_account_row is not None:
+            maya.delete_ui(self.batch_account_row)
+        if self.account_ui_elements:
+            maya.delete_ui(self.account_ui_elements)
+        self.account_ui_elements = []
+        self.status = "Please select Batch Account"
+        with utils.Row(2, 2, (90,210), ("left","left"), parent=self.account_settings_frame) as batch_account_row:
+            self.batch_account_row = batch_account_row
             maya.text(label="Batch Account:    ", align="left")
             maya.refresh()
             with utils.Dropdown(self.select_account_in_dropdown) as account_dropdown:
@@ -135,13 +143,14 @@ class ConfigUI(object):
                 for account in accounts:
                     self._account_dropdown.add_item(account.name)
 
-    def init_after_batch_account_selected(self, callback_to_init_settings):
-        if self.account_ui_elements is not None and not self.account_ui_elements.count() == 0:
+    def init_after_batch_account_selected(self):
+        if self.account_ui_elements:
             maya.delete_ui(self.account_ui_elements)
         self.account_ui_elements = []
+        self.status = "Authenticated"
         with utils.Row(2, 2, (90, 210), ("left","left"),[(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as storageAccountRow:
             self.account_ui_elements.append(storageAccountRow)
-            maya.text(label="Storage Account:   ", align="right")
+            maya.text(label="Storage Account:   ", align="left")
             self.storage_account_field = maya.text_field(height=25, enable=True, editable=False, text=self.base.storage_account)
 
         #TODO: Allow set to 0 to disable threads
@@ -176,6 +185,8 @@ class ConfigUI(object):
     def select_subscription_in_dropdown(self, selected_subscription_name):
         # TODO: Check value against current lists. 
         if selected_subscription_name:
+            self.status = "Loading"
+            maya.refresh()
             self._subscription_dropdown.select(selected_subscription_name)
             self.selected_subscription_id = self.subscriptions_by_displayname[selected_subscription_name].subscription_id
             self.subscription = selected_subscription_name
@@ -184,9 +195,11 @@ class ConfigUI(object):
 
     def select_account_in_dropdown(self, account_displayName):
         if account_displayName:
+            self.status = "Loading"
+            maya.refresh()
             self._account_dropdown.select(account_displayName)
             self.selected_batchaccount = self.accounts_by_name[account_displayName]
-            self.base.init_after_batch_account_selected(self.selected_batchaccount.name, self. self.selected_subscription_id)
+            self.base.init_after_batch_account_selected(self.selected_batchaccount, self.selected_subscription_id)
             self.init_after_batch_account_selected()
 
     @property
@@ -227,10 +240,13 @@ class ConfigUI(object):
     @status.setter
     def status(self, value):
         """Plug-in authentication status. Sets contents of label."""
-        if value:
+        if value == "Authenticated":
             maya.text(self.auth_status, edit=True, label="Authenticated", backgroundColor=[0.23, 0.44, 0.21])
         else:
-            maya.text(self.auth_status, edit=True, label="Not authenticated", backgroundColor=[0.6, 0.23, 0.23])
+            if value == "Loading":
+                maya.text(self.auth_status, edit=True, label="Loading", backgroundColor=[0.6, 0.23, 0.23])
+            else:
+                maya.text(self.auth_status, edit=True, label=value, backgroundColor=[0.6, 0.6, 0.23])
 
     @property
     def logging(self):
@@ -259,9 +275,17 @@ class ConfigUI(object):
 
     def prompt_for_login(self, value):
         """Called when the plug-in is prompting for authentication login. Sets heading text."""
-        maya.text(
-            self.heading, edit=True, label=value)
+       
+        self.devicelogin_code = value[93:103]
+        login_prompt_string = "To sign in, use a web browser to open the page <a href=\"https://aka.ms/devicelogin/\">https://aka.ms/devicelogin</a> and enter the code {} to authenticate."
+        login_prompt_string = login_prompt_string.format(self.devicelogin_code)
+
+        maya.text(self.heading, edit=True, label=login_prompt_string, align="center", font="plainLabelFont", hyperlink=True, parent=self.auth_layout, backgroundColor=[0.75, 0.75, 0.75], width=300)
+        maya.button(label="Copy Code to clipboard", command=self.copy_devicelogincode_to_clipboard, parent=self.auth_layout, width=200)
         maya.form_layout(self.page, edit=True, enable=True)
+
+    def copy_devicelogincode_to_clipboard(self, *args):
+        utils.copy_to_clipboard(self.devicelogin_code)
 
     def prepare(self):
         """Prepare Config tab contents - nothing needs to be done here as all

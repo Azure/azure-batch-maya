@@ -218,10 +218,10 @@ class AzureBatchConfig(object):
         context = adal.AuthenticationContext(self.aadAuthorityHostUrl + '/' + self.aadTenant, api_version=None)
 
         code = context.acquire_user_code(self.mgmtAadResource, self.aadClientId)
-
+        self._log.info(code['message'])
+        
         self.ui.prompt_for_login(code['message'])
         maya.refresh()
-        self.ui.disable(False)
 
         def aad_auth_thread_func(context, code):
             self.mgmt_auth_token = context.acquire_token_with_device_code(self.mgmtAadResource, code, self.aadClientId)
@@ -444,6 +444,8 @@ class AzureBatchConfig(object):
         """Retrieve the currently available subscriptions to populate
         the subscription selection drop down.
         """
+        if not self.subscription_client:
+            self.subscription_client = SubscriptionClient(self.mgmtCredentials)
         all_subscriptions = self._call(self.subscription_client.subscriptions.list)
         self.subscriptions = []
         for subscription in all_subscriptions:
@@ -465,13 +467,14 @@ class AzureBatchConfig(object):
     def init_after_batch_account_selected(self, batchaccount, subscription_id):
         self.batch_account = batchaccount.name
         self.batch_url = "https://" + batchaccount.account_endpoint
+
         #if batchaccount.auto_storage == None:
             #throw exception or display message that account needs autoStorage set through the portal first
         storageAccountId = batchaccount.auto_storage.storage_account_id
+        self.storage_account_resource_id = storageAccountId
 
         parsedStorageAccountId = msrestazuretools.parse_resource_id(storageAccountId)
-
-        self.storage_account_resource_id = storageAccountId
+        self.storage_account = parsedStorageAccountId['name']
 
         self.storage_mgmt_client = StorageManagementClient(self.mgmtCredentials, str(subscription_id))
 
@@ -486,6 +489,7 @@ class AzureBatchConfig(object):
             storage_client=self._storage)
 
         self._client.config.add_user_agent(self._user_agent)
+        self.logging_level = self.default_logging()
         self.save_changes()
         self._log = self._configure_logging(self.logging_level)
 

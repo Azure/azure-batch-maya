@@ -7,6 +7,7 @@ from enum import Enum
 import os
 import logging
 import platform
+import subprocess
 
 from azurebatchmayaapi import MayaAPI as maya
 from exception import CancellationException, FileUploadException
@@ -14,6 +15,9 @@ from exception import CancellationException, FileUploadException
 
 MAX_LOCAL_PATH_LENGTH = 150
 
+def copy_to_clipboard(txt):
+    cmd='echo '+ txt.strip() +'|clip'
+    return subprocess.check_call(cmd, shell=True)
 
 def shorten_path(path, filename):
     """Iteratively remove directories from the end of a file path
