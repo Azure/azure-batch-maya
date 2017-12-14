@@ -73,6 +73,10 @@ class AzureBatchConfig(object):
         self.ui = ConfigUI(self, settings, frame)
         self._configure_plugin(False)
 
+        #TODO as part of init should check batch and storage clients work somehow 
+        #old method with dummy listPool etc calls slowed down opening,
+        #so maybe do this in background after UI has been fully loaded
+
     @property
     def batch(self):
         return self._client
@@ -136,10 +140,6 @@ class AzureBatchConfig(object):
     @batch_account.setter
     def batch_account(self, value):
         self._batch_account = value
-
-    @property
-    def auth(self):
-        return self._auth
 
     @property
     def path(self):
@@ -308,20 +308,6 @@ class AzureBatchConfig(object):
         finally:
             if self._client != None:
                 self._client.threads = self.ui.threads
-        self.ui.set_authenticate(self._auth)
-
-    def _auto_authentication(self):
-        """Test whether the clients are correctly authenticated
-        by doing some quick API calls.
-        """
-        try:
-            filter = batch.models.PoolListOptions(max_results=1, select="id")
-            list(self._client.pool.list(filter))
-            self._storage.list_containers(num_results=1)
-            return True
-        except Exception as exp:
-            self._log.info("Failed to authenticate: {0}".format(exp))
-            return False
 
     def _save_config(self):
         """Persist the current plugin configuration to file."""
@@ -368,18 +354,6 @@ class AzureBatchConfig(object):
             self._cfg.add_section('AzureBatch')
         except ConfigParser.DuplicateSectionError:
             pass
-
-    def authenticate(self):
-        """Begin authentication - initiated by the UI button."""
-        try:
-            self._configure_plugin(True)
-            self._auth = self._auto_authentication()
-        except ValueError as exp:
-            maya.error(str(exp))
-            self._auth = False
-        finally:
-            self.ui.set_authenticate(self._auth)
-            self.session()
     
     def get_threads(self):
         """Attempt to retrieve number of threads configured for the plugin."""
@@ -495,12 +469,9 @@ class AzureBatchConfig(object):
 
         self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
 
-        self._auth = self._auto_authentication()
-
         self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
 
     def init_from_config(self):
-
         parsedStorageAccountId = msrestazuretools.parse_resource_id(self.storage_account_resource_id)
         self.storage_account = parsedStorageAccountId['name']
 
@@ -519,10 +490,7 @@ class AzureBatchConfig(object):
         self._client.config.add_user_agent(self._user_agent)
         self.save_changes()
         self._log = self._configure_logging(self.logging_level)
-
         self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
-
-        self._auth = self._auto_authentication()
 
         self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
 

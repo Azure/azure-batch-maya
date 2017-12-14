@@ -62,6 +62,7 @@ class ConfigUI(object):
                     maya.refresh()
                     self.selected_batch_account_textfield = maya.text_field(height=25, enable=True, editable=False, text=self.base.batch_account)
 
+                #TODO test the case that autostorage is removed from a stored account in config
                 self.account_ui_elements = []
                 with utils.Row(2, 2, (100, 200), ("left","left"),[(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as storageAccountRow:
                     self.account_ui_elements.append(storageAccountRow)
@@ -304,17 +305,6 @@ class ConfigUI(object):
         :param int threads: The selected number of threads.
         """
         self.base.set_threads(int(threads))
-
-    def set_authenticate(self, auth):
-        """Set label of authentication button depending on auth status.
-        :param bool auth: Whether plug-in is authenticated.
-        """
-        self.status = auth
-        if auth:
-            maya.button(
-                self._authenticate, edit=True, label="Refresh Authentication")
-        else:
-            maya.button(self._authenticate, edit=True, label="Authenticate")
 
     def authenticate(self, *args):
         """Initiate plug-in authentication, and save updated credentials

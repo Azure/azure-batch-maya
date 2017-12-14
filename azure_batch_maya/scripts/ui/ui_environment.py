@@ -29,9 +29,7 @@ class EnvironmentUI(object):
         self.ready = False
         self.page = maya.form_layout(enableBackground=True)
         self.license_settings = {}
-        with utils.ScrollLayout(
-            v_scrollbar=3, h_scrollbar=0, height=520) as scroll:
-
+        with utils.ScrollLayout(v_scrollbar=3, h_scrollbar=0, height=520) as scroll:
             with utils.RowLayout(row_spacing=20) as sublayout:
                 with utils.FrameLayout(
                     label="Render Node Configuration", collapsable=True, width=325):
