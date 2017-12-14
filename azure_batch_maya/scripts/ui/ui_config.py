@@ -65,7 +65,7 @@ class ConfigUI(object):
                 self.account_ui_elements = []
                 with utils.Row(2, 2, (100, 200), ("left","left"),[(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as storageAccountRow:
                     self.account_ui_elements.append(storageAccountRow)
-                    maya.text(label="Storage Account:   ", align="left")
+                    maya.text(label="Storage Account:", align="left")
                     self.storage_account_field = maya.text_field(height=25, enable=True, editable=False, text=self.base.storage_account)
 
                 #TODO: Allow set to 0 to disable threads
@@ -150,7 +150,7 @@ class ConfigUI(object):
         self.status = "Authenticated"
         with utils.Row(2, 2, (90, 210), ("left","left"),[(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as storageAccountRow:
             self.account_ui_elements.append(storageAccountRow)
-            maya.text(label="Storage Account:   ", align="left")
+            maya.text(label="Storage Account:", align="left")
             self.storage_account_field = maya.text_field(height=25, enable=True, editable=False, text=self.base.storage_account)
 
         #TODO: Allow set to 0 to disable threads
