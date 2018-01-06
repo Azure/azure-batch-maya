@@ -3,7 +3,8 @@ unreleased v0.17.0
 ------------------
 - Restructured dependency installation for wider compatibility:
     get_pip.py is now packaged with the plugin.
--Fixed unicode filename errors in thumbnail generation.
+- Fixed unicode filename errors in thumbnail generation.
+- Fixed detection of Bifrost caches as assets.
 
 2017.10.16 v0.16.0
 ------------------
