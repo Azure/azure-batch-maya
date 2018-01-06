@@ -18,9 +18,9 @@ import maya.OpenMayaMPx as omp
 from default import AzureBatchRenderJob, AzureBatchRenderAssets
 
 try:
-    str = unicode
+    str_type = unicode
 except NameError:
-    pass
+    str_type = str
 
 
 class ArnoldRenderJob(AzureBatchRenderJob):
@@ -40,7 +40,7 @@ class ArnoldRenderJob(AzureBatchRenderJob):
         if self.scene_name == '':
             job_name = "Untitled"
         else:
-            job_name = str(os.path.splitext(os.path.basename(self.scene_name))[0])
+            job_name = str_type(os.path.splitext(os.path.basename(self.scene_name))[0])
         file_prefix = cmds.getAttr("defaultRenderGlobals.imageFilePrefix")
         if file_prefix:
             file_prefix = os.path.split(file_prefix)[1]
@@ -59,7 +59,7 @@ class ArnoldRenderJob(AzureBatchRenderJob):
         self.logging = self.display_menu("Logging:   ", self.log_levels, log_level+1)
 
     def get_title(self):
-        return str(cmds.textField(self.job_name, query=True, text=True))
+        return str_type(cmds.textField(self.job_name, query=True, text=True))
 
     def render_enabled(self):
         return True
@@ -147,9 +147,12 @@ class ArnoldRenderAssets(AzureBatchRenderAssets):
     
     def setup_script(self, script_handle, pathmap, searchpaths):
         search_path = ';'.join(searchpaths).encode('utf-8')
-        script_handle.write("setAttr -type \"string\" defaultArnoldRenderOptions.procedural_searchpath \"{}\";\n".format(search_path))
-        script_handle.write("setAttr -type \"string\" defaultArnoldRenderOptions.plugin_searchpath \"{}\";\n".format(search_path))
-        script_handle.write("setAttr -type \"string\" defaultArnoldRenderOptions.texture_searchpath \"{}\";\n".format(search_path))
+        procedural_searchpath = str("setAttr -type \"string\" defaultArnoldRenderOptions.procedural_searchpath \"{}\";\n").format(search_path)
+        plugin_searchpath = str("setAttr -type \"string\" defaultArnoldRenderOptions.plugin_searchpath \"{}\";\n").format(search_path)
+        texture_searchpath = str("setAttr -type \"string\" defaultArnoldRenderOptions.texture_searchpath \"{}\";\n").format(search_path)
+        script_handle.write(procedural_searchpath)
+        script_handle.write(plugin_searchpath)
+        script_handle.write(texture_searchpath)
         
         # This kind of explicit asset re-direct is kinda ugly - so far
         # it only seems to be needed on aiImage nodes, which appear to
