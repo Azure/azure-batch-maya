@@ -500,6 +500,34 @@ class Assets(object):
         self._log.debug("Found {0} references.".format(len(assets)))
         return assets
 
+    def _get_bifrost_caches(self, assets):
+        start = maya.start_frame()
+        end = maya.end_frame()
+        step = maya.frame_step()
+        caches = []
+        cache_paths = []
+        containers = maya.get_list(type="bifrostContainer")
+        for container in containers:
+            for cache_type in ['Foam', 'Guide', 'Liquid', 'LiquidMesh', 'Solid']:
+                try:
+                    enabled = maya.get_attr(container + ".enable{}Cache".format(cache_type))
+                except ValueError:
+                    continue
+                if enabled:
+                    cache_name = maya.get_attr(container + ".{}CacheFileName".format(cache_type.lower()))
+                    cache_path = maya.get_attr(container + ".{}CachePath".format(cache_type.lower()))
+                    cache_paths.append(os.path.join(cache_path, cache_name))
+        cache_paths = list(set(cache_paths))
+        for cache_path in cache_paths:
+            for frame in range(start, end+step, step):
+                frame_name = "*.{}.bif".format(str(frame).zfill(4))
+                caches.extend(glob.glob(os.path.join(cache_path, "**", frame_name)))
+        caches = list(set(caches))
+        for cache in caches:
+            asset = Asset(cache, assets, self.batch, self._log)
+            if not asset.is_duplicate(assets):
+                assets.append(asset)
+
     def _get_caches(self):
         """Gather data caches as assets. TODO: This needs to be tested.
         We generally only want to gather caches relevant to the current
@@ -518,20 +546,7 @@ class Assets(object):
                     asset = Asset(cache_path, assets, self.batch, self._log)
                     assets.append(asset)
 
-        containers = maya.get_list(type="bifrostContainer")
-        for container in containers:
-            if not maya.get_attr(container + ".enableDiskCache"):
-                continue
-            bifrost_path = maya.get_attr(container + ".cacheDir")
-            bifrost_name = maya.get_attr(container + ".cacheName")
-            start = maya.start_frame()
-            end = maya.end_frame()
-            step = maya.frame_step()
-            for frame in range(start, end+step, step):
-                cache_file = os.path.join(bifrost_path, bifrost_name + "_p." + str(frame).zfill(4) + ".bif")
-                if os.path.exists(cache_file):
-                    asset = Asset(cache_file, assets, self.batch, self._log)
-                    assets.append(asset)
+        self._get_bifrost_caches(assets)
         self._log.debug("Found {0} caches.".format(len(assets)))
         return assets
 
@@ -769,4 +784,3 @@ class UploadProgress(object):
         if int(progress) > self.progress:
             self.progress = int(progress)
             self.queue.put(lambda: self.command(progress))
-
