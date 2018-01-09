@@ -101,7 +101,7 @@
         "filePath": "workspace.mel"
       }
     ],
-    "commandLine": "/bin/bash -c \"yum install -y libunwind libicu && curl -sSL -o dotnet.tar.gz https://go.microsoft.com/fwlink/?linkid=848821 && mkdir -p /opt/dotnet && tar zxf dotnet.tar.gz -C /opt/dotnet && ln -nsf /opt/dotnet/dotnet /usr/local/bin && wget -O azcopy.tar.gz https://aka.ms/downloadazcopyprlinux && tar -xf azcopy.tar.gz && ./install.sh && azcopy --source \\\"[parameters('storageURL')]\\\" --destination $AZ_BATCH_JOB_PREP_WORKING_DIR/assets --recursive\""
+    "commandLine": "/bin/bash -c \"yum install -y libunwind libicu && curl -sSL -o dotnet.tar.gz https://download.microsoft.com/download/7/3/A/73A3E4DC-F019-47D1-9951-0453676E059B/dotnet-sdk-2.0.2-linux-x64.tar.gz && mkdir -p /opt/dotnet && tar zxf dotnet.tar.gz -C /opt/dotnet && ln -nsf /opt/dotnet/dotnet /usr/local/bin && wget -O azcopy.tar.gz https://aka.ms/downloadazcopyprlinux && tar -xf azcopy.tar.gz && ./install.sh && azcopy --source \\\"[parameters('storageURL')]\\\" --destination $AZ_BATCH_JOB_PREP_WORKING_DIR/assets --recursive\""
   },
   "taskFactory": {
     "type": "parametricSweep",
