@@ -517,6 +517,8 @@ class Assets(object):
                     cache_name = maya.get_attr(container + ".{}CacheFileName".format(cache_type.lower()))
                     cache_path = maya.get_attr(container + ".{}CachePath".format(cache_type.lower()))
                     cache_paths.append(os.path.join(cache_path, cache_name))
+                    self.pathmaps[cache_path] = utils.get_remote_file_path(cache_path)
+                    self.pathmaps[cache_paths[-1]] = utils.get_remote_file_path(cache_paths[-1])
         cache_paths = list(set(cache_paths))
         for cache_path in cache_paths:
             for frame in range(start, end+step, step):
