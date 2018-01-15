@@ -30,7 +30,7 @@ warnings.simplefilter('ignore')
 
 INSTALL_DIR = os.path.normpath(
     os.path.join(cmds.internalVar(userScriptDir=True), 'azure-batch-libs'))
-sys.path.append(INSTALL_DIR)
+sys.path.insert(0, INSTALL_DIR)
 
 REQUIREMENTS = {
     "pathlib==1.0.1": "pathlib",
@@ -47,7 +47,7 @@ NAMESPACE_PACKAGES = {
     "azure-batch-extensions==1.0.1": "azure.batch_extensions"
 }
 
-VERSION = "0.16.0"
+VERSION = "0.17.0"
 EULA_PREF = "AzureBatch_EULA"
 SHELF_FILE = "shelf_AzureBatch.mel"
 cmd_name = "AzureBatch"
@@ -269,6 +269,7 @@ class AzureBatchSetup(OpenMayaMPx.MPxCommand):
         sys.path.append(modpath)
         sys.path.append(srcpath)
         sys.path.append(os.path.join(srcpath, "ui"))
+        sys.path.append(tolpath)
 
         script_dirs = os.environ["MAYA_SCRIPT_PATH"] + os.pathsep
         os.environ["AZUREBATCH_ICONS"] = AzureBatchSetup.clean(icnpath)
@@ -349,7 +350,7 @@ def dependency_installed(package, namespace):
         return True
 
 
-def install_pkg(package):
+def install_pkg(pip, package):
     """Install the specified package by shelling out to pip.
     :param str package: A pip-formatted package reference.
 
@@ -358,9 +359,7 @@ def install_pkg(package):
     """
     if not os.path.isdir(INSTALL_DIR):
         os.makedirs(INSTALL_DIR)
-    pip_cmds = ['mayapy', os.path.join(INSTALL_DIR, 'pip'), 
-                'install', package, 
-                '--target', INSTALL_DIR]
+    pip_cmds = ['mayapy', pip, 'install', package, '--target', INSTALL_DIR]
     print(pip_cmds)
     installer = subprocess.Popen(pip_cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     installer.wait()
@@ -370,7 +369,7 @@ def install_pkg(package):
         raise RuntimeError("Failed to install package: {}".format(package))
 
 
-def install_namespace_pkg(package, namespace):
+def install_namespace_pkg(pip, package, namespace):
     """Azure packages have issues installing one by one as they don't
     unpackage correctly into the namespace directory. So we have to install
     to a temp directory and move it to the right place.
@@ -381,10 +380,7 @@ def install_namespace_pkg(package, namespace):
     temp_target = os.path.join(INSTALL_DIR, 'temp-target')
     if not os.path.isdir(temp_target):
         os.makedirs(temp_target)
-    pip_cmds = ['mayapy', os.path.join(INSTALL_DIR, 'pip'),
-                'install', package, 
-                '--no-deps',
-                '--target', temp_target]
+    pip_cmds = ['mayapy', pip, 'install', package, '--no-deps', '--target', temp_target]
     print(pip_cmds)
     installer = subprocess.Popen(pip_cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     installer.wait()
@@ -447,25 +443,39 @@ def initializePlugin(obj):
 
         print("Attempting to install dependencies via Pip.")
         try:
-            install_script = os.path.normpath(os.path.join( os.environ['AZUREBATCH_TOOLS'], 'install_pip.py'))
-            installer = subprocess.Popen(["mayapy", install_script, '--target', INSTALL_DIR],
-                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            installer.wait()
-            if installer.returncode != 0:
+            import pip
+            if StrictVersion(pip.__version__) < StrictVersion("9.0.0"):
+                print("Found out-of-date pip ({}) - attempting to upgrade.".format(pip.__version__))
+                raise ImportError
+            print("Found pip installed, version: {}".format(pip.__version__))
+            pip_location = os.path.dirname(pip.__file__)
+        except ImportError:
+            try:
+                import getpip
+                print("Running getpip command")
+                install_script = getpip.__file__
+                args = ["mayapy", install_script, "--target", INSTALL_DIR]
+                print(args)
+                installer = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                installer.wait()
                 print(installer.stdout.read())
                 print(installer.stderr.read())
-                raise RuntimeError("Failed to install pip")
-        except BaseException as exp:
-            print("Failed to install Pip. Please install dependencies manually to continue.")
-            raise
+                if installer.returncode != 0:
+                    raise RuntimeError("Failed to install pip")
+            except ImportError as e:
+                print("Unable to load getpip")
+                raise
+            else:
+                print("Getpip complete")
+                pip_location = os.path.join(INSTALL_DIR, "pip")
         try:
-            print("Installing dependencies")
+            print("Installing dependencies using {}".format(pip_location))
             for package in missing_libs:
                 if package in NAMESPACE_PACKAGES:
                     package_path = NAMESPACE_PACKAGES[package].split('.')
-                    install_namespace_pkg(package, os.path.join(*package_path))
+                    install_namespace_pkg(pip_location, package, os.path.join(*package_path))
                 else:
-                    install_pkg(package)
+                    install_pkg(pip_location, package)
             shutil.copy(os.path.join(INSTALL_DIR, 'azure', '__init__.py'), os.path.join(INSTALL_DIR, 'azure', 'mgmt', '__init__.py'))
         except:
             error = "Failed to install dependencies - please install manually"
@@ -521,6 +531,7 @@ def uninitializePlugin(obj):
 try:
     sys.path.extend(os.environ["AZUREBATCH_SCRIPTS"].split(os.pathsep))
     sys.path.append(os.environ['AZUREBATCH_MODULES'])
+    sys.path.append(os.environ['AZUREBATCH_TOOLS'])
 except KeyError as e:
     print("Couldn't find Azure Batch environment, setting up now...")
     setup_module()
