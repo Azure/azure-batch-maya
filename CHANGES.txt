@@ -1,5 +1,5 @@
 
-unreleased v0.17.0
+2018.01.15 v0.17.0
 ------------------
 - Restructured dependency installation for wider compatibility:
     get_pip.py is now packaged with the plugin.
