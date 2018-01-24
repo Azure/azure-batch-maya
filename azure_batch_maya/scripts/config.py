@@ -83,11 +83,27 @@ class AzureBatchConfig(object):
 
     @property
     def subscription_client(self):
-        return self._subscription_client
+        try:
+            return self._subscription_client
+        except AttributeError:
+            self._subscription_client = None
+            return self._subscription_client
 
     @subscription_client.setter
     def subscription_client(self, value):
         self._subscription_client = value
+
+    @property
+    def batch_mgmt_client(self):
+        try:
+            return self._batch_mgmt_client
+        except AttributeError:
+            self._batch_mgmt_client = None
+            return self._batch_mgmt_client
+
+    @batch_mgmt_client.setter
+    def batch_mgmt_client(self, value):
+        self._batch_mgmt_client = value
 
     @property
     def storage(self):
@@ -272,42 +288,52 @@ class AzureBatchConfig(object):
             self.convert_utc_expireson_to_local_timezone_naive(self._mgmt_auth_token)
         except ConfigParser.NoOptionError:
             self._mgmt_auth_token = ""
+
+        #set to true optimistically here, if any values are missing then this must be an old config format
+        self.can_init_from_config = True
         try:
             self.subscription_id = self._cfg.get('AzureBatch', 'subscription_id')
         except ConfigParser.NoOptionError:
             self.subscription_id = ""
+            self.can_init_from_config = False
         try:
             self._subscription_name = self._cfg.get('AzureBatch', 'subscription_name')
         except ConfigParser.NoOptionError:
             self._subscription_name = ""
+            self.can_init_from_config = False
         try:
             self.batch_url = self._cfg.get('AzureBatch', 'batch_url')
         except ConfigParser.NoOptionError:
             self.batch_url = ""
+            self.can_init_from_config = False
         try:
             self.batch_account = self._cfg.get('AzureBatch', 'batch_account')
             self.can_init_from_config = True
         except ConfigParser.NoOptionError:
             self.batch_account = ""
+            self.can_init_from_config = False
         try:
             self.storage_account_resource_id = self._cfg.get('AzureBatch', 'storage_account_resource_id')
         except ConfigParser.NoOptionError:
             self.storage_account_resource_id = ""
+            self.can_init_from_config = False
         try:
             self.storage_key = self._cfg.get('AzureBatch', 'storage_key')
         except ConfigParser.NoOptionError:
             self.storage_key = ""
+            self.can_init_from_config = False
         try:
             self.logging_level = self._cfg.getint('AzureBatch', 'logging')
+            self._log = self._configure_logging(self.logging_level)
         except ConfigParser.NoOptionError:
             self.logging_level = self.default_logging()
         try:
-            self.ui.threads = self._cfg.getint('AzureBatch', 'threads')
+            self.threads = self._cfg.getint('AzureBatch', 'threads')
         except ConfigParser.NoOptionError:
-            self.ui.threads = 20
+            self.threads = 20
         finally:
             if self._client != None:
-                self._client.threads = self.ui.threads
+                self._client.threads = self.threads
 
     def _save_config(self):
         """Persist the current plugin configuration to file."""
@@ -431,19 +457,18 @@ class AzureBatchConfig(object):
         self.subscription_id = subscription_id
         self.subscription_name = subscription_name
         self.batch_mgmt_client = BatchManagementClient(self.mgmtCredentials, str(subscription_id))
-        batch_accounts = self._call(self.batch_mgmt_client.batch_account.list)
-        accounts = []
-        for account in batch_accounts:
-            accounts.append(account)
-        self.count = len(accounts)
-        self._available_batch_accounts = accounts
+        #batch_accounts = self._call(self.batch_mgmt_client.batch_account.list)
+        #accounts = []
+        #for account in batch_accounts:
+        #    if account.auto_storage != None:
+        #        accounts.append(account)
+        #self.count = len(accounts)
+        #self._available_batch_accounts = accounts
 
     def init_after_batch_account_selected(self, batchaccount, subscription_id):
         self.batch_account = batchaccount.name
         self.batch_url = "https://" + batchaccount.account_endpoint
 
-        #if batchaccount.auto_storage == None:
-            #throw exception or display message that account needs autoStorage set through the portal first
         storageAccountId = batchaccount.auto_storage.storage_account_id
         self.storage_account_resource_id = storageAccountId
 
@@ -487,11 +512,11 @@ class AzureBatchConfig(object):
             base_url=self.batch_url,
             storage_client=self._storage)
 
+        self.ui.selected_subscription_id = self.subscription_id
+
         self._client.config.add_user_agent(self._user_agent)
         self.save_changes()
         self._log = self._configure_logging(self.logging_level)
-        self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
-
         self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
 
         self.ui.init_from_config()
@@ -500,6 +525,16 @@ class AzureBatchConfig(object):
         """Retrieve the currently available batch accounts to populate
         the account selection drop down.
         """
+        if not self.batch_mgmt_client:
+             self.batch_mgmt_client = BatchManagementClient(self.mgmtCredentials, str(self.subscription_id))
+        batch_accounts = self._call(self.batch_mgmt_client.batch_account.list)
+        accounts = []
+        for account in batch_accounts:
+            if account.auto_storage != None:
+                accounts.append(account)
+        self.count = len(accounts)
+        self._available_batch_accounts = accounts
+
         return self._available_batch_accounts
 
     def default_logging(self):
@@ -507,10 +542,11 @@ class AzureBatchConfig(object):
 
     def convert_timezone_naive_expireson_to_utc(self, token):
         # we want to store token expiry times as UTC for consistency
-        expireson_local = dateparse(token['expiresOn']).replace(tzinfo=dateutil.tz.tzlocal())
-        expireson_utc = expireson_local.astimezone(dateutil.tz.gettz('UTC'))
-        token['expiresOnUTC'] = str(expireson_utc)
-        del token['expiresOn']
+        if 'expiresOnUTC' not in token:
+            expireson_local = dateparse(token['expiresOn']).replace(tzinfo=dateutil.tz.tzlocal())
+            expireson_utc = expireson_local.astimezone(dateutil.tz.gettz('UTC'))
+            token['expiresOnUTC'] = str(expireson_utc)
+            del token['expiresOn']
 
     def convert_utc_expireson_to_local_timezone_naive(self, token):
         #the standard token expireson format which the various AAD libraries expect / return is a vanilla datetime string, in local time and timezone naive (no tz specified)
