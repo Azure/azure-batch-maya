@@ -47,7 +47,7 @@ class AzureBatchConfig(object):
     mgmtAadResource = "https://management.core.windows.net/"
     aadTenant = "microsoft.onmicrosoft.com"
     aadAuthorityHostUrl = "https://login.microsoftonline.com"
-    aadClientId = "72d009d6-c30b-4728-9222-bb4cf6ca393c"
+    aadClientId = "04b07795-8ddb-461a-bbee-02f9e1bf7b46" #Azure CLI
 
     def __init__(self, index, settings, frame, start, call):
         """Create new configuration Handler.
