@@ -63,11 +63,16 @@ class AzureBatchSettings(object):
 
     def init_after_account_selected(self):
         try:
-            self.submission = AzureBatchSubmission(self.tab_index['SUBMIT'], self.frame, self.call)
-            self.assets = AzureBatchAssets(self.tab_index['ASSETS'], self.frame, self.call)
-            self.pools = AzureBatchPools(self.tab_index['POOLS'], self.frame, self.call)
-            self.jobhistory =  AzureBatchJobHistory(self.tab_index['JOBHISTORY'], self.frame, self.call)
-            self.env =  AzureBatchEnvironment(self.tab_index['ENV'], self.frame, self.call)
+            if not hasattr(self, "submission"):
+                self.submission = AzureBatchSubmission(self.tab_index['SUBMIT'], self.frame, self.call)
+            if not hasattr(self, "assets"):
+                self.assets = AzureBatchAssets(self.tab_index['ASSETS'], self.frame, self.call)
+            if not hasattr(self, "pools"):
+                self.pools = AzureBatchPools(self.tab_index['POOLS'], self.frame, self.call)
+            if not hasattr(self, "jobhistory"):
+                self.jobhistory =  AzureBatchJobHistory(self.tab_index['JOBHISTORY'], self.frame, self.call)
+            if not hasattr(self, "env"):
+                self.env =  AzureBatchEnvironment(self.tab_index['ENV'], self.frame, self.call)
             self.start()
         except Exception as exp:
             if (maya.window("AzureBatch", q=1, exists=1)):

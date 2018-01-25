@@ -42,9 +42,16 @@ class ConfigUI(object):
 
     def change_subscription_button_pressed(self, *args):
         self.status = "Loading"
-        maya.menu(self._subscription_dropdown.menu, edit=True, deleteAllItems=True, enable=True)
         maya.refresh()
+        maya.form_layout(self.page, edit=True, enable=False)
+
+        maya.menu(self._subscription_dropdown.menu, edit=True, deleteAllItems=True, enable=True)
         maya.delete_ui(self._change_subscription_button)
+        if self.batch_account_row is not None:
+            maya.delete_ui(self.batch_account_row)
+        if self.account_ui_elements:
+            maya.delete_ui(self.account_ui_elements)
+        self.account_ui_elements = []
         subscriptions = self.base.available_subscriptions()
         self.subscriptions_by_displayname = dict([ (sub.display_name, sub) for sub in subscriptions ])
         self._subscription_dropdown.add_item("")    #dummy value so dropdown appears empty
@@ -52,13 +59,41 @@ class ConfigUI(object):
             self._subscription_dropdown.add_item(sub.display_name)
         maya.menu(self._subscription_dropdown.menu, edit=True, enable=True, width=257)
         self.status = "Please select Subscription"
+
+        #TODO: Allow set to 0 to disable threads
+        with utils.Row(2, 2, (100,200), ("left","left"), parent=self.account_settings_frame) as threadsRow:
+            self.account_ui_elements.append(threadsRow)
+            maya.text(label="Threads:    ", align="left")
+            self._threads = maya.int_field(
+                changeCommand=self.set_threads,
+                height=25,
+                minValue=1,
+                maxValue=40,
+                enable=True,
+                value=self.base.threads)
+            
+        with utils.Row(2, 2, (100,200), ("left","center"),
+                        [(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as loggingRow:
+            self.account_ui_elements.append(loggingRow)
+            maya.text(label="Logging:    ", align="left")
+            with utils.Dropdown(self.set_logging) as log_settings:
+                self._logging = log_settings
+                self._logging.add_item("Debug")
+                self._logging.add_item("Info")
+                self._logging.add_item("Warning")
+                self._logging.add_item("Error")
+        maya.form_layout(self.page, edit=True, enable=True)
         maya.refresh()
 
     def change_batch_account_button_pressed(self, *args):
         self.status = "Loading"
-        maya.menu(self._account_dropdown.menu, edit=True, deleteAllItems=True)
         maya.refresh()
+        maya.form_layout(self.page, edit=True, enable=False)
+        maya.menu(self._account_dropdown.menu, edit=True, deleteAllItems=True)
         maya.delete_ui(self._change_batch_account_button)
+        if self.account_ui_elements:
+            maya.delete_ui(self.account_ui_elements)
+        self.account_ui_elements = []
         maya.menu(self._account_dropdown.menu, edit=True, enable=True, width=257)
         accounts = self.base.available_batch_accounts()
         self.accounts_by_name = dict([ (account.name, account) for account in accounts ])
@@ -66,6 +101,30 @@ class ConfigUI(object):
         for account in accounts:
             self._account_dropdown.add_item(account.name)
         self.status = "Authenticated"
+
+        #TODO: Allow set to 0 to disable threads
+        with utils.Row(2, 2, (100,200), ("left","left"), parent=self.account_settings_frame) as threadsRow:
+            self.account_ui_elements.append(threadsRow)
+            maya.text(label="Threads:    ", align="left")
+            self._threads = maya.int_field(
+                changeCommand=self.set_threads,
+                height=25,
+                minValue=1,
+                maxValue=40,
+                enable=True,
+                value=self.base.threads)
+            
+        with utils.Row(2, 2, (100,200), ("left","center"),
+                        [(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as loggingRow:
+            self.account_ui_elements.append(loggingRow)
+            maya.text(label="Logging:    ", align="left")
+            with utils.Dropdown(self.set_logging) as log_settings:
+                self._logging = log_settings
+                self._logging.add_item("Debug")
+                self._logging.add_item("Info")
+                self._logging.add_item("Warning")
+                self._logging.add_item("Error")
+        maya.form_layout(self.page, edit=True, enable=True)
         maya.refresh()
 
     def init_from_config(self):
@@ -115,7 +174,7 @@ class ConfigUI(object):
                         minValue=1,
                         maxValue=40,
                         enable=True,
-                        value=20)
+                        value=self.base.threads)
             
                 with utils.Row(2, 2, (100,200), ("left","center"),
                                 [(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as loggingRow:
@@ -139,6 +198,11 @@ class ConfigUI(object):
             maya.delete_ui(self.subscription_ui_elements)
         if self.subscription_row is not None:
             maya.delete_ui(self.subscription_row)
+        if self.batch_account_row is not None:
+            maya.delete_ui(self.batch_account_row)
+        if self.account_ui_elements:
+            maya.delete_ui(self.account_ui_elements)
+        self.account_ui_elements = []
         self.subscription_ui_elements = []
         with utils.ScrollLayout(height=520, parent=self.page, width=325) as scroll:
             box_label = "Batch Account Settings"
@@ -160,6 +224,29 @@ class ConfigUI(object):
                         for sub in subscriptions:
                             self._subscription_dropdown.add_item(sub.display_name)
 
+                 #TODO: Allow set to 0 to disable threads
+                with utils.Row(2, 2, (100,200), ("left","left"), parent=self.account_settings_frame) as threadsRow:
+                    self.account_ui_elements.append(threadsRow)
+                    maya.text(label="Threads:    ", align="left")
+                    self._threads = maya.int_field(
+                        changeCommand=self.set_threads,
+                        height=25,
+                        minValue=1,
+                        maxValue=40,
+                        enable=True,
+                        value=self.base.threads)
+            
+                with utils.Row(2, 2, (100,200), ("left","center"),
+                                [(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as loggingRow:
+                    self.account_ui_elements.append(loggingRow)
+                    maya.text(label="Logging:    ", align="left")
+                    with utils.Dropdown(self.set_logging) as log_settings:
+                        self._logging = log_settings
+                        self._logging.add_item("Debug")
+                        self._logging.add_item("Info")
+                        self._logging.add_item("Warning")
+                        self._logging.add_item("Error")
+
         self.disable(True)
         maya.form_layout(self.page, edit=True, enable=True)
         maya.refresh()
@@ -167,11 +254,11 @@ class ConfigUI(object):
     def init_after_subscription_selected(self):
         self.status = "Loading"
         maya.refresh()
-        self.disable(False)
         if self.batch_account_row is not None:
             maya.delete_ui(self.batch_account_row)
         if self.account_ui_elements:
             maya.delete_ui(self.account_ui_elements)
+        self.disable(False)
         self.account_ui_elements = []
         with utils.Row(2, 2, (100,200), ("left","left"), parent=self.account_settings_frame) as batch_account_row:
             self.batch_account_row = batch_account_row
@@ -194,7 +281,7 @@ class ConfigUI(object):
                 minValue=1,
                 maxValue=40,
                 enable=True,
-                value=20)
+                value=self.base.threads)
 
         with utils.Row(2, 2, (100,200), ("left","center"),
                         [(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as loggingRow:
@@ -202,7 +289,7 @@ class ConfigUI(object):
             maya.text(label="Logging:    ", align="left")
             with utils.Dropdown(self.set_logging) as log_settings:
                 self._logging = log_settings
-                self._logging.add_item("Debug")
+                self._logging.add_item("Debug") 
                 self._logging.add_item("Info")
                 self._logging.add_item("Warning")
                 self._logging.add_item("Error")
@@ -229,7 +316,7 @@ class ConfigUI(object):
                 minValue=1,
                 maxValue=40,
                 enable=True,
-                value=20)
+                value=self.base.threads)
             
         with utils.Row(2, 2, (100,200), ("left","center"),
                         [(1, "bottom", 20),(2,"bottom",15)], parent=self.account_settings_frame) as loggingRow:
@@ -249,24 +336,29 @@ class ConfigUI(object):
         return self._subscription_dropdown.value()
 
     def select_subscription_in_dropdown(self, selected_subscription_name):
-        # TODO: Check value against current lists. 
+        self.status = "Loading"
+        maya.refresh()
         if selected_subscription_name:
-            self.status = "Loading"
-            maya.refresh()
             self._subscription_dropdown.select(selected_subscription_name)
-            self.base.subscription_id = self.subscriptions_by_displayname[selected_subscription_name].subscription_id
-            self.subscription = selected_subscription_name
-            self.base.init_after_subscription_selected(self.base.subscription_id, selected_subscription_name)
-            self.init_after_subscription_selected()
+        else:
+            self._subscription_dropdown.select(2)
+            selected_subscription_name =  self._subscription_dropdown.value()
+        self.base.subscription_id = self.subscriptions_by_displayname[selected_subscription_name].subscription_id
+        self.subscription = selected_subscription_name
+        self.base.init_after_subscription_selected(self.base.subscription_id, selected_subscription_name)
+        self.init_after_subscription_selected()
 
     def select_account_in_dropdown(self, account_displayName):
+        self.status = "Loading"
+        maya.refresh()
         if account_displayName:
-            self.status = "Loading"
-            maya.refresh()
             self._account_dropdown.select(account_displayName)
-            self.selected_batchaccount = self.accounts_by_name[account_displayName]
-            self.base.init_after_batch_account_selected(self.selected_batchaccount, self.base.subscription_id)
-            self.init_after_batch_account_selected()
+        else:
+            self._account_dropdown.select(2)
+            account_displayName = self._account_dropdown.value()
+        self.selected_batchaccount = self.accounts_by_name[account_displayName]
+        self.base.init_after_batch_account_selected(self.selected_batchaccount, self.base.subscription_id)
+        self.init_after_batch_account_selected()
 
     @property
     def threads(self):
