@@ -59,6 +59,7 @@ class AzureBatchConfig(object):
         """
         self.ui = None
         self.session = start
+        self.threads = 20
         self._tab_index = index
         self._data_dir = os.path.join(maya.prefs_dir(), 'AzureBatchData')
         self._ini_file = "azure_batch.ini"
@@ -483,16 +484,16 @@ class AzureBatchConfig(object):
             self.storage_account,
             self.storage_key)
 
+        #TODO refactor move the below shared block into def configureClient(client)
         self._client = batch.BatchExtensionsClient(self.batchCredentials, 
             base_url=self.batch_url,
             storage_client=self._storage)
 
         self._client.config.add_user_agent(self._user_agent)
+        self._client.threads = self.threads
         self.logging_level = self.default_logging()
         self.save_changes()
         self._log = self._configure_logging(self.logging_level)
-
-        self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
 
         self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
 
@@ -508,6 +509,7 @@ class AzureBatchConfig(object):
             self.storage_account,
             self.storage_key)
 
+        #TODO refactor move the below shared block into def configureClient(client)
         self._client = batch.BatchExtensionsClient(self.batchCredentials, 
             base_url=self.batch_url,
             storage_client=self._storage)
@@ -515,6 +517,7 @@ class AzureBatchConfig(object):
         self.ui.selected_subscription_id = self.subscription_id
 
         self._client.config.add_user_agent(self._user_agent)
+        self._client.threads = self.threads
         self.save_changes()
         self._log = self._configure_logging(self.logging_level)
         self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
