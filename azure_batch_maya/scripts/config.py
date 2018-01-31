@@ -59,7 +59,7 @@ class AzureBatchConfig(object):
         """
         self.ui = None
         self.session = start
-        self.threads = 20
+        self.threads = self.default_threads()
         self._tab_index = index
         self._data_dir = os.path.join(maya.prefs_dir(), 'AzureBatchData')
         self._ini_file = "azure_batch.ini"
@@ -331,7 +331,7 @@ class AzureBatchConfig(object):
         try:
             self.threads = self._cfg.getint('AzureBatch', 'threads')
         except ConfigParser.NoOptionError:
-            self.threads = 20
+            self.threads = self.default_threads()
         finally:
             if self._client != None:
                 self._client.threads = self.threads
@@ -542,6 +542,10 @@ class AzureBatchConfig(object):
 
     def default_logging(self):
         return 10
+
+    
+    def default_threads(self):
+        return 20
 
     def convert_timezone_naive_expireson_to_utc(self, token):
         # we want to store token expiry times as UTC for consistency
