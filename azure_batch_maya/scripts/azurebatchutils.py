@@ -22,9 +22,8 @@ def copy_to_clipboard(txt):
         return subprocess.check_call(cmd, shell=True)
     if platform == OperatingSystem.darwin.value:
         process = subprocess.Popen(
-        'pbcopy', env={'LANG': 'en_US.UTF-8'}, stdin=txt.strip())
-        process.communicate(output.encode('utf-8'))
-        return 
+        'pbcopy', env={'LANG': 'en_US.UTF-8'}, stdin=subprocess.PIPE)
+        process.communicate(txt.encode('utf-8')) 
 
 
 def shorten_path(path, filename):
