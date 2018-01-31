@@ -443,7 +443,7 @@ class ConfigUI(object):
         maya.form_layout(self.page, edit=True, enable=True)
 
     def copy_devicelogincode_to_clipboard(self, *args):
-        utils.copy_to_clipboard(self.devicelogin_code)
+        utils.copy_to_clipboard(self.devicelogin_code.rstrip())
 
     def prepare(self):
         """Prepare Config tab contents - nothing needs to be done here as all
