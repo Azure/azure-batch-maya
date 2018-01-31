@@ -37,7 +37,7 @@ REQUIREMENTS = {
     "futures==3.1.1": "concurrent.futures",
     "msrestazure==0.4.16": "msrestazure",
     "azure-common==1.1.8": "azure.common",
-    "python-dateutil==2.6.1": "python.dateutil",
+    "python-dateutil==2.6.1": "dateutil",
 }
 
 NAMESPACE_PACKAGES = {
