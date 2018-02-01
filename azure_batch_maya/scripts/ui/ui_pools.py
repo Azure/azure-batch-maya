@@ -147,6 +147,12 @@ class AzureBatchPoolInfo(object):
         """
         maya.text(self._type, edit=True, label=" {0}".format(value))
 
+    def set_image_type(self, value):
+        """Set the type of the pool - vm image or container.
+        :param str value: The pool image type.
+        """
+        maya.text(self._type, edit=True, label=" {0}".format(value))
+
     def set_dedicated_size(self, pool):
         """Set the number of instances in the pool, both current and target.
         :param int value: Size of the pool.

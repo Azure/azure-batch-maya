@@ -9,11 +9,13 @@ import os
 import logging
 import json
 
+from azure.batch import models
+
 from azurebatchmayaapi import MayaAPI as maya
 from azurebatchmayaapi import MayaCallbacks as callback
 import azurebatchutils as utils
 from ui_environment import EnvironmentUI
-
+from ui_environment import ImageType
 
 MAYA_IMAGES = {
     'Windows 2016':
@@ -108,11 +110,56 @@ class AzureBatchEnvironment(object):
     def set_image(self, image):
         self._session.store_image(image)
 
+    def get_image_type(self):
+        return self.ui.get_image_type()
+
+    def build_container_configuration(self):
+        return models.containerConfiguration(
+            container_registries=self.get_container_registries(),
+            container_image_names=self.get_container_images())
+
+    def build_virtualmachineconfiguration(self):
+        vm_config = models.VirtualMachineConfiguration(
+            image_reference=self.get_image_reference(),
+            node_agent_sku_id=self.get_node_sku_id())
+
+        if self.ui.get_image_type == ImageType.CUSTOM_IMAGE:
+            vm_config.container_configuration = models.ContainerConfiguration(
+                container_registries=self.get_container_registries(),
+                container_image_names=self.get_container_images())
+        return vm_config
+
+    def get_container_registries(self):
+        containerRegistries = []
+        containerRegistries.append(models.ContainerRegistry(
+            user_name=self.ui.get_container_registry_username(),
+            password = self.ui.get_container_registry_password(),
+            registry_server = self.ui.get_container_registry_server()))
+        return containerRegistries
+
+    def get_container_images(self):
+        containerImages = []
+        containerImages.append(self.ui.get_container_image())
+        return containerImages
+
     def set_sku(self, sku):
         self._session.store_vm_sku(sku)
+    
+    def get_image_reference(self):
+        if self.get_image_type == ImageType.BATCH_IMAGE:
+            image = self.get_batch_image()
+            image.pop('node_sku_id')
+            return models.ImageReference(**image)
+        return models.ImageReference(virtual_machine_image_id=self.ui.get_custom_image_arm_id())
 
-    def get_image(self):
-        selected_image = self.ui.get_image()
+    def get_node_sku_id(self):
+        if self.get_image_type == ImageType.BATCH_IMAGE:
+            image = self.get_batch_image()
+            return image.pop('node_sku_id')
+        return self.ui.get_node_sku_id()
+
+    def get_batch_image(self):
+        selected_image = self.ui.get_os_image()
         return dict(MAYA_IMAGES[selected_image])
 
     def get_image_label(self, image_ref):
@@ -139,7 +186,7 @@ class AzureBatchEnvironment(object):
                 return utils.OperatingSystem.linux
             else:
                 raise ValueError('Selected pool is not using a valid Maya image.')
-        image = self.ui.get_image()
+        image = self.ui.get_os_image()
         if utils.OperatingSystem.windows.value in image:
             self._log.debug("Detected windows: {}".format(image))
             return utils.OperatingSystem.windows

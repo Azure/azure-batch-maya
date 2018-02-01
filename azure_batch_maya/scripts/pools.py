@@ -160,13 +160,9 @@ class AzureBatchPools(object):
         Called on job submission by submission.py.
         TODO: Support auto-scale formula.
         """
-        image = self.environment.get_image()
-        node_agent_sku_id = image.pop('node_sku_id')
-        pool_id = 'Maya_Pool_{}'.format(uuid.uuid4())
-        pool_config = models.VirtualMachineConfiguration(
-            image_reference=models.ImageReference(**image),
-            node_agent_sku_id=node_agent_sku_id)
+        pool_config = self.environment.build_virtualmachineconfiguration()
         self._log.info("Creating new pool '{}' with {} VMs.".format(name, size))
+        pool_id = 'Maya_Pool_{}'.format(uuid.uuid4())
         new_pool = models.PoolAddParameter(
             id=pool_id,
             display_name="Maya Pool for {}".format(name),
@@ -185,11 +181,7 @@ class AzureBatchPools(object):
         """Create a JSON auto pool specification.
         Called on job submission by submission.py.
         """
-        image = self.environment.get_image()
-        node_agent_sku_id = image.pop('node_sku_id')
-        pool_config = {
-            'imageReference': image,
-            'nodeAgentSKUId': node_agent_sku_id}
+        pool_config = self.environment.build_virtualmachineconfiguration()
         pool_spec = {
             'vmSize': self.environment.get_vm_sku(),
             'displayName': "Auto Pool for {}".format(job_name),
