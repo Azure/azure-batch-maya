@@ -1,4 +1,8 @@
 
+2018.01.15 v0.18.0
+------------------
+- Changed image versions to static rather than floating, as vNext image breaks backwards compatibility
+
 2018.01.15 v0.17.0
 ------------------
 - Restructured dependency installation for wider compatibility:
