@@ -1,7 +1,9 @@
 
-2018.01.15 v0.18.0
+2018.04.06 v0.18.0
 ------------------
 - Changed image versions to static rather than floating, as vNext image breaks backwards compatibility
+- Fixed dependency issues related to msrestazure version requirement increasing
+
 
 2018.01.15 v0.17.0
 ------------------
@@ -9,6 +11,7 @@
     get_pip.py is now packaged with the plugin.
 - Fixed unicode filename errors in thumbnail generation.
 - Fixed detection of Bifrost caches as assets.
+
 
 2017.10.16 v0.16.0
 ------------------
