@@ -35,8 +35,9 @@ sys.path.insert(0, INSTALL_DIR)
 REQUIREMENTS = {
     "pathlib==1.0.1": "pathlib",
     "futures==3.1.1": "concurrent.futures",
-    "msrestazure==0.4.11": "msrestazure",
-    "azure-common==1.1.8": "azure.common",
+    "configparser==3.5.0": "backports.configparser",
+    "msrestazure==0.4.14": "msrestazure",
+    "azure-common==1.1.8": "azure.common"
 }
 
 NAMESPACE_PACKAGES = {
@@ -477,6 +478,7 @@ def initializePlugin(obj):
                 else:
                     install_pkg(pip_location, package)
             shutil.copy(os.path.join(INSTALL_DIR, 'azure', '__init__.py'), os.path.join(INSTALL_DIR, 'azure', 'mgmt', '__init__.py'))
+            shutil.copy(os.path.join(INSTALL_DIR, 'azure', '__init__.py'), os.path.join(INSTALL_DIR, 'backports', '__init__.py'))
         except:
             error = "Failed to install dependencies - please install manually"
             cmds.confirmDialog(message=error, button='OK')
