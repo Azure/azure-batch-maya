@@ -1,6 +1,6 @@
 {
   "templateMetadata": {
-    "description": "Application template for working with Maya on Windows."
+    "description": "Application template for working with Maya and Arnold on Windows."
   },
   "parameters": {
     "sceneFile": {
@@ -11,12 +11,12 @@
     },
     "renderer": {
       "type": "string",
-      "defaultValue": "sw",
+      "defaultValue": "arnold",
       "metadata": {
         "description": "The Maya renderer to be used for the render"
       },
       "allowedValues": [
-        "sw"
+        "arnold"
       ]
     },
     "projectData": {
@@ -67,6 +67,13 @@
         "description": "The file group where outputs will be stored"
       }
     },
+    "logLevel": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "Arnold logging verbosity"
+      }
+    },
     "storageURL": {
       "type": "string",
       "metadata": {
@@ -107,7 +114,7 @@
     ],
     "repeatTask": {
       "displayName": "Frame {0}",
-      "commandLine": "subst X: %AZ_BATCH_JOB_PREP_WORKING_DIR%\\assets & render -renderer [parameters('renderer')] -proj \"%AZ_BATCH_JOB_PREP_WORKING_DIR%\" -verb -preRender renderPrep -rd \"%AZ_BATCH_TASK_WORKING_DIR%\\images\" -s {0} -e {0} \"[parameters('sceneFile')]\" & call mayapy %AZ_BATCH_JOB_PREP_WORKING_DIR%\\thumbnail.py %^errorlevel%",
+      "commandLine": "subst X: %AZ_BATCH_JOB_PREP_WORKING_DIR%\\assets & %MAYA_2017_EXEC% -renderer [parameters('renderer')] -proj \"%AZ_BATCH_JOB_PREP_WORKING_DIR%\" -ai:ltc 1 -ai:lve [parameters('logLevel')] -verb -preRender renderPrep -rd \"%AZ_BATCH_TASK_WORKING_DIR%\\images\" -s {0} -e {0} \"[parameters('sceneFile')]\" & call %MAYA_2017%\\bin\\mayapy %AZ_BATCH_JOB_PREP_WORKING_DIR%\\thumbnail.py %^errorlevel%",
       "environmentSettings": [
         {
           "name": "MAYA_SCRIPT_PATH",

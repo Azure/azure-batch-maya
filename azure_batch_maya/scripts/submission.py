@@ -246,12 +246,16 @@ class AzureBatchSubmission(object):
             progress = utils.ProgressBar(self._log)
             maya.refresh()
 
+            mayaVersion = maya.about(version=True)
+            if mayaVersion != "2017" and mayaVersion != "2018":
+                raise Exception("Unrecognized mayaVersion \"{}\", 2017 and 2018 are supported".format(mayaVersion))
+
             batch_parameters = {'id': job_id}
             batch_parameters['displayName'] = self.renderer.get_title()
             batch_parameters['metadata'] =  [{"name": "JobType", "value": "Maya"}]
             template_file = os.path.join(
                 os.environ['AZUREBATCH_TEMPLATES'],
-                "{}-basic-{}.json".format(self.renderer.render_engine, pool_os.value.lower()))
+                "{}-{}-{}.json".format(self.renderer.render_engine, mayaVersion, pool_os.value.lower()))
             batch_parameters['applicationTemplateInfo'] = {'filePath': template_file}
             application_params = {}
             batch_parameters['applicationTemplateInfo']['parameters'] = application_params
