@@ -32,6 +32,9 @@ INSTALL_DIR = os.path.normpath(
     os.path.join(cmds.internalVar(userScriptDir=True), 'azure-batch-libs'))
 sys.path.insert(0, INSTALL_DIR)
 
+
+DEPENDENCY_INSTALL_LOG = os.path.join(INSTALL_DIR, "AzureBatchInstall.log")
+
 REQUIREMENTS = {
     "pathlib==1.0.1": "pathlib",
     "futures==3.1.1": "concurrent.futures",
@@ -360,14 +363,13 @@ def install_pkg(pip, package):
     """
     if not os.path.isdir(INSTALL_DIR):
         os.makedirs(INSTALL_DIR)
-    pip_cmds = ['mayapy', pip, 'install', package, '--target', INSTALL_DIR]
+    pip_cmds = ['mayapy', pip, 'install', package, '--target', INSTALL_DIR,  '--log', DEPENDENCY_INSTALL_LOG]
     print(pip_cmds)
-    installer = subprocess.Popen(pip_cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    installer = subprocess.Popen(pip_cmds)
     installer.wait()
+    print("Successfully installed package {}".format(package))
     if installer.returncode != 0:
-        print(installer.stdout.read())
-        print(installer.stderr.read())
-        raise RuntimeError("Failed to install package: {}".format(package))
+        raise RuntimeError("Failed to install package: {}, please check logs in: {}".format(package, DEPENDENCY_INSTALL_LOG))
 
 
 def install_namespace_pkg(pip, package, namespace):
@@ -381,9 +383,9 @@ def install_namespace_pkg(pip, package, namespace):
     temp_target = os.path.join(INSTALL_DIR, 'temp-target')
     if not os.path.isdir(temp_target):
         os.makedirs(temp_target)
-    pip_cmds = ['mayapy', pip, 'install', package, '--no-deps', '--target', temp_target]
+    pip_cmds = ['mayapy', pip, 'install', package, '--no-deps', '--target', temp_target, '--log', DEPENDENCY_INSTALL_LOG]
     print(pip_cmds)
-    installer = subprocess.Popen(pip_cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    installer = subprocess.Popen(pip_cmds)
     installer.wait()
     if installer.returncode == 0:
         try:
@@ -392,12 +394,11 @@ def install_namespace_pkg(pip, package, namespace):
             print(exp)
         try:
             shutil.rmtree(temp_target)
+            print("Successfully installed namespace package {} to namespace {}".format(package, namespace))
         except Exception as exp:
             print(exp)
     else:
-        print(installer.stdout.read())
-        print(installer.stderr.read())
-        raise RuntimeError("Failed to install package: {}".format(package))
+        raise RuntimeError("Failed to install package: {} to namespace: {}, please check logs in: {}".format(package, namespace, DEPENDENCY_INSTALL_LOG))
 
 
 def initializePlugin(obj):
@@ -470,7 +471,7 @@ def initializePlugin(obj):
                 print("Getpip complete")
                 pip_location = os.path.join(INSTALL_DIR, "pip")
         try:
-            print("Installing dependencies using {}".format(pip_location))
+            print("Installing dependencies using {}, logging to {}".format(pip_location, DEPENDENCY_INSTALL_LOG))
             for package in missing_libs:
                 if package in NAMESPACE_PACKAGES:
                     package_path = NAMESPACE_PACKAGES[package].split('.')
