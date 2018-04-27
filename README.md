@@ -27,6 +27,9 @@ The first time the plug-in is loaded, you will be prompted to agree to some term
 The downloading and installing of the Python dependencies may take a few minutes, after which you will need to close and reopen Maya to
 ensure the updated dependencies are loaded correctly.
 
+Any errors in the dependency install will be logged to the file "AzureBatchInstall.log" in the "azure-batch-libs" folder, which is created for holding dependencies. In windows this is located at: Users\<username>\Documents\maya\<version>\scripts\azure-batch-libs
+
+
 ![](./docs/images/install_dependencies.png)
 
 
