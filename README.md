@@ -58,6 +58,33 @@ In order to retrieve this information:
 - [Monitoring jobs](./docs/submitting_jobs.md#monitoring-jobs)
 
 
+## Uninstall
+
+To uninstall the plug-in:
+
+1. Run Maya
+2. Open Window > Settings/Preferences > Plug-in Manager
+3. Scroll down and find the entry for AzureBatch.py, it may be necessary to expand the folder view
+4. Untick the "Load" and "Auto Load" entries for AzureBatch.py
+5. Confirm the removal of the shelf 
+6. Confirm to remove the dependencies if you wish a clean uninstall
+
+To remove config which is retained for a reinstall, delete the config file "azure_batch.ini". For Windows this is located in:
+Users\<username>\Documents\maya\2017\prefs\AzureBatchData
+
+Interrupted uninstalls may fail to delete the "AzureBatch.mod" file and it may be necessary to delete this manually. For Windows this is located in:
+ProgramFiles\Maya\Maya2017\modules
+
+
+##  Upgrading or reinstalling
+
+When upgrading the plugin, it is recommended to Uninstall the previous version of the plugin, then close and reopen Maya before Installing the new version of the plugin, following the instructions above for Uninstall and Install.
+
+
+##  Side-by-side compatibility
+
+Side by side is supported for Maya 2017 and 2018. The plugin installs and is managed independently in Maya 2017 and 2018, so you can have it installed for both 2017 and 2018 at one time. Each install can be configured for a different Batch account or they can share an account.
+
 ## Supported Maya Versions
 Earlier versions of the code and releases were supported on Maya2017-Update3 only. 
 
