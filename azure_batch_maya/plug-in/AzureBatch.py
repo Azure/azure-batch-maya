@@ -39,7 +39,7 @@ REQUIREMENTS = {
     "pathlib==1.0.1": "pathlib",
     "futures==3.1.1": "concurrent.futures",
     "azure-common==1.1.8": "azure.common",
-    "msrestazure==0.4.16": "msrestazure",
+    "msrestazure==0.4.14": "msrestazure",
     "configparser==3.5.0": "backports.configparser",
     "python-dateutil==2.6.1": "dateutil",
 }
