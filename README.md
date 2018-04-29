@@ -83,7 +83,7 @@ When upgrading the plugin, it is recommended to Uninstall the previous version o
 
 ##  Side-by-side compatibility
 
-Side by side is supported for Maya 2017 and 2018. The plugin installs and is managed independently in Maya 2017 and 2018, so you can have it installed for both 2017 and 2018 at one time. Each install can be configured for a different Batch account or they can share an account.
+Side-by-side installs are supported for Maya 2017 and 2018. The plugin installs and is managed independently in Maya 2017 and 2018, so you can have it installed for both 2017 and 2018 at one time. Each install can be configured for a different Batch account or they can share an account. If the plugin is installed side-by-side, it is recommended that both installs are of the same identical version / release of the plugin.
 
 ## Supported Maya Versions
 Earlier versions of the code and releases were supported on Maya2017-Update3 only. 
