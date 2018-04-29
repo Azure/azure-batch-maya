@@ -27,6 +27,9 @@ The first time the plug-in is loaded, you will be prompted to agree to some term
 The downloading and installing of the Python dependencies may take a few minutes, after which you will need to close and reopen Maya to
 ensure the updated dependencies are loaded correctly.
 
+Any errors in the dependency install will be logged to the file "AzureBatchInstall.log" in the "azure-batch-libs" folder, which is created for holding dependencies. In windows this is located at: Users\<username>\Documents\maya\<version>\scripts\azure-batch-libs
+
+
 ![](./docs/images/install_dependencies.png)
 
 
@@ -54,6 +57,33 @@ In order to retrieve this information:
 - [Managing Pools](./docs/submitting_jobs.md#managing-pools)
 - [Monitoring jobs](./docs/submitting_jobs.md#monitoring-jobs)
 
+
+## Uninstall
+
+To uninstall the plug-in:
+
+1. Run Maya
+2. Open Window > Settings/Preferences > Plug-in Manager
+3. Scroll down and find the entry for AzureBatch.py, it may be necessary to expand the folder view
+4. Untick the "Load" and "Auto Load" entries for AzureBatch.py
+5. Confirm the removal of the shelf 
+6. Confirm to remove the dependencies if you wish a clean uninstall
+
+To remove config which is retained for a reinstall, delete the config file "azure_batch.ini". For Windows this is located in:
+Users\<username>\Documents\maya\2017\prefs\AzureBatchData
+
+Interrupted uninstalls may fail to delete the "AzureBatch.mod" file and it may be necessary to delete this manually. For Windows this is located in:
+ProgramFiles\Maya\Maya2017\modules
+
+
+##  Upgrading or reinstalling
+
+When upgrading the plugin, it is recommended to Uninstall the previous version of the plugin, then close and reopen Maya before Installing the new version of the plugin, following the instructions above for Uninstall and Install.
+
+
+##  Side-by-side compatibility
+
+Side-by-side installs are supported for Maya 2017 and 2018. The plugin installs and is managed independently in Maya 2017 and 2018, so you can have it installed for both 2017 and 2018 at one time. Each install can be configured for a different Batch account or they can share an account. If the plugin is installed side-by-side, it is recommended that both installs are of the same identical version / release of the plugin.
 
 ## Supported Maya Versions
 Earlier versions of the code and releases were supported on Maya2017-Update3 only. 
