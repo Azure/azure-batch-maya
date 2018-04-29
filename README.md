@@ -80,6 +80,10 @@ ProgramFiles\Maya\Maya2017\modules
 
 When upgrading the plugin, it is recommended to Uninstall the previous version of the plugin, then close and reopen Maya before Installing the new version of the plugin, following the instructions above for Uninstall and Install.
 
+##  Known Installation Issues
+There is a bug that even if "Load" and "Auto Load" are both unticked, an entry in the Maya plugin manager for a plugin named AzureBatch.py will cause this entry to be loaded instead, even if you browse to a different folder location and try to load a different AzureBatch.py plugin. 
+
+This entry may be present in the plugin manager when Maya is first loaded, in which case it may be necessary to first load it, then uninstall it and restart Maya in order to allow the new AzureBatch.py to be loaded.
 
 ##  Side-by-side compatibility
 
