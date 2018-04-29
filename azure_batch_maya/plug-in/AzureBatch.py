@@ -32,11 +32,15 @@ INSTALL_DIR = os.path.normpath(
     os.path.join(cmds.internalVar(userScriptDir=True), 'azure-batch-libs'))
 sys.path.insert(0, INSTALL_DIR)
 
+
+DEPENDENCY_INSTALL_LOG = os.path.join(INSTALL_DIR, "AzureBatchInstall.log")
+
 REQUIREMENTS = {
     "pathlib==1.0.1": "pathlib",
     "futures==3.1.1": "concurrent.futures",
-    "msrestazure==0.4.16": "msrestazure",
     "azure-common==1.1.8": "azure.common",
+    "msrestazure==0.4.16": "msrestazure",
+    "configparser==3.5.0": "backports.configparser",
     "python-dateutil==2.6.1": "dateutil",
 }
 
@@ -49,7 +53,7 @@ NAMESPACE_PACKAGES = {
     "azure-batch-extensions==1.0.1": "azure.batch_extensions"
 }
 
-VERSION = "0.17.0"
+VERSION = "0.18.0"
 EULA_PREF = "AzureBatch_EULA"
 SHELF_FILE = "shelf_AzureBatch.mel"
 cmd_name = "AzureBatch"
@@ -361,14 +365,13 @@ def install_pkg(pip, package):
     """
     if not os.path.isdir(INSTALL_DIR):
         os.makedirs(INSTALL_DIR)
-    pip_cmds = ['mayapy', pip, 'install', package, '--target', INSTALL_DIR]
+    pip_cmds = ['mayapy', pip, 'install', package, '--target', INSTALL_DIR,  '--log', DEPENDENCY_INSTALL_LOG]
     print(pip_cmds)
-    installer = subprocess.Popen(pip_cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    installer = subprocess.Popen(pip_cmds)
     installer.wait()
+    print("Successfully installed package {}".format(package))
     if installer.returncode != 0:
-        print(installer.stdout.read())
-        print(installer.stderr.read())
-        raise RuntimeError("Failed to install package: {}".format(package))
+        raise RuntimeError("Failed to install package: {}, please check logs in: {}".format(package, DEPENDENCY_INSTALL_LOG))
 
 
 def install_namespace_pkg(pip, package, namespace):
@@ -382,9 +385,9 @@ def install_namespace_pkg(pip, package, namespace):
     temp_target = os.path.join(INSTALL_DIR, 'temp-target')
     if not os.path.isdir(temp_target):
         os.makedirs(temp_target)
-    pip_cmds = ['mayapy', pip, 'install', package, '--no-deps', '--target', temp_target]
+    pip_cmds = ['mayapy', pip, 'install', package, '--no-deps', '--target', temp_target, '--log', DEPENDENCY_INSTALL_LOG]
     print(pip_cmds)
-    installer = subprocess.Popen(pip_cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    installer = subprocess.Popen(pip_cmds)
     installer.wait()
     if installer.returncode == 0:
         try:
@@ -393,12 +396,11 @@ def install_namespace_pkg(pip, package, namespace):
             print(exp)
         try:
             shutil.rmtree(temp_target)
+            print("Successfully installed namespace package {} to namespace {}".format(package, namespace))
         except Exception as exp:
             print(exp)
     else:
-        print(installer.stdout.read())
-        print(installer.stderr.read())
-        raise RuntimeError("Failed to install package: {}".format(package))
+        raise RuntimeError("Failed to install package: {} to namespace: {}, please check logs in: {}".format(package, namespace, DEPENDENCY_INSTALL_LOG))
 
 
 def initializePlugin(obj):
@@ -471,7 +473,7 @@ def initializePlugin(obj):
                 print("Getpip complete")
                 pip_location = os.path.join(INSTALL_DIR, "pip")
         try:
-            print("Installing dependencies using {}".format(pip_location))
+            print("Installing dependencies using {}, logging to {}".format(pip_location, DEPENDENCY_INSTALL_LOG))
             for package in missing_libs:
                 if package in NAMESPACE_PACKAGES:
                     package_path = NAMESPACE_PACKAGES[package].split('.')
@@ -479,6 +481,7 @@ def initializePlugin(obj):
                 else:
                     install_pkg(pip_location, package)
             shutil.copy(os.path.join(INSTALL_DIR, 'azure', '__init__.py'), os.path.join(INSTALL_DIR, 'azure', 'mgmt', '__init__.py'))
+            shutil.copy(os.path.join(INSTALL_DIR, 'azure', '__init__.py'), os.path.join(INSTALL_DIR, 'backports', '__init__.py'))
         except:
             error = "Failed to install dependencies - please install manually"
             cmds.confirmDialog(message=error, button='OK')

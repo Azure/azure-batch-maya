@@ -402,6 +402,10 @@ class MayaAPI(object):
     def script_dir():
         return cmds.internalVar(userScriptDir=True)
 
+    @staticmethod
+    def about(*args, **kwargs):
+        return cmds.about(*args, **kwargs)
+
 
 class NodeIterator(object):
 

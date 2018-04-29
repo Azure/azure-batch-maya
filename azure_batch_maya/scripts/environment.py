@@ -24,7 +24,7 @@ MAYA_IMAGES = {
             'publisher': 'batch',
             'offer': 'rendering-windows2016',
             'sku': 'rendering',
-            'version': 'latest'
+            'version': '1.2.1'
         },
     'Centos 73':
         {
@@ -32,13 +32,13 @@ MAYA_IMAGES = {
             'publisher': 'batch',
             'offer': 'rendering-centos73',
             'sku': 'rendering',
-            'version': 'latest'
+            'version': '1.0.8'
         },
 }
 LICENSES = [
     {'label': 'Maya', 'id': 'maya', 'plugin': None },
     {'label': 'Arnold', 'id': 'arnold', 'plugin': 'mtoa' },
-    {'label': 'V-Ray (Preview)', 'id': 'vray', 'plugin': 'vrayformaya' }
+    {'label': 'V-Ray', 'id': 'vray', 'plugin': 'vrayformaya' }
 ]
 #
 

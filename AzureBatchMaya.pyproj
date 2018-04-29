@@ -59,9 +59,7 @@
     <Compile Include="azure_batch_maya\scripts\tools\generate_thumbnails.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="azure_batch_maya\scripts\tools\install_pip.py">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="azure_batch_maya\scripts\tools\getpip.py" />
     <Compile Include="azure_batch_maya\scripts\tools\job_watcher.py" />
     <Compile Include="azure_batch_maya\scripts\ui\ui_assets.py">
       <SubType>Code</SubType>
@@ -143,12 +141,18 @@
     <Content Include="azure_batch_maya\scripts\tools\supported_plugins.json">
       <SubType>Code</SubType>
     </Content>
-    <Content Include="azure_batch_maya\templates\arnold-basic-windows.json" />
-    <Content Include="azure_batch_maya\templates\arnold-basic-linux.json" />
-    <Content Include="azure_batch_maya\templates\mayaSoftware-basic-linux.json" />
-    <Content Include="azure_batch_maya\templates\mayaSoftware-basic-windows.json" />
-    <Content Include="azure_batch_maya\templates\vray-basic-linux.json" />
-    <Content Include="azure_batch_maya\templates\vray-basic-windows.json" />
+    <Content Include="azure_batch_maya\templates\arnold-2017-linux.json" />
+    <Content Include="azure_batch_maya\templates\arnold-2017-windows.json" />
+    <Content Include="azure_batch_maya\templates\arnold-2018-linux.json" />
+    <Content Include="azure_batch_maya\templates\arnold-2018-windows.json" />
+    <Content Include="azure_batch_maya\templates\mayaSoftware-2017-linux.json" />
+    <Content Include="azure_batch_maya\templates\mayaSoftware-2017-windows.json" />
+    <Content Include="azure_batch_maya\templates\mayaSoftware-2018-linux.json" />
+    <Content Include="azure_batch_maya\templates\mayaSoftware-2018-windows.json" />
+    <Content Include="azure_batch_maya\templates\vray-2017-linux.json" />
+    <Content Include="azure_batch_maya\templates\vray-2017-windows.json" />
+    <Content Include="azure_batch_maya\templates\vray-2018-linux.json" />
+    <Content Include="azure_batch_maya\templates\vray-2018-windows.json" />
     <Content Include="CHANGES.txt" />
     <Content Include="CONTRIBUTING.md">
       <SubType>Code</SubType>
