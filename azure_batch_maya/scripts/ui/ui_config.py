@@ -434,7 +434,8 @@ class ConfigUI(object):
     def prompt_for_login(self, value):
         """Called when the plug-in is prompting for authentication login. Sets heading text."""
        
-        self.devicelogin_code = value[93:103]
+        #cut out the login code from the middle of the string and construct our own string, to include the hyperlink
+        self.devicelogin_code = value.split("and enter the code ",1)[1][:9]
         login_prompt_string = "To sign in, use a web browser to open the page <a href=\"https://aka.ms/devicelogin/\">https://aka.ms/devicelogin</a> and enter the code {} to authenticate."
         login_prompt_string = login_prompt_string.format(self.devicelogin_code)
 
