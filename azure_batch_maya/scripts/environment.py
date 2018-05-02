@@ -30,7 +30,7 @@ MAYA_IMAGES = {
             'publisher': 'batch',
             'offer': 'rendering-centos73',
             'sku': 'rendering',
-            'version': '1.0.8'
+            'version': '1.1.2'
         },
 }
 LICENSES = [
