@@ -1,3 +1,11 @@
+2018.05.02 v0.19.0
+------------------
+- Target the latest release of the rendering images - Windows v1.2.1 and CentOS v1.1.2
+    Note - this breaks backwards compatibility for new jobs being submitted to old pools created with older versions of the plugin, pools will need to be recreated.
+    Support for Maya2018 - jobs submitted from Maya2017 will render with MayaIO2017 and jobs submitted from Maya2018 will render with MayaIO2018
+- Dependency install now logs to Mayapy console window and to new log file
+- Drop Preview tag for VRay now it is Generally Available (GA)
+- Numerous additional details added to ReadMe.md, including install / reinstall / uninstall and Known Issue sections
 
 2018.04.06 v0.18.0
 ------------------

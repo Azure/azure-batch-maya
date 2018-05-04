@@ -54,7 +54,7 @@ NAMESPACE_PACKAGES = {
     "azure-batch-extensions==1.0.1": "azure.batch_extensions"
 }
 
-VERSION = "0.18.0"
+VERSION = "0.19.0"
 EULA_PREF = "AzureBatch_EULA"
 SHELF_FILE = "shelf_AzureBatch.mel"
 cmd_name = "AzureBatch"
