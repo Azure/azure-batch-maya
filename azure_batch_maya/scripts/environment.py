@@ -91,9 +91,12 @@ class AzureBatchEnvironment(object):
         Called on successful authentication.
         """
         self._session = session
+        self.batch = self._session.batch
+        self.retrieve_node_agent_skus()
+        self.ui.select_node_sku_id(self._session.get_cached_node_sku_id())
         self.ui.select_image(self._session.get_cached_image())
         self.ui.select_sku(self._session.get_cached_vm_sku())
-
+        
     def refresh(self):
         self._get_plugin_licenses()
         if self._session:
@@ -123,7 +126,7 @@ class AzureBatchEnvironment(object):
             image_reference=self.get_image_reference(),
             node_agent_sku_id=self.get_node_sku_id())
 
-        if self.ui.get_image_type == ImageType.CUSTOM_IMAGE:
+        if self.ui.get_image_type == ImageType.CUSTOM_IMAGE_WITH_CONTAINERS:
             vm_config.container_configuration = models.ContainerConfiguration(
                 container_registries=self.get_container_registries(),
                 container_image_names=self.get_container_images())
@@ -144,6 +147,16 @@ class AzureBatchEnvironment(object):
 
     def set_sku(self, sku):
         self._session.store_vm_sku(sku)
+
+    def set_node_sku_id(self, node_sku_id):
+        self._session.store_node_sku_id(node_sku_id)
+
+    def retrieve_node_agent_skus(self):
+        node_agent_sku_list =  self._call(self.batch.account.list_node_agent_skus)
+        self.node_agent_sku_id_list = [nodeagentsku.id for nodeagentsku in node_agent_sku_list]
+
+    def node_agent_skus(self):
+        return self.node_agent_sku_id_list 
     
     def get_image_reference(self):
         if self.get_image_type == ImageType.BATCH_IMAGE:

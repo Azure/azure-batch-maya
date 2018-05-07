@@ -398,10 +398,22 @@ class AzureBatchConfig(object):
         self._cfg.set('AzureBatch', 'vm_sku', sku)
         self._save_config()
 
+    def store_node_sku_id(self, node_sku_id):
+        """Cache selected node agent SKU id for later sessions."""
+        self._cfg.set('AzureBatch', 'node_sku_id', node_sku_id)
+        self._save_config()
+
     def get_cached_image(self):
         """Attempt to retrieve a selected image a previous session."""
         try:
             return self._cfg.get('AzureBatch', 'image')
+        except ConfigParser.NoOptionError:
+            return None
+
+    def get_cached_node_sku_id(self):
+        """Attempt to retrieve a selected node sku id from a previous session."""
+        try:
+            return self._cfg.get('AzureBatch', 'node_sku_id')
         except ConfigParser.NoOptionError:
             return None
 

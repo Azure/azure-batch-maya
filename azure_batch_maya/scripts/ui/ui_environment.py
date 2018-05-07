@@ -42,8 +42,8 @@ class EnvironmentUI(object):
         self.select_rendernode_type = ImageType.BATCH_IMAGE.value
         self.images = images
         self.licenses = licenses
+        self.node_sku_id = None
         #self.image_arm_id = ""
-        #self.node_sku_id = ""
         #self.container_registry_server = ""
         #self.container_registry_username = ""
         #self.container_registry_password = ""
@@ -54,7 +54,7 @@ class EnvironmentUI(object):
 
             with utils.RowLayout(row_spacing=20) as sublayout:
                 with utils.FrameLayout(
-                    label="Render Node Configuration", collapsable=True, width=325) as rendernode_config:
+                    label="Render Node Configuration", collapsable=True, width=325, collapse=False) as rendernode_config:
                     self.rendernode_config = rendernode_config
                     with utils.ColumnLayout(
                         2, col_width=((1,80),(2,160)), row_spacing=(1,5),
@@ -67,22 +67,18 @@ class EnvironmentUI(object):
 
                     with utils.Row(1,1,325):
                         maya.radio_group(
-                            labelArray4=("Batch Managed Image",
-                                            "Batch Managed Image with Containers",
-                                            "Custom Image",
-                                            "Custom Image with Containers"),
-                            numberOfRadioButtons=4,
+                            labelArray2=("Batch Managed Image",
+                                            "Custom Image"),
+                            numberOfRadioButtons=2,
                             select=self.select_rendernode_type,
                             vertical = True,
                             onCommand1=self.set_batch_image,
-                            onCommand2=self.set_batch_image_with_containers,
-                            onCommand3=self.set_custom_image,
-                            onCommand4=self.set_custom_image_with_containers)
+                            onCommand2=self.set_custom_image)
                     maya.parent()
                     self.image_config = []
                     with utils.FrameLayout(
                         label="Batch Managed Image Settings", collapsable=True,
-                        width=325, collapse=True, parent = self.rendernode_config) as framelayout:
+                        width=325, collapse=False, parent = self.rendernode_config) as framelayout:
                         self.image_config.append(framelayout)
                         with utils.ColumnLayout(
                             2, col_width=((1,160),(2,160)), row_spacing=(1,5),
@@ -198,11 +194,22 @@ class EnvironmentUI(object):
         if sku:
             self._sku.select(sku)
 
-    def get_custom_image_arm_id(self):
-        return maya.text_field(self.image_arm_id, query=True, text=True)
+    def select_node_sku_id(self, node_sku_id):
+        if node_sku_id:
+            if not self._node_sku_id_dropdown:
+                self.node_sku_id = node_sku_id
+            self._node_sku_id_dropdown.select(node_sku_id)
+
+    def set_node_sku_id(self, node_sku_id):
+        self.base.set_node_sku_id(node_sku_id)
 
     def get_node_sku_id(self):
-        return maya.text_field(self.node_sku_id, query=True, text=True)
+        if not self._node_sku_id_dropdown:
+            return self.node_sku_id
+        return self._node_sku_id_dropdown.value()
+
+    def get_custom_image_arm_id(self):
+        return maya.text_field(self.image_arm_id, query=True, text=True)
 
     def get_container_registry_server(self):
         return maya.text_field(self.container_registry_server, query=True, text=True)
@@ -288,7 +295,7 @@ class EnvironmentUI(object):
         self.image_config = []
         with utils.FrameLayout(
             label="Batch Managed Image Settings", collapsable=True,
-            width=325, collapse=True, parent = self.rendernode_config) as framelayout:
+            width=325, collapse=False, parent = self.rendernode_config) as framelayout:
             self.image_config.append(framelayout)
             with utils.ColumnLayout(
                 2, col_width=((1,80),(2,160)), row_spacing=(1,5),
@@ -348,7 +355,7 @@ class EnvironmentUI(object):
         self.image_config = []
         with utils.FrameLayout(
                     label="Custom Image Settings", collapsable=True,
-                    width=325, collapse=True, parent = self.rendernode_config) as framelayout:
+                    width=325, collapse=False, parent = self.rendernode_config) as framelayout:
             self.image_config.append(framelayout)
           
             with utils.Row(2, 2, (140, 180), ("right","center"),
@@ -363,22 +370,17 @@ class EnvironmentUI(object):
                     parent = self.image_config[0])
 
             with utils.Row(2, 2, (140, 180), ("right","center"),
-                            [(1, "bottom", 20),(2,"bottom",15)], 
+                               [(1, "bottom", 20),(2,"bottom",15)],
                             parent = self.image_config[0]) as node_sku_id_row:
                 self.image_config.append(node_sku_id_row)
-                self.image_config.append(maya.text(label="Node SKU ID:   ", align="left",
-                    parent = self.image_config[0]))
-                self.node_sku_id = maya.text_field(height=25, enable=True,
-                    parent = self.image_config[0])
-
-            with utils.ColumnLayout(
-                        2, col_width=((1,120),(2,160)), row_spacing=(1,5),
-                        row_offset=((1, "top", 15),(5, "bottom", 15)), parent=framelayout) as image_layout: 
-                self.image_config.append(image_layout)
-                self.image_config.append(maya.text(label="Application licenses: ", align='left', parent = image_layout))
-                for label, checked in self.licenses.items():
-                    self.license_settings[label] = maya.check_box(label=label, value=checked, changeCommand=self.use_license_server, parent = image_layout)
-                    maya.text(label="", align='left', parent = image_layout)
+                maya.text(label="Node Agent SKU ID:    ", align="left")
+                with utils.Dropdown(self.set_node_sku_id, parent = node_sku_id_row) as node_sku_id_dropdown:
+                    self.image_config.append(node_sku_id_dropdown)
+                    self._node_sku_id_dropdown = node_sku_id_dropdown 
+                    for nodeagentsku in self.base.node_agent_skus():
+                        self._node_sku_id_dropdown.add_item(nodeagentsku)
+                    if self.node_sku_id:
+                        self.select_node_sku_id(self.node_sku_id)
 
     def set_custom_image_with_containers(self, *args):
         self.select_rendernode_type = ImageType.CUSTOM_IMAGE_WITH_CONTAINERS.value
@@ -400,13 +402,14 @@ class EnvironmentUI(object):
                     parent = self.image_config[0])
 
             with utils.Row(2, 2, (140, 180), ("right","center"),
-                            [(1, "bottom", 20),(2,"bottom",15)], 
-                            parent = self.image_config[0]) as node_sku_id_row:
+                            [(1, "bottom", 20),(2,"bottom",15)],
+                        parent = self.image_config[0]) as node_sku_id_row:
                 self.image_config.append(node_sku_id_row)
-                self.image_config.append(maya.text(label="Node SKU ID:   ", align="left",
-                    parent = self.image_config[0]))
-                self.node_sku_id = maya.text_field(height=25, enable=True,
-                    parent = self.image_config[0])
+                with utils.Dropdown(self.set_node_sku_id, parent =  self.image_config[0]) as node_sku_id_dropdown:
+                    self.image_config.append(node_sku_id_dropdown)
+                    self._node_sku_id_dropdown = node_sku_id_dropdown
+                    for nodeagentsku in self.base.node_agent_skus():
+                        self._node_sku_id_dropdown.add_item(nodeagentsku)
 
             with utils.Row(2, 2, (140, 180), ("right","center"),
                             [(1, "bottom", 20),(2,"bottom",15)], 
@@ -448,15 +451,3 @@ class EnvironmentUI(object):
                         2, col_width=((1,120),(2,160)), row_spacing=(1,5),
                         row_offset=((1, "top", 15),(5, "bottom", 15)), parent=framelayout) as image_layout: 
                 self.image_config.append(image_layout)
-
-                self.image_config.append(maya.text(label="Application licenses: ", align='left', parent = image_layout))
-                for label, checked in self.licenses.items():
-                    self.license_settings[label] = maya.check_box(label=label, value=checked, changeCommand=self.use_license_server, parent = image_layout)
-                    maya.text(label="", align='left', parent = image_layout)
-
-
-#maya.text(label="Use licenses: ", align='right')
-#for label, checked in licenses.items():
-#    self.license_settings[label] = maya.check_box(
-#            label=label, value=checked, changeCommand=self.use_license_server)
-#    maya.text(label="", align='right')

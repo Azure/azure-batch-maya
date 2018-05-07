@@ -213,6 +213,8 @@ class FrameLayout(Layout):
             settings["label"] = kwargs["label"]
         if kwargs.get("collapsable"):
             settings["collapsable"] = kwargs["collapsable"]
+        if kwargs.get("collapse"):
+            settings["collapse"] = kwargs["collapse"]
         super(FrameLayout, self).__init__(
             maya.frame_layout, layout=settings, **kwargs)
 
