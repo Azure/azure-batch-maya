@@ -57,6 +57,7 @@ class AzureBatchEnvironment(object):
         self._call = call
         self._session = None
         self._tab_index = index
+        self.node_agent_sku_id_list = None
 
         self.licenses = {}
         self._get_plugin_licenses()
@@ -67,7 +68,7 @@ class AzureBatchEnvironment(object):
         #callback.after_read(self.ui.refresh)
 
     def _load_skus(self):
-        """Populate the list of availablke hardware SKUs."""
+        """Populate the list of available hardware SKUs."""
         sku_path = os.path.join(os.environ['AZUREBATCH_TOOLS'], 'skus.json')
         with open(sku_path, 'r') as sku_list:
             return json.load(sku_list)
@@ -92,8 +93,8 @@ class AzureBatchEnvironment(object):
         """
         self._session = session
         self.batch = self._session.batch
-        self.retrieve_node_agent_skus()
         self.ui.select_node_sku_id(self._session.get_cached_node_sku_id())
+        self.ui.select_custom_image_resource_id(self._session.get_cached_custom_image_resource_id())
         self.ui.select_image(self._session.get_cached_image())
         self.ui.select_sku(self._session.get_cached_vm_sku())
         
@@ -156,6 +157,8 @@ class AzureBatchEnvironment(object):
         self.node_agent_sku_id_list = [nodeagentsku.id for nodeagentsku in node_agent_sku_list]
 
     def node_agent_skus(self):
+        if not self.node_agent_sku_id_list:
+            self.retrieve_node_agent_skus()
         return self.node_agent_sku_id_list 
     
     def get_image_reference(self):
@@ -163,7 +166,7 @@ class AzureBatchEnvironment(object):
             image = self.get_batch_image()
             image.pop('node_sku_id')
             return models.ImageReference(**image)
-        return models.ImageReference(virtual_machine_image_id=self.ui.get_custom_image_arm_id())
+        return models.ImageReference(virtual_machine_image_id=self.ui.get_custom_image_resource_id())
 
     def get_node_sku_id(self):
         if self.get_image_type == ImageType.BATCH_IMAGE:
@@ -174,6 +177,13 @@ class AzureBatchEnvironment(object):
     def get_batch_image(self):
         selected_image = self.ui.get_os_image()
         return dict(MAYA_IMAGES[selected_image])
+
+    def get_custom_image_resource_id(self):
+        selected_image = self.ui.get_os_image()
+        return dict(MAYA_IMAGES[selected_image])
+
+    def set_custom_image_resource_id(self, custom_image_resource_id):
+        self._session.store_custom_image_resource_id(custom_image_resource_id)
 
     def get_image_label(self, image_ref):
         """Retrieve the image label from the data in a pool image

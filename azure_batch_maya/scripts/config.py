@@ -417,6 +417,18 @@ class AzureBatchConfig(object):
         except ConfigParser.NoOptionError:
             return None
 
+    def get_cached_custom_image_resource_id(self):
+        """Attempt to retrieve a selected custom image resource id from a previous session."""
+        try:
+            return self._cfg.get('AzureBatch', 'custom_image_resource_id')
+        except ConfigParser.NoOptionError:
+            return None
+
+    def store_custom_image_resource_id(self, custom_image_resource_id):
+        """Cache selected custom_image_resource_id for later sessions."""
+        self._cfg.set('AzureBatch', 'custom_image_resource_id', custom_image_resource_id)
+        self._save_config()
+
     def store_image(self, image):
         """Cache selected image for later sessions."""
         self._cfg.set('AzureBatch', 'image', image)

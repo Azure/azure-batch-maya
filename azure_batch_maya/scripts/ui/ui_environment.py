@@ -42,8 +42,13 @@ class EnvironmentUI(object):
         self.select_rendernode_type = ImageType.BATCH_IMAGE.value
         self.images = images
         self.licenses = licenses
+
         self.node_sku_id = None
-        #self.image_arm_id = ""
+        self._node_sku_id_dropdown = None
+
+        self.custom_image_resource_id = None
+        self.image_resource_id_field = None
+
         #self.container_registry_server = ""
         #self.container_registry_username = ""
         #self.container_registry_password = ""
@@ -165,7 +170,7 @@ class EnvironmentUI(object):
         """Retrieve the currently selected image name."""
         if self.select_rendernode_type == ImageType.BATCH_IMAGE:
             return self._image.value()
-        return self.get_custom_image_arm_id()
+        return self.get_custom_image_resource_id()
 
     def get_image_type(self):
         """Retrieve the currently selected image type."""
@@ -196,9 +201,11 @@ class EnvironmentUI(object):
 
     def select_node_sku_id(self, node_sku_id):
         if node_sku_id:
+            #if the dropdown hasn't been created yet (because "Custom Image" hasn't been selected) store value in a temporary value
             if not self._node_sku_id_dropdown:
                 self.node_sku_id = node_sku_id
-            self._node_sku_id_dropdown.select(node_sku_id)
+            else:
+                self._node_sku_id_dropdown.select(node_sku_id)
 
     def set_node_sku_id(self, node_sku_id):
         self.base.set_node_sku_id(node_sku_id)
@@ -208,8 +215,17 @@ class EnvironmentUI(object):
             return self.node_sku_id
         return self._node_sku_id_dropdown.value()
 
-    def get_custom_image_arm_id(self):
-        return maya.text_field(self.image_arm_id, query=True, text=True)
+    def get_custom_image_resource_id(self):
+        if not self.image_resource_id_field:
+            return self.custom_image_resource_id
+        return maya.text_field(self.image_resource_id_field, query=True, text=True)
+
+    def select_custom_image_resource_id(self, custom_image_resource_id):
+        if custom_image_resource_id:
+             self.custom_image_resource_id = custom_image_resource_id
+
+    def set_custom_image_resource_id(self, custom_image_resource_id):
+        self.base.set_custom_image_resource_id(custom_image_resource_id)
 
     def get_container_registry_server(self):
         return maya.text_field(self.container_registry_server, query=True, text=True)
@@ -360,13 +376,17 @@ class EnvironmentUI(object):
           
             with utils.Row(2, 2, (140, 180), ("right","center"),
                             [(1, "top", 20),(2, "top", 15)],
-                            parent = self.image_config[0]) as image_arm_id_row:
-                self.image_config.append(image_arm_id_row)
+                            parent = self.image_config[0]) as image_resource_id_row:
+                self.image_config.append(image_resource_id_row)
+                
                 self.image_config.append(maya.text(label="Image Resource ID:   ", align="left",
                     annotation="Image Resource ID is visible in the portal under Images -> Select Image -> Resource ID.",
                     parent = self.image_config[0]))
-                self.image_arm_id = maya.text_field(height=25, enable=True,
+
+                self.image_resource_id_field = maya.text_field(height=25, enable=True,
+                    changeCommand=self.set_custom_image_resource_id,
                     annotation="Image Resource ID is visible in the portal under Images -> Select Image -> Resource ID.",
+                    text = self.get_custom_image_resource_id(),
                     parent = self.image_config[0])
 
             with utils.Row(2, 2, (140, 180), ("right","center"),
@@ -374,11 +394,17 @@ class EnvironmentUI(object):
                             parent = self.image_config[0]) as node_sku_id_row:
                 self.image_config.append(node_sku_id_row)
                 maya.text(label="Node Agent SKU ID:    ", align="left")
-                with utils.Dropdown(self.set_node_sku_id, parent = node_sku_id_row) as node_sku_id_dropdown:
+                with utils.Dropdown(
+                    self.set_node_sku_id, 
+                    parent = node_sku_id_row) as node_sku_id_dropdown:
+
                     self.image_config.append(node_sku_id_dropdown)
                     self._node_sku_id_dropdown = node_sku_id_dropdown 
+                        
                     for nodeagentsku in self.base.node_agent_skus():
                         self._node_sku_id_dropdown.add_item(nodeagentsku)
+                    
+                    #check if we had to write the value to a temporary field because we read it during configure() before the dropdown was created
                     if self.node_sku_id:
                         self.select_node_sku_id(self.node_sku_id)
 
@@ -392,24 +418,29 @@ class EnvironmentUI(object):
             self.image_config.append(framelayout)
             with utils.Row(2, 2, (140, 180), ("right","center"),
                             [(1, "top", 20),(2, "top", 15)],
-                            parent = self.image_config[0]) as image_arm_id_row:
-                self.image_config.append(image_arm_id_row)
+                            parent = self.image_config[0]) as image_resource_id_row:
+                self.image_config.append(image_resource_id_row)
                 self.image_config.append(maya.text(label="Image Resource ID:   ", align="left", 
                     annotation="Image Resource ID is visible in the portal under Images -> Select Image -> Resource ID.",
                     parent = self.image_config[0]))
-                self.image_arm_id = maya.text_field(height=25, enable=True,
+                self.image_resource_id_field = maya.text_field(height=25, enable=True,
+                    changeCommand=self.set_custom_image_resource_id,
                     annotation="Image Resource ID is visible in the portal under Images -> Select Image -> Resource ID.",
                     parent = self.image_config[0])
 
-            with utils.Row(2, 2, (140, 180), ("right","center"),
-                            [(1, "bottom", 20),(2,"bottom",15)],
-                        parent = self.image_config[0]) as node_sku_id_row:
-                self.image_config.append(node_sku_id_row)
-                with utils.Dropdown(self.set_node_sku_id, parent =  self.image_config[0]) as node_sku_id_dropdown:
-                    self.image_config.append(node_sku_id_dropdown)
-                    self._node_sku_id_dropdown = node_sku_id_dropdown
-                    for nodeagentsku in self.base.node_agent_skus():
-                        self._node_sku_id_dropdown.add_item(nodeagentsku)
+            with utils.Dropdown(
+                self.set_node_sku_id, 
+                parent = node_sku_id_row) as node_sku_id_dropdown:
+
+                self.image_config.append(node_sku_id_dropdown)
+                self._node_sku_id_dropdown = node_sku_id_dropdown 
+                        
+                for nodeagentsku in self.base.node_agent_skus():
+                    self._node_sku_id_dropdown.add_item(nodeagentsku)
+                    
+                #check if we had to write the value to a temporary field because we read it during configure() before the dropdown was created
+                if self.node_sku_id:
+                    self.select_node_sku_id(self.node_sku_id)
 
             with utils.Row(2, 2, (140, 180), ("right","center"),
                             [(1, "bottom", 20),(2,"bottom",15)], 
