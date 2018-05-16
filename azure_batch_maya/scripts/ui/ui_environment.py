@@ -216,9 +216,9 @@ class EnvironmentUI(object):
         return self._node_sku_id_dropdown.value()
 
     def get_custom_image_resource_id(self):
-        if not self.image_resource_id_field:
+        value_in_text_field = maya.text_field(self.image_resource_id_field, query=True, text=True)
+        if value_in_text_field == None:
             return self.custom_image_resource_id
-        return maya.text_field(self.image_resource_id_field, query=True, text=True)
 
     def select_custom_image_resource_id(self, custom_image_resource_id):
         if custom_image_resource_id:
