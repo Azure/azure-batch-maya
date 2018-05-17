@@ -209,12 +209,12 @@ class AzureBatchEnvironment(object):
                 return utils.OperatingSystem.linux
             else:
                 raise ValueError('Selected pool is not using a valid Maya image.')
-        image = self.ui.get_os_image()
-        if utils.OperatingSystem.windows.value in image:
-            self._log.debug("Detected windows: {}".format(image))
+        node_sku_id = self.ui.get_node_sku_id()
+        if utils.OperatingSystem.windows.value in node_sku_id:
+            self._log.debug("Detected windows: {}".format(node_sku_id))
             return utils.OperatingSystem.windows
         else:
-            self._log.debug("Detected centos: {}".format(image))
+            self._log.debug("Detected centos: {}".format(node_sku_id))
             return utils.OperatingSystem.linux
 
     def get_environment_settings(self):
