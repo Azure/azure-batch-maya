@@ -219,6 +219,7 @@ class EnvironmentUI(object):
         value_in_text_field = maya.text_field(self.image_resource_id_field, query=True, text=True)
         if value_in_text_field == None:
             return self.custom_image_resource_id
+        return value_in_text_field
 
     def select_custom_image_resource_id(self, custom_image_resource_id):
         if custom_image_resource_id:
