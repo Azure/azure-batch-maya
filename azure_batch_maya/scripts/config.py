@@ -201,10 +201,22 @@ class AzureBatchConfig(object):
 
         if self.can_init_from_config:
             self.init_from_config()
+            self.ui.selected_subscription_id = self.subscription_id
+            self.ui.init_from_config()
 
         else:
             self.subscription_client = SubscriptionClient(self.mgmtCredentials)
             self.ui.init_post_auth() 
+
+    def update_batch_and_storage_client_creds(self, batch_auth_token, mgmt_auth_token):
+
+        self.mgmtCredentials = AADTokenCredentials(batch_auth_token)
+        self.batchCredentials = AADTokenCredentials(mgmt_auth_token)
+
+        self._client._mgmt_credentials = self.mgmtCredentials
+        self._client._client.creds = self.batchCredentials
+        
+        self.storage_mgmt_client._client.creds = self.mgmtCredentials
 
     def need_to_refresh_auth_tokens(self, auth_token_list):
 
@@ -538,15 +550,11 @@ class AzureBatchConfig(object):
             base_url=self.batch_url,
             storage_client=self._storage)
 
-        self.ui.selected_subscription_id = self.subscription_id
-
         self._client.config.add_user_agent(self._user_agent)
         self._client.threads = self.threads
         self.save_changes()
         self._log = self._configure_logging(self.logging_level)
         self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
-
-        self.ui.init_from_config()
 
     def available_batch_accounts(self):
         """Retrieve the currently available batch accounts to populate

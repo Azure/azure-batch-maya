@@ -15,6 +15,7 @@ from jobhistory import AzureBatchJobHistory
 from assets import AzureBatchAssets
 from pools import AzureBatchPools
 from environment import AzureBatchEnvironment
+import collections
 
 from azurebatchmayaapi import MayaAPI as maya
 from azure.batch.models import BatchErrorException
@@ -106,21 +107,44 @@ class AzureBatchSettings(object):
         Others we raise and display to the user.
         """
         try:
-            return command(*args, **kwargs)
+            result = command(*args, **kwargs)
+            return self.ensure_iter_called(result)
         except BatchErrorException as exp:
-            if exp.error.code in ACCEPTED_ERRORS:
-                self._log.info("Call failed: {}".format(exp.error.code))
-                raise
+            #if auth error (401) refresh tokens and recreate clients, before repeating the call
+            if exp.response.status_code in [401]:
+                self.config.refresh_auth_tokens(self.config.batch_auth_token, self.config.mgmt_auth_token)
+                self.config.update_batch_and_storage_client_creds(self.config.batch_auth_token, self.config.mgmt_auth_token)
+
+                result = command(*args, **kwargs)
+                try:
+                    return self.ensure_iter_called(result)
+                except BatchErrorException as exp:
+                    self.handle_batch_exception(exp)
             else:
-                message = exp.error.message.value
-                if exp.error.values:
-                    message += "Details:\n"
-                    for detail in exp.error.values:
-                        message += "{}: {}".format(detail.key, detail.value)
-                raise ValueError(message)
+                self.handle_batch_exception(exp)
+
         except Exception as exp:
             if (maya.window("AzureBatch", q=1, exists=1)):
                 maya.delete_ui("AzureBatch")
             exc_type, exc_value, exc_traceback = sys.exc_info()
             self._log.error("".join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
             raise ValueError("Error: {0}".format(exp))
+
+    def handle_batch_exception(self, exp):
+        if exp.error.code in ACCEPTED_ERRORS:
+            self._log.info("Call failed: {}".format(exp.error.code))
+            raise
+        else:
+            message = exp.error.message.value
+            if exp.error.values:
+                message += "Details:\n"
+                for detail in exp.error.values:
+                    message += "{}: {}".format(detail.key, detail.value)
+            raise ValueError(message)
+
+    def ensure_iter_called(self, result):
+        if isinstance(result, collections.Iterator):
+            #peek at the first result to force the first call and make sure any auth errors are raised here
+            peek = result.next()
+            result.reset()
+        return result
