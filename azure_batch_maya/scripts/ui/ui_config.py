@@ -130,9 +130,9 @@ class ConfigUI(object):
     def init_from_config(self):
         maya.delete_ui(self.auth_layout)
         self.subscription_ui_elements = []
-        with utils.ScrollLayout(height=520, parent=self.page, width=375) as scroll:
+        with utils.ScrollLayout(height=475, parent=self.page, width=375) as scroll:
             box_label = "Batch Account Settings"
-            with utils.FrameLayout(label=box_label, collapsable=True, width=325) as account_settings_frame:
+            with utils.FrameLayout(label=box_label, collapsable=True) as account_settings_frame:
                 self.account_settings_frame = account_settings_frame
                 with utils.Row(1, 1, (300), ("left"), [(1, "top", 15)], parent=self.account_settings_frame):
                     self.auth_status = maya.text(label="", align="center")
