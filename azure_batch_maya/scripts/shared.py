@@ -145,6 +145,9 @@ class AzureBatchSettings(object):
     def ensure_iter_called(self, result):
         if isinstance(result, collections.Iterator):
             #peek at the first result to force the first call and make sure any auth errors are raised here
-            peek = result.next()
-            result.reset()
+            try:
+                peek = result.next()
+                result.reset()
+            except StopIteration:
+                pass
         return result
