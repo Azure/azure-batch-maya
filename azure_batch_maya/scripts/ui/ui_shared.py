@@ -67,10 +67,10 @@ class AzureBatchUI(object):
         """Called when a user clicks on a tab to display it.
         Initiates the loading of that tabs contents.
         """
-        selected = maya.tab_layout(
-            self.tab_display, query=True, selectTabIndex=True)
-        selected_tab = self.tabs[selected-1]
-        selected_tab.prepare()
+        if self.base.config.auth:
+            selected = maya.tab_layout(self.tab_display, query=True, selectTabIndex=True)
+            selected_tab = self.tabs[selected-1]
+            selected_tab.prepare()
 
     def select_tab(self, tab):
         """Select a specific tab for display.

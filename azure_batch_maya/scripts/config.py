@@ -45,7 +45,6 @@ class AzureBatchConfig(object):
 
     batchAadResource = "https://batch.core.windows.net/"
     mgmtAadResource = "https://management.core.windows.net/"
-    aadTenant = "microsoft.onmicrosoft.com"
     aadAuthorityHostUrl = "https://login.microsoftonline.com"
     aadClientId = "04b07795-8ddb-461a-bbee-02f9e1bf7b46" #Azure CLI
 
@@ -71,6 +70,9 @@ class AzureBatchConfig(object):
         self._credentials = None
         self._call = call
         self.can_init_from_config = False
+        
+        self._log = self._configure_logging(LOG_LEVELS['debug'])
+
         self.ui = ConfigUI(self, settings, frame)
         self._configure_plugin(False)
 
@@ -162,6 +164,26 @@ class AzureBatchConfig(object):
     def path(self):
         return os.path.join(self._data_dir, self._ini_file)
 
+    @property
+    def aad_tenant_name(self):
+        try:
+            return self._aad_tenant_name
+        except AttributeError:
+            self._aad_tenant_name = None
+            return self._aad_tenant_name
+
+    @aad_tenant_name.setter
+    def aad_tenant_name(self, value):
+        self._aad_tenant_name = value
+
+    @property
+    def auth(self):
+        return self._auth
+
+    @auth.setter
+    def auth(self, value):
+        self._auth = value
+
     def _configure_plugin(self, from_auth_button):
         """Set up the the config file, authenticate the SDK clients
         and set up the log file.
@@ -169,27 +191,24 @@ class AzureBatchConfig(object):
         if not os.path.exists(self._data_dir):
             os.makedirs(self._data_dir)
         config_file = os.path.join(self._data_dir, self._ini_file)
-        if not os.path.exists(config_file):
-            self._log = self._configure_logging(LOG_LEVELS['debug'])
-        else:
-            try:
-                self._cfg.read(config_file)
 
-                self.ui.disable(True)
+        try:
+            self._cfg.read(config_file)
 
-                self._read_config_file()
+            self.ui.disable(True)
 
-            except Exception as exp:
-                # We should only worry about this if it happens when authenticating
-                # using the UI, otherwise it's expected.
-                if from_auth_button:
-                    raise ValueError("Invalid Configuration: {}".format(exp))
-                else:
-                    # We'll need a place holder logger
-                    self._log = self._configure_logging(LOG_LEVELS['debug'])
+            self._read_config_file()
+
+        except Exception as exp:
+            # We should only worry about this if it happens when authenticating
+            # using the UI, otherwise it's expected.
+            if from_auth_button:
+                raise ValueError("Invalid Configuration: {}".format(exp))
+
+        self.ui.init_post_config_file_read()
 
         if(not self.mgmt_auth_token or not self.batch_auth_token):
-            self.obtain_aad_tokens()
+            self.ui.prompt_for_aad_tenant()
         else:
             if self.need_to_refresh_auth_tokens([self.mgmt_auth_token, self.batch_auth_token]):
                 self.refresh_auth_tokens(self.mgmt_auth_token, self.batch_auth_token)
@@ -231,7 +250,7 @@ class AzureBatchConfig(object):
 
     def refresh_auth_tokens(self, mgmt_token, batch_token):
 
-        context = adal.AuthenticationContext(self.aadAuthorityHostUrl + '/' + self.aadTenant, api_version=None)
+        context = adal.AuthenticationContext(self.aadAuthorityHostUrl + '/' + self.aad_tenant_name, api_version=None)
 
         self.mgmt_auth_token = context.acquire_token_with_refresh_token(
             mgmt_token['refreshToken'],
@@ -244,13 +263,12 @@ class AzureBatchConfig(object):
             self.batchAadResource)
 
     def obtain_aad_tokens(self):
-        context = adal.AuthenticationContext(self.aadAuthorityHostUrl + '/' + self.aadTenant, api_version=None)
+        context = adal.AuthenticationContext(self.aadAuthorityHostUrl + '/' + self.aad_tenant_name, api_version=None)
 
         code = context.acquire_user_code(self.mgmtAadResource, self.aadClientId)
         self._log.info(code['message'])
         
         self.ui.prompt_for_login(code['message'])
-        maya.refresh()
 
         def aad_auth_thread_func(context, code):
             self.mgmt_auth_token = context.acquire_token_with_device_code(self.mgmtAadResource, code, self.aadClientId)
@@ -308,6 +326,11 @@ class AzureBatchConfig(object):
             self.subscription_id = self._cfg.get('AzureBatch', 'subscription_id')
         except ConfigParser.NoOptionError:
             self.subscription_id = ""
+            self.can_init_from_config = False
+        try:
+            self.aad_tenant_name = self._cfg.get('AzureBatch', 'aad_tenant_name')
+        except ConfigParser.NoOptionError:
+            self.aad_tenant_name = ""
             self.can_init_from_config = False
         try:
             self._subscription_name = self._cfg.get('AzureBatch', 'subscription_name')
@@ -384,6 +407,7 @@ class AzureBatchConfig(object):
         self.convert_timezone_naive_expireson_to_utc(self.mgmt_auth_token)
         self.convert_timezone_naive_expireson_to_utc(self.batch_auth_token)
 
+        self._cfg.set('AzureBatch', 'aad_tenant_name', self.aad_tenant_name)
         self._cfg.set('AzureBatch', 'mgmt_auth_token', json.dumps(self.mgmt_auth_token))
         self._cfg.set('AzureBatch', 'batch_auth_token', json.dumps(self.batch_auth_token))
         self._save_config()
@@ -439,6 +463,17 @@ class AzureBatchConfig(object):
     def store_custom_image_resource_id(self, custom_image_resource_id):
         """Cache selected custom_image_resource_id for later sessions."""
         self._cfg.set('AzureBatch', 'custom_image_resource_id', custom_image_resource_id)
+        self._save_config()
+
+    def get_cached_aad_tenant_name(self):
+        try:
+            return self._cfg.get('AzureBatch', 'aad_tenant_name')
+        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError) as e:
+            return None
+
+    def store_aad_tenant_name(self, aad_tenant_name):
+        self.ensure_azurebatch_config_section_exists()
+        self._cfg.set('AzureBatch', 'aad_tenant_name', aad_tenant_name)
         self._save_config()
 
     def store_image(self, image):

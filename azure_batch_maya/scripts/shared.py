@@ -74,6 +74,8 @@ class AzureBatchSettings(object):
                 self.jobhistory =  AzureBatchJobHistory(self.tab_index['JOBHISTORY'], self.frame, self.call)
             if not hasattr(self, "env"):
                 self.env =  AzureBatchEnvironment(self.tab_index['ENV'], self.frame, self.call)
+
+            self.config.auth = True 
             self.start()
         except Exception as exp:
             if (maya.window("AzureBatch", q=1, exists=1)):
@@ -89,12 +91,15 @@ class AzureBatchSettings(object):
         """
         try:
             self._log.debug("Starting AzureBatchShared...")
-            self.frame.is_logged_in()
-            self.env.configure(self.config)
-            self.jobhistory.configure(self.config)
-            self.assets.configure(self.config)
-            self.pools.configure(self.config, self.env)
-            self.submission.start(self.config, self.assets, self.pools, self.env)
+            if self.config.auth:
+                self.frame.is_logged_in()
+                self.env.configure(self.config)
+                self.jobhistory.configure(self.config)
+                self.assets.configure(self.config)
+                self.pools.configure(self.config, self.env)
+                self.submission.start(self.config, self.assets, self.pools, self.env)
+            else:
+                self.frame.is_logged_out()
         except Exception as exp:
             self._log.warning(exp)
             if (maya.window("AzureBatch", q=1, exists=1)):
