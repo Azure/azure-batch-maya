@@ -54,6 +54,14 @@ class PoolsUI(object):
         """Called when the plug-in is logged out. Disables UI and resets
         whether that tab has been loaded for the first time.
         """
+        maya.delete_ui(self.empty_pools)
+        self.base.pool_selected(None)
+        for i in self.pools_displayed:
+            i.remove()
+
+        self.pools_displayed = []
+        self.empty_pools = maya.text(label="No pools to display",parent=self.pools_layout)
+
         maya.form_layout(self.page, edit=True, enable=False)
         self.ready = False
 

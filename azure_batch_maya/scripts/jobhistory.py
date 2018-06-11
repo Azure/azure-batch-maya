@@ -42,10 +42,11 @@ class AzureBatchJobHistory(object):
         self.count = 0
         self.min = True
         self.max = False
-        self.ui = JobHistoryUI(self, frame)
+      
         self.all_jobs = []
         self.jobs = []
         self.selected_job = None
+        self.ui = JobHistoryUI(self, frame)
 
     def _get_image_height(self, image):
         """Get the pixel height of the job thumbnail to display.

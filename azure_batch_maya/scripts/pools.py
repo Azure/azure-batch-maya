@@ -34,9 +34,11 @@ class AzureBatchPools(object):
         self._tab_index = index
 
         self.batch = None
-        self.ui = PoolsUI(self, frame)
-        self.pools = []
+
         self.selected_pool = None
+        self.pools = []
+
+        self.ui = PoolsUI(self, frame)
 
     def configure(self, session, env):
         """Populate the Batch client for the current sessions of the pools tab.
