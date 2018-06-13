@@ -46,16 +46,19 @@ class ConfigUI(object):
         maya.delete_ui(self.heading)
         self.heading = None
         box_label = "AzureActiveDirectory Authentication"
+        aad_domain_hover_message = "Sign in to the Azure portal and hover over your account name on the upper right-hand side, your AAD Domain will be the bottom value shown, e.g. \"contoso.onmicrosoft.com\""
+        
         with utils.FrameLayout(label=box_label, collapsable=True, width=345, collapse=False, parent = self.scroll_layout) as aad_framelayout:
             self.aad_framelayout = aad_framelayout
         with utils.Row(1, 1, (300), ("left"), [(1, "top", 15)], parent=self.aad_framelayout):
             self.auth_status_field = maya.text(label="", align="center")
         with utils.Row(2, 2, (75,255), ("right","center"), [(1, "bottom", 20),(2,"bottom",15)], parent = self.aad_framelayout) as aad_tenant_row:
             self.aad_tenant_row = aad_tenant_row
-            maya.text(label="AAD Tenant:   ", align="left", parent = self.aad_tenant_row)
+            maya.text(label="AAD Domain:   ", align="left", parent = self.aad_tenant_row,
+                annotation=aad_domain_hover_message)
             self._aad_tenant_field = maya.text_field(height=25, enable=True,
                 changeCommand=self.aad_tenant_name_changed,
-                annotation="Please input your AAD tenant name, e.g. 'microsoft.onmicrosoft.com'",
+                annotation=aad_domain_hover_message,
                 parent = self.aad_tenant_row)
 
         maya.form_layout(self.page, edit= True, enable=False, 
@@ -67,7 +70,7 @@ class ConfigUI(object):
             maya.text_field(self._aad_tenant_field, edit=True, text=cached_tenant_name)
 
     def prompt_for_aad_tenant(self):
-        self.auth_status = "Please input your AAD tenant name"
+        self.auth_status = "Please input your AAD domain name"
         maya.form_layout(self.page, edit=True, enable=True)
         maya.refresh() 
 
