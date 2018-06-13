@@ -83,7 +83,7 @@ class ConfigUI(object):
 
         maya.delete_ui(self.auth_temp_ui_elements)
         self.auth_temp_ui_elements = []
-        self.auth_temp_ui_elements.append(maya.text(label=login_prompt_string, align="center", font="plainLabelFont", hyperlink=True, backgroundColor=[0.75, 0.75, 0.75], width=300, wordWrap=True, parent=self.aad_framelayout))
+        self.auth_temp_ui_elements.append(maya.text(label=login_prompt_string, align="center", font="plainLabelFont", hyperlink=True, backgroundColor=[0.75, 0.75, 0.75], width=300, height=75, wordWrap=True, parent=self.aad_framelayout))
         self.auth_temp_ui_elements.append(maya.button(label="Copy Code to clipboard", command=self.copy_devicelogincode_to_clipboard, width=200, parent=self.aad_framelayout))
         maya.form_layout(self.page, edit=True, enable=True)
 
