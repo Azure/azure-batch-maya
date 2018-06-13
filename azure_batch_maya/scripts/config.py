@@ -229,8 +229,8 @@ class AzureBatchConfig(object):
 
     def update_batch_and_storage_client_creds(self, batch_auth_token, mgmt_auth_token):
 
-        self.mgmtCredentials = AADTokenCredentials(batch_auth_token)
-        self.batchCredentials = AADTokenCredentials(mgmt_auth_token)
+        self.batchCredentials = AADTokenCredentials(batch_auth_token)
+        self.mgmtCredentials = AADTokenCredentials(mgmt_auth_token)
 
         self._client._mgmt_credentials = self.mgmtCredentials
         self._client._client.creds = self.batchCredentials
