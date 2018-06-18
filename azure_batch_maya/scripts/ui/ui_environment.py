@@ -254,25 +254,10 @@ class EnvironmentUI(object):
             vars[row_key[0]] = row_val[0]
         return vars
 
-    def use_license_server(self, enabled):
-        """Enable the license service for the specified apps.
-        Enable use of custom Maya license server. Command for use_license
-        check box.
-        """
-        for label, checkbox in self.license_settings.items():
-            checked = maya.check_box(checkbox, query=True, value=True)
-            self.base.licenses[label] = checked
-
-    def refresh_licenses(self):
-        """Refresh the use of plugin licenses based on scene."""
-        for label, checked in self.base.licenses.items():
-            maya.check_box(self.license_settings[label], edit=True, value=checked)
-
     def refresh(self, *args):
         """Clear any data and customization. Command for refresh_button."""
         maya.table(self.env_vars, edit=True, clearTable=True, rows=0)
         self.base.refresh()
-        self.refresh_licenses()
         maya.refresh()
 
     def is_logged_in(self):
