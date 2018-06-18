@@ -17,8 +17,13 @@ import json
 import traceback
 import datetime
 import dateutil.tz
+import adal
+import collections
+import itertools
 from dateutil.parser import parse as dateparse
 from azure.batch.models import BatchErrorException
+
+from msrestazure.azure_exceptions import CloudError
 
 try:
     str = unicode
@@ -30,10 +35,12 @@ header_line_length = 50
 
 batchAadResource = "https://batch.core.windows.net/"
 mgmtAadResource = "https://management.core.windows.net/"
-aadTenant = "microsoft.onmicrosoft.com"
 aadAuthorityHostUrl = "https://login.microsoftonline.com"
 aadClientId = "04b07795-8ddb-461a-bbee-02f9e1bf7b46" #Azure CLI
 
+aadTenant = None
+mgmt_auth_token = None
+batch_auth_token = None
 
 def header(header):
     header_chars = len(header)
@@ -58,12 +65,11 @@ def _check_valid_dir(directory):
 
 def _download_output(job_id, output_name, output_path, size):
     print("Downloading task output: {}".format(output_name))
-    batch_client.file.download(output_path, job_id, remote_path=output_name)
+    call(batch_client.file.download, output_path, job_id, remote_path=output_name)
     print("Output {} download successful".format(output_name))
 
-
 def _track_completed_outputs(job_id, dwnld_dir):
-    job_outputs = batch_client.file.list_from_group(job_id)
+    job_outputs =  call(batch_client.file.list_from_group, job_id)
     downloads = []
     for output in job_outputs:
         if output['name'].startswith('thumbs/'):
@@ -119,8 +125,8 @@ def track_job_progress(job_id, dwnld_dir):
     from azure.batch.models import TaskState
     print("Tracking job with ID: {0}".format(job_id))
     try:
-        job = batch_client.job.get(job_id)
-        tasks = [t for t in batch_client.task.list(job_id)]
+        job = call(batch_client.job.get, job_id)
+        tasks = [t for t in call(batch_client.task.list, job_id)]
         while True:
             completed_tasks = [t for t in tasks if t.state == TaskState.completed]
             errored_tasks = [t for t in completed_tasks if t.execution_info.exit_code != 0]
@@ -137,9 +143,9 @@ def track_job_progress(job_id, dwnld_dir):
                 return # Job complete
 
             time.sleep(10)
-            job = batch_client.job.get(job_id)
-            tasks = [t for t in batch_client.task.list(job_id)]
-    except KeyboardInterrupt:
+            job = call(batch_client.job.get, job_id)
+            tasks = [t for t in call(batch_client.task.list, job_id)]
+    except BatchErrorException: #KeyboardInterrupt:
         raise RuntimeError("Monitoring aborted.")
 
 def convert_utc_expireson_to_local_timezone_naive(token):
@@ -183,27 +189,56 @@ def call(command, *args, **kwargs):
     Some errors we anticipate and raise without a dialog (e.g. PoolNotFound).
     Others we raise and display to the user.
     """
+    global mgmt_auth_token, batch_auth_token
     try:
-        return command(*args, **kwargs)
-    except BatchErrorException as exp:
-        if exp.error.code in ACCEPTED_ERRORS:
-            print "Call failed: {}".format(exp.error.code)
-            raise
-        else:
-            message = exp.error.message.value
-            if exp.error.values:
-                message += "Details:\n"
-                for detail in exp.error.values:
-                    message += "{}: {}".format(detail.key, detail.value)
-            raise ValueError(message)
-    except Exception as exp:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        print "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-        raise ValueError("Error: {0}".format(exp))
+        result = command(*args, **kwargs)
+        return ensure_iter_called(result)
+    except (BatchErrorException) as exp: #cloudError is type thrown by storageMgmtClient listKeys, clouderror.status_code will be 401
+        if exp.response.status_code in [401]:
+            mgmt_auth_token, batch_auth_token = refresh_auth_tokens(mgmt_auth_token, batch_auth_token)
+            update_batch_and_storage_client_creds(batch_auth_token, mgmt_auth_token)
 
+            result = command(*args, **kwargs)
+            try:
+                return ensure_iter_called(result)
+            except BatchErrorException as exp:
+                handle_batch_exception(exp)
+        else:
+            handle_batch_exception(exp)
+
+def handle_batch_exception(exp):
+    if exp.error.code in ACCEPTED_ERRORS:
+        print "Call failed: {}".format(exp.error.code)
+        raise
+    else:
+        message = exp.error.message.value
+        if exp.error.values:
+            message += "Details:\n"
+            for detail in exp.error.values:
+                message += "{}: {}".format(detail.key, detail.value)
+        raise ValueError(message)
+
+def ensure_iter_called(result):
+    if isinstance(result, collections.Iterator):
+        #peek at the first result to force the first call and make sure any auth errors are raised here
+        try:
+            #create a new iterator for the results so we don't advance the original
+            result, result2 = itertools.tee(result)
+            peek = result2.next()
+        except StopIteration:
+            pass
+    return result
+
+def update_batch_and_storage_client_creds(batch_auth_token, mgmt_auth_token):
+    global batch_client
+    batchCredentials = AADTokenCredentials(batch_auth_token)
+    mgmtCredentials = AADTokenCredentials(mgmt_auth_token)
+
+    batch_client._client._mgmt_credentials = mgmtCredentials
+    batch_client._client.creds = batchCredentials
 
 def _authenticate(cfg_path):
-    global batch_client, storage_client
+    global batch_client, storage_client, mgmt_auth_token, batch_auth_token, aadTenant
     cfg = ConfigParser.ConfigParser()
     try:
         cfg.read(cfg_path)
@@ -212,6 +247,8 @@ def _authenticate(cfg_path):
 
         subscription_id = cfg.get('AzureBatch', 'subscription_id')
         batch_url = cfg.get('AzureBatch', 'batch_url')
+
+        aadTenant = cfg.get('AzureBatch', 'aad_tenant_name')
 
         mgmt_auth_token = json.loads(cfg.get('AzureBatch', 'mgmt_auth_token'))
         convert_utc_expireson_to_local_timezone_naive(mgmt_auth_token)
