@@ -540,13 +540,13 @@ class ConfigUI(object):
         """Set logging level. Command for logging dropdown selection.
         :param str level: The selected logging level, e.g. ``debug``.
         """
-        self.base.set_logging(self.logging)
+        self.base.logging = self.logging
 
     def set_threads(self, threads):
         """Set number of threads. OnChange command for threads field.
         :param int threads: The selected number of threads.
         """
-        self.base.set_threads(int(threads))
+        self.base.threads = int(threads)
 
     def authenticate(self, *args):
         """Initiate plug-in authentication, and save updated credentials

@@ -13,7 +13,7 @@ from azurebatchmayaapi import MayaAPI as maya
 def edit_cell(*args):
     return 1
 
-class ImageType(Enum):
+class PoolImageMode(Enum):
     BATCH_IMAGE = 1
     BATCH_IMAGE_WITH_CONTAINERS = 2
     CUSTOM_IMAGE = 3
@@ -39,12 +39,9 @@ class EnvironmentUI(object):
         self.ready = False
         self.page = maya.form_layout(enableBackground=True)
         self.license_settings = {}
-        self.select_rendernode_type = ImageType.BATCH_IMAGE.value
-        self.images = images
+        self.select_rendernode_type = PoolImageMode.BATCH_IMAGE.value
+        self.batch_images = images
         self.licenses = licenses
-
-        self.node_sku_id = None
-        self._node_sku_id_dropdown = None
 
         self.custom_image_resource_id = None
         self.image_resource_id_field = None
@@ -73,7 +70,7 @@ class EnvironmentUI(object):
                     with utils.Row(1,1,325):
                         maya.radio_group(
                             labelArray2=("Batch Managed Image",
-                                            "Custom Image"),
+                                         "Custom Image"),
                             numberOfRadioButtons=2,
                             select=self.select_rendernode_type,
                             vertical = True,
@@ -168,13 +165,13 @@ class EnvironmentUI(object):
 
     def get_os_image(self):
         """Retrieve the currently selected image name."""
-        if self.select_rendernode_type == ImageType.BATCH_IMAGE:
+        if self.select_rendernode_type == PoolImageMode.BATCH_IMAGE:
             return self._image.value()
         return self.get_custom_image_resource_id()
 
     def get_image_type(self):
         """Retrieve the currently selected image type."""
-        return ImageType(self.select_rendernode_type)
+        return PoolImageMode(self.select_rendernode_type)
 
     def select_image(self, image):
         """Select the cached image value if available."""
@@ -187,7 +184,7 @@ class EnvironmentUI(object):
         selection. This value will be stored in the config file.
         :param str sku: The selected hardware SKU.
         """
-        self.base.set_sku(sku)
+        self.base.vm_sku = sku
 
     def get_sku(self):
         """Retrieve the currently selected VM SKU."""
@@ -292,7 +289,7 @@ class EnvironmentUI(object):
         Displays the Batch VM image selection UI control.
         Command for select_rendernode_type radio buttons.
         """
-        self.select_rendernode_type = ImageType.BATCH_IMAGE.value
+        self.select_rendernode_type = PoolImageMode.BATCH_IMAGE.value
         maya.delete_ui(self.image_config)
         self.image_config = []
         with utils.FrameLayout(
@@ -306,7 +303,7 @@ class EnvironmentUI(object):
                 maya.text(label="Use Image: ", align='left', parent=os_image_layout)
                 with utils.Dropdown(self.set_os_image, parent=os_image_layout) as image_settings:
                     self._image = image_settings
-                    for image in self.images:
+                    for image in self.batch_images:
                         self._image.add_item(image)
 
 
@@ -315,7 +312,7 @@ class EnvironmentUI(object):
         Displays the Batch VM image selection UI control.
         Command for select_rendernode_type radio buttons.
         """
-        self.select_rendernode_type = ImageType.BATCH_IMAGE_WITH_CONTAINERS.value
+        self.select_rendernode_type = PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value
         maya.delete_ui(self.image_config)
         self.image_config = []
         with utils.FrameLayout(
@@ -332,7 +329,7 @@ class EnvironmentUI(object):
                 with utils.Dropdown(self.set_os_image, parent=os_image_layout) as os_image_settings:
                     self.image_config.append(os_image_settings)
                     self._image = os_image_settings 
-                    for image in self.images:
+                    for image in self.batch_images:
                         self._image.add_item(image)
                 self.image_config.append(maya.text( 
                     label="Maya Version : ", align='left',
@@ -352,7 +349,7 @@ class EnvironmentUI(object):
                         self._vrayOnImage.add_item(image)
 
     def set_custom_image(self, *args):
-        self.select_rendernode_type = ImageType.CUSTOM_IMAGE.value
+        self.select_rendernode_type = PoolImageMode.CUSTOM_IMAGE.value
         maya.delete_ui(self.image_config)
         self.image_config = []
         with utils.FrameLayout(
@@ -395,7 +392,7 @@ class EnvironmentUI(object):
                         self.select_node_sku_id(self.node_sku_id)
 
     def set_custom_image_with_containers(self, *args):
-        self.select_rendernode_type = ImageType.CUSTOM_IMAGE_WITH_CONTAINERS.value
+        self.select_rendernode_type = PoolImageMode.CUSTOM_IMAGE_WITH_CONTAINERS.value
         maya.delete_ui(self.image_config)
         self.image_config = []
         with utils.FrameLayout(

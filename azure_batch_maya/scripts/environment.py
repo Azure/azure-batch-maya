@@ -15,9 +15,9 @@ from azurebatchmayaapi import MayaAPI as maya
 from azurebatchmayaapi import MayaCallbacks as callback
 import azurebatchutils as utils
 from ui_environment import EnvironmentUI
-from ui_environment import ImageType
+from ui_environment import PoolImageMode
 
-MAYA_IMAGES = {
+BATCH_POOL_IMAGES = {
     'Windows 2016':
         {
             'node_sku_id': 'batch.node.windows amd64',
@@ -62,7 +62,7 @@ class AzureBatchEnvironment(object):
         self.licenses = {}
         self._get_plugin_licenses()
         self.skus = self._load_skus()
-        self.ui = EnvironmentUI(self, frame, MAYA_IMAGES.keys(), self.skus, self.licenses)
+        self.ui = EnvironmentUI(self, frame, BATCH_POOL_IMAGES.keys(), self.skus, self.licenses)
         self.refresh()
         #callback.after_new(self.ui.refresh)
         #callback.after_read(self.ui.refresh)
@@ -93,16 +93,14 @@ class AzureBatchEnvironment(object):
         """
         self._session = session
         self.batch = self._session.batch
-        self.ui.select_node_sku_id(self._session.get_cached_node_sku_id())
-        self.ui.select_custom_image_resource_id(self._session.get_cached_custom_image_resource_id())
-        self.ui.select_image(self._session.get_cached_image())
-        self.ui.select_sku(self._session.get_cached_vm_sku())
+        self.ui.select_image(self._session.batch_image)
+        self.ui.select_sku(self._session.vm_sku)
         
     def refresh(self):
         self._get_plugin_licenses()
         if self._session:
-            self.ui.select_image(self._session.get_cached_image())
-            self.ui.select_sku(self._session.get_cached_vm_sku())
+            self.ui.select_image(self._session.batch_image)
+            self.ui.select_sku(self._session.vm_sku)
 
     def get_application_licenses(self):
         license_servers = []
@@ -110,9 +108,6 @@ class AzureBatchEnvironment(object):
             if selected:
                 license_servers.extend([v['id'] for v in LICENSES if v['label'] == name])
         return license_servers
-
-    def set_image(self, image):
-        self._session.store_image(image)
 
     def get_image_type(self):
         return self.ui.get_image_type()
@@ -127,13 +122,14 @@ class AzureBatchEnvironment(object):
             image_reference=self.get_image_reference(),
             node_agent_sku_id=self.get_node_sku_id())
 
-        if self.ui.get_image_type == ImageType.CUSTOM_IMAGE_WITH_CONTAINERS:
+        if self.ui.get_image_type == PoolImageMode.CUSTOM_IMAGE_WITH_CONTAINERS:
             vm_config.container_configuration = models.ContainerConfiguration(
                 container_registries=self.get_container_registries(),
                 container_image_names=self.get_container_images())
         return vm_config
 
     def get_container_registries(self):
+        #TODO currently only a single registry is supported
         containerRegistries = []
         containerRegistries.append(models.ContainerRegistry(
             user_name=self.ui.get_container_registry_username(),
@@ -143,14 +139,12 @@ class AzureBatchEnvironment(object):
 
     def get_container_images(self):
         containerImages = []
+        #TODO currently only a single containerImage is supported 
         containerImages.append(self.ui.get_container_image())
         return containerImages
 
-    def set_sku(self, sku):
-        self._session.store_vm_sku(sku)
-
     def set_node_sku_id(self, node_sku_id):
-        self._session.store_node_sku_id(node_sku_id)
+        self._session.node_sku_id = node_sku_id
 
     def retrieve_node_agent_skus(self):
         node_agent_sku_list =  self._call(self.batch.account.list_node_agent_skus)
@@ -162,25 +156,25 @@ class AzureBatchEnvironment(object):
         return self.node_agent_sku_id_list 
     
     def get_image_reference(self):
-        if self.get_image_type == ImageType.BATCH_IMAGE:
+        if self.get_image_type == PoolImageMode.BATCH_IMAGE:
             image = self.get_batch_image()
             image.pop('node_sku_id')
             return models.ImageReference(**image)
         return models.ImageReference(virtual_machine_image_id=self.ui.get_custom_image_resource_id())
 
     def get_node_sku_id(self):
-        if self.get_image_type == ImageType.BATCH_IMAGE:
+        if self.get_image_type == PoolImageMode.BATCH_IMAGE:
             image = self.get_batch_image()
             return image.pop('node_sku_id')
-        return self.ui.get_node_sku_id()
+        return self.node_sku_id
 
     def get_batch_image(self):
         selected_image = self.ui.get_os_image()
-        return dict(MAYA_IMAGES[selected_image])
+        return dict(BATCH_POOL_IMAGES[selected_image])
 
     def get_custom_image_resource_id(self):
         selected_image = self.ui.get_os_image()
-        return dict(MAYA_IMAGES[selected_image])
+        return dict(BATCH_POOL_IMAGES[selected_image])
 
     def set_custom_image_resource_id(self, custom_image_resource_id):
         self._session.store_custom_image_resource_id(custom_image_resource_id)
@@ -189,25 +183,22 @@ class AzureBatchEnvironment(object):
         """Retrieve the image label from the data in a pool image
         reference object.
         """
-        pool_image = [k for k,v in MAYA_IMAGES.items() if v['offer'] == image_ref.offer]
+        pool_image = [k for k,v in BATCH_POOL_IMAGES.items() if v['offer'] == image_ref.offer]
         if pool_image:
             return pool_image[0]
         else:
             self._log.debug("Pool using unknown image reference: {}".format(image_ref.offer))
             return image_ref.offer
 
-    def get_vm_sku(self):
-        return self.ui.get_sku()
-
     def os_flavor(self, pool_image=None):
         if pool_image:
-            windows_offers = [value['offer'] for value in MAYA_IMAGES.values() if 'windows' in value['node_sku_id']]
-            linux_offers = [value['offer'] for value in MAYA_IMAGES.values() if value['offer'] not in windows_offers]
+            windows_offers = [value['offer'] for value in BATCH_POOL_IMAGES.values() if 'windows' in value['node_sku_id']]
+            linux_offers = [value['offer'] for value in BATCH_POOL_IMAGES.values() if value['offer'] not in windows_offers]
             if pool_image.offer in windows_offers:
                 return utils.OperatingSystem.windows
             elif pool_image.offer in linux_offers:
                 return utils.OperatingSystem.linux
-        node_sku_id = self.ui.get_node_sku_id()
+        node_sku_id = self.node_sku_id()
         if utils.OperatingSystem.windows.value.lower() in node_sku_id:
             self._log.debug("Detected windows for skuId: {}".format(node_sku_id))
             return utils.OperatingSystem.windows
@@ -220,3 +211,34 @@ class AzureBatchEnvironment(object):
         vars = [{'name': k, 'value': v} for k, v in env_vars.items()]
         self._log.debug("Adding custom env vars: {}".format(vars))
         return vars
+
+    @property
+    def batch_image(self):
+        return self._session.batch_image(self)
+    @batch_image.setter
+    def batch_image(self, value):
+        self._session.batch_image = value
+
+    @property
+    def node_sku_id(self):
+        return  self._session.node_sku_id(self)
+    @node_sku_id.setter
+    def node_sku_id(self, value):
+       self._session.node_sku_id = value
+
+    @property
+    def vm_sku(self):
+        return self._session.vm_sku(self)
+    @vm_sku.setter
+    def vm_sku(self, value):
+       self._session.vm_sku = value
+
+    @property
+    def custom_image_resource_id(self):
+        return  self._session.custom_image_resource_id(self)
+    @custom_image_resource_id.setter
+    def custom_image_resource_id(self, value):
+       self._session.custom_image_resource_id = value
+
+
+

@@ -170,7 +170,7 @@ class AzureBatchPools(object):
             display_name="Maya Pool for {}".format(name),
             resize_timeout=datetime.timedelta(minutes=30),
             application_licenses=self.environment.get_application_licenses(),
-            vm_size=self.environment.get_vm_sku(),
+            vm_size=self.environment.vm_sku,
             virtual_machine_configuration=pool_config,
             target_dedicated_nodes=int(size[0]),
             target_low_priority_nodes=int(size[1]),
@@ -185,7 +185,7 @@ class AzureBatchPools(object):
         """
         pool_config = self.environment.build_virtualmachineconfiguration()
         pool_spec = {
-            'vmSize': self.environment.get_vm_sku(),
+            'vmSize': self.environment.vm_sku,
             'displayName': "Auto Pool for {}".format(job_name),
             'virtualMachineConfiguration': pool_config,
             'maxTasksPerNode': 1,

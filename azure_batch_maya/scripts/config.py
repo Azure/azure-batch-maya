@@ -12,6 +12,7 @@ import logging
 import sys
 import traceback
 import adal
+import copy
 import maya.utils
 
 from Queue import Queue
@@ -56,22 +57,15 @@ class AzureBatchConfig(object):
         :type frame: :class:`.AzureBatchUI`
         :param func call: The shared REST API call wrapper.
         """
-        self.ui = None
         self.session = start
-        self.threads = self.default_threads()
         self._tab_index = index
         self._data_dir = os.path.join(maya.prefs_dir(), 'AzureBatchData')
         self._ini_file = "azure_batch.ini"
         self._user_agent = "batchmaya/{}".format(os.environ.get('AZUREBATCH_VERSION'))
         self._cfg = ConfigParser.ConfigParser()
-        self._client = None
-        self._log = None
-        self._storage = None
-        self._credentials = None
         self._call = call
-        self.can_init_from_config = False
         
-        self._log = self._configure_logging(LOG_LEVELS['debug'])
+        self._log = self._configure_logging(LOG_LEVELS['debug'])    #config hasn't been loaded yet so use a default logging level
 
         self.ui = ConfigUI(self, settings, frame)
         self._configure_plugin(False)
@@ -80,18 +74,146 @@ class AzureBatchConfig(object):
         #old method with dummy listPool etc calls slowed down opening,
         #so maybe do this in background after UI has been fully loaded
 
+    def __getattr__(self, attr):
+        #return None rather than throw AttributeError so we don't have to init everything
+        return self.__dict__.get(attr, None)
+
+    #property helpers
+    def _get_cached_config_value(self, identifier):
+        try:
+            return self._cfg.get('AzureBatch', identifier)
+        except ConfigParser.NoOptionError:
+            return None
+
+    def _store_config_value(self, identifier, value):
+        self._cfg.set('AzureBatch', identifier, value)
+        self._save_config()
+
+    #properties from config file
+    @property
+    def mgmt_auth_token(self):
+        value_from_config = self._get_cached_config_value('mgmt_auth_token')
+        if value_from_config is None:
+            return None
+        json_loaded_value = json.loads(value_from_config)
+        return self.convert_utc_expireson_to_local_timezone_naive(json_loaded_value)
+    @mgmt_auth_token.setter
+    def mgmt_auth_token(self, value):
+        self._store_config_value('mgmt_auth_token',  json.dumps(self.convert_timezone_naive_expireson_to_utc(value)))
+
+    @property
+    def batch_auth_token(self): 
+        value_from_config = self._get_cached_config_value('batch_auth_token')
+        if value_from_config is None:
+            return None
+        json_loaded_value = json.loads(value_from_config)
+        return self.convert_utc_expireson_to_local_timezone_naive(json_loaded_value)
+    @batch_auth_token.setter
+    def batch_auth_token(self, value):
+        self._store_config_value('batch_auth_token',  json.dumps(self.convert_timezone_naive_expireson_to_utc(value)))
+
+    @property
+    def subscription_id(self):
+        return self._get_cached_config_value('subscription_id')
+    @subscription_id.setter
+    def subscription_id(self, value):
+        self._store_config_value('subscription_id', value)
+
+    @property
+    def subscription_name(self):
+        return self._get_cached_config_value('subscription_name')
+    @subscription_name.setter
+    def subscription_name(self, value):
+        self._store_config_value('subscription_name', value)
+
+    @property
+    def vm_sku(self):
+        return self._get_cached_config_value('vm_sku')
+    @vm_sku.setter
+    def vm_sku(self, value):
+        self._store_config_value('vm_sku', value)
+
+    @property
+    def image(self):
+        return self._get_cached_config_value('image')
+    @image.setter
+    def image(self, value):
+        self._store_config_value('image', value)
+
+    @property
+    def batch_account(self):
+        return self._get_cached_config_value('batch_account')
+    @batch_account.setter
+    def batch_account(self, value):
+        self._store_config_value('batch_account', value)
+
+    @property
+    def custom_image_resource_id(self):
+        return self._get_cached_config_value('custom_image_resource_id')
+    @custom_image_resource_id.setter
+    def custom_image_resource_id(self, value):
+        self._store_config_value('custom_image_resource_id', value)
+
+    @property
+    def container_image(self):
+        return self._get_cached_config_value('container_image')
+    @container_image.setter
+    def container_image(self, value):
+        self._store_config_value('container_image', value)
+
+    @property
+    def node_sku_id(self):
+        return self._get_cached_config_value('node_sku_id')
+    @node_sku_id.setter
+    def node_sku_id(self, value):
+        self._store_config_value('node_sku_id', value)
+
+    @property
+    def batch_image(self):
+        return self._get_cached_config_value('batch_image')
+    @batch_image.setter
+    def batch_image(self, value):
+        self._store_config_value('batch_image', value)
+
+    @property
+    def aad_tenant_name(self):
+        return self._get_cached_config_value('aad_tenant_name')
+    @aad_tenant_name.setter
+    def aad_tenant_name(self, value):
+        self._store_config_value('aad_tenant_name', value)
+
+    #properties from config file with additional behaviour
+    @property
+    def logging_level(self):
+        value_in_config = self._get_cached_config_value('logging')
+        if value_in_config is None:
+            return self.default_logging()
+        return value_in_config
+    @logging_level.setter
+    def logging_level(self, value):
+        self._log.setLevel(level)
+        self._store_config_value('logging', value)
+
+    @property
+    def threads(self):
+        value_in_config = self._get_cached_config_value('threads')
+        if value_in_config is None:
+            return self.default_threads()
+        return value_in_config
+    @threads.setter
+    def threads(self, value):
+        if self._client != None:
+            self._client.threads = self.threads
+        self._store_config_value('threads', value)
+
+    #non config file properties
     @property
     def batch(self):
         return self._client
 
     @property
     def subscription_client(self):
-        try:
-            return self._subscription_client
-        except AttributeError:
-            self._subscription_client = None
-            return self._subscription_client
-
+        return self._subscription_client
     @subscription_client.setter
     def subscription_client(self, value):
         self._subscription_client = value
@@ -103,7 +225,6 @@ class AzureBatchConfig(object):
         except AttributeError:
             self._batch_mgmt_client = None
             return self._batch_mgmt_client
-
     @batch_mgmt_client.setter
     def batch_mgmt_client(self, value):
         self._batch_mgmt_client = value
@@ -113,73 +234,12 @@ class AzureBatchConfig(object):
         return self._storage
 
     @property
-    def batch_auth_token(self):
-        try:
-            return self._batch_auth_token
-        except AttributeError:
-            self._batch_auth_token = None
-            return self._batch_auth_token
-
-    @batch_auth_token.setter
-    def batch_auth_token(self, value):
-        self._batch_auth_token = value
-
-    @property
-    def mgmt_auth_token(self):
-        try:
-            return self._mgmt_auth_token
-        except AttributeError:
-            self._mgmt_auth_token = None
-            return self._mgmt_auth_token
-
-    @mgmt_auth_token.setter
-    def mgmt_auth_token(self, value):
-        self._mgmt_auth_token = value
-
-    @property
-    def subscription_name(self):
-        try:
-            return self._subscription_name
-        except AttributeError:
-            self._subscription_name = None
-            return self._subscription_name
-
-    @subscription_name.setter
-    def subscription_name(self, value):
-        self._subscription_name = value
-
-    @property
-    def batch_account(self):
-        try:
-            return self._batch_account
-        except AttributeError:
-            self._batch_account = None
-            return self._batch_account
-
-    @batch_account.setter
-    def batch_account(self, value):
-        self._batch_account = value
-
-    @property
     def path(self):
         return os.path.join(self._data_dir, self._ini_file)
 
     @property
-    def aad_tenant_name(self):
-        try:
-            return self._aad_tenant_name
-        except AttributeError:
-            self._aad_tenant_name = None
-            return self._aad_tenant_name
-
-    @aad_tenant_name.setter
-    def aad_tenant_name(self, value):
-        self._aad_tenant_name = value
-
-    @property
     def auth(self):
         return self._auth
-
     @auth.setter
     def auth(self, value):
         self._auth = value
@@ -220,7 +280,6 @@ class AzureBatchConfig(object):
 
         if self.can_init_from_config:
             self.init_from_config()
-            self.ui.selected_subscription_id = self.subscription_id
             self.ui.init_from_config()
 
         else:
@@ -305,93 +364,35 @@ class AzureBatchConfig(object):
         """Populate the config tab UI with the values loaded from the
         configuration file.
         """
-        try:
-            self._cfg.add_section('AzureBatch')
-        except ConfigParser.DuplicateSectionError:
-            pass
-        try:
-            self._batch_auth_token = json.loads(self._cfg.get('AzureBatch', 'batch_auth_token'))
-            self.convert_utc_expireson_to_local_timezone_naive(self._batch_auth_token)
-        except ConfigParser.NoOptionError:
-            self._batch_auth_token = ""
-        try:
-            self._mgmt_auth_token = json.loads(self._cfg.get('AzureBatch', 'mgmt_auth_token'))
-            self.convert_utc_expireson_to_local_timezone_naive(self._mgmt_auth_token)
-        except ConfigParser.NoOptionError:
-            self._mgmt_auth_token = ""
+        self.ensure_azurebatch_config_section_exists()
 
         #set to true optimistically here, if any values are missing then this must be an old config format
         self.can_init_from_config = True
-        try:
-            self.subscription_id = self._cfg.get('AzureBatch', 'subscription_id')
-        except ConfigParser.NoOptionError:
-            self.subscription_id = ""
+
+        required_config_values = [self.subscription_id, 
+                                    self.aad_tenant_name, 
+                                    self.subscription_name, 
+                                    self.batch_url, 
+                                    self.batch_account, 
+                                    self.storage_account_resource_id, 
+                                    self.storage_key,
+                                    self.mgmt_auth_token,
+                                    self.batch_auth_token]
+
+        #if a required value is not present in the config, the relevant property will return 'None'
+        if None in required_config_values:
             self.can_init_from_config = False
-        try:
-            self.aad_tenant_name = self._cfg.get('AzureBatch', 'aad_tenant_name')
-        except ConfigParser.NoOptionError:
-            self.aad_tenant_name = ""
-            self.can_init_from_config = False
-        try:
-            self._subscription_name = self._cfg.get('AzureBatch', 'subscription_name')
-        except ConfigParser.NoOptionError:
-            self._subscription_name = ""
-            self.can_init_from_config = False
-        try:
-            self.batch_url = self._cfg.get('AzureBatch', 'batch_url')
-        except ConfigParser.NoOptionError:
-            self.batch_url = ""
-            self.can_init_from_config = False
-        try:
-            self.batch_account = self._cfg.get('AzureBatch', 'batch_account')
-            self.can_init_from_config = True
-        except ConfigParser.NoOptionError:
-            self.batch_account = ""
-            self.can_init_from_config = False
-        try:
-            self.storage_account_resource_id = self._cfg.get('AzureBatch', 'storage_account_resource_id')
-        except ConfigParser.NoOptionError:
-            self.storage_account_resource_id = ""
-            self.can_init_from_config = False
-        try:
-            self.storage_key = self._cfg.get('AzureBatch', 'storage_key')
-        except ConfigParser.NoOptionError:
-            self.storage_key = ""
-            self.can_init_from_config = False
-        try:
-            self.logging_level = self._cfg.getint('AzureBatch', 'logging')
-            self._log = self._configure_logging(self.logging_level)
-        except ConfigParser.NoOptionError:
-            self.logging_level = self.default_logging()
-        try:
-            self.threads = self._cfg.getint('AzureBatch', 'threads')
-        except ConfigParser.NoOptionError:
-            self.threads = self.default_threads()
-        finally:
-            if self._client != None:
-                self._client.threads = self.threads
+
+        self._log = self._configure_logging(self.logging_level)
+
+        if self._client != None:
+            self._client.threads = self.threads
 
     def _save_config(self):
         """Persist the current plugin configuration to file."""
         config_file = os.path.join(self._data_dir, self._ini_file)
         with open(config_file, 'w') as handle:
             self._cfg.write(handle)
-
-    def set_logging(self, level):
-        """Set the logging level to that specified in the UI.
-        :param str level: The specified logging level.
-        """
-        self._log.setLevel(level)
-        self._cfg.set('AzureBatch', 'logging', str(level))
-        self._save_config()
-
-    def set_threads(self, threads):
-        """Set the number of threads to that specified in the UI.
-        :param int threads: The specified number of threads.
-        """
-        self._cfg.set('AzureBatch', 'threads', threads)
-        self._client.threads = threads
-        self._save_config()
 
     def save_changes(self):
         """Persist auth config changes to file for future sessions."""
@@ -403,13 +404,9 @@ class AzureBatchConfig(object):
         self._cfg.set('AzureBatch', 'storage_account_resource_id', self.storage_account_resource_id)
         self._cfg.set('AzureBatch', 'storage_key', self.storage_key)
         self._cfg.set('AzureBatch', 'logging', self.logging_level)
-
-        self.convert_timezone_naive_expireson_to_utc(self.mgmt_auth_token)
-        self.convert_timezone_naive_expireson_to_utc(self.batch_auth_token)
-
         self._cfg.set('AzureBatch', 'aad_tenant_name', self.aad_tenant_name)
-        self._cfg.set('AzureBatch', 'mgmt_auth_token', json.dumps(self.mgmt_auth_token))
-        self._cfg.set('AzureBatch', 'batch_auth_token', json.dumps(self.batch_auth_token))
+        self._cfg.set('AzureBatch', 'mgmt_auth_token', self.mgmt_auth_token)
+        self._cfg.set('AzureBatch', 'batch_auth_token', self.batch_auth_token)
         self._save_config()
 
     def ensure_azurebatch_config_section_exists(self):
@@ -417,100 +414,6 @@ class AzureBatchConfig(object):
             self._cfg.add_section('AzureBatch')
         except ConfigParser.DuplicateSectionError:
             pass
-    
-    def get_threads(self):
-        """Attempt to retrieve number of threads configured for the plugin."""
-        return self._client.threads
-
-    def get_cached_vm_sku(self):
-        """Attempt to retrieve a selected VM SKU from a previous session."""
-        try:
-            return self._cfg.get('AzureBatch', 'vm_sku')
-        except ConfigParser.NoOptionError:
-            return None
-
-    def store_vm_sku(self, sku):
-        """Cache selected VM SKU for later sessions."""
-        self._cfg.set('AzureBatch', 'vm_sku', sku)
-        self._save_config()
-
-    def store_node_sku_id(self, node_sku_id):
-        """Cache selected node agent SKU id for later sessions."""
-        self._cfg.set('AzureBatch', 'node_sku_id', node_sku_id)
-        self._save_config()
-
-    def get_cached_image(self):
-        """Attempt to retrieve a selected image a previous session."""
-        try:
-            return self._cfg.get('AzureBatch', 'image')
-        except ConfigParser.NoOptionError:
-            return None
-
-    def get_cached_node_sku_id(self):
-        """Attempt to retrieve a selected node sku id from a previous session."""
-        try:
-            return self._cfg.get('AzureBatch', 'node_sku_id')
-        except ConfigParser.NoOptionError:
-            return None
-
-    def get_cached_custom_image_resource_id(self):
-        """Attempt to retrieve a selected custom image resource id from a previous session."""
-        try:
-            return self._cfg.get('AzureBatch', 'custom_image_resource_id')
-        except ConfigParser.NoOptionError:
-            return None
-
-    def store_custom_image_resource_id(self, custom_image_resource_id):
-        """Cache selected custom_image_resource_id for later sessions."""
-        self._cfg.set('AzureBatch', 'custom_image_resource_id', custom_image_resource_id)
-        self._save_config()
-
-    def get_cached_aad_tenant_name(self):
-        try:
-            return self._cfg.get('AzureBatch', 'aad_tenant_name')
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError) as e:
-            return None
-
-    def store_aad_tenant_name(self, aad_tenant_name):
-        self.ensure_azurebatch_config_section_exists()
-        self._cfg.set('AzureBatch', 'aad_tenant_name', aad_tenant_name)
-        self._save_config()
-
-    def store_image(self, image):
-        """Cache selected image for later sessions."""
-        self._cfg.set('AzureBatch', 'image', image)
-        self._save_config()
-
-    def get_cached_subscription(self):
-        """Attempt to retrieve a selected subscription from a previous session."""
-        try:
-            return self._cfg.get('AzureBatch', 'subscription_id')
-        except ConfigParser.NoOptionError:
-            return None
-
-    def get_cached_batch_account(self):
-        """Attempt to retrieve a selected batch account from a previous session."""
-        try:
-            return self._cfg.get('AzureBatch', 'batch_account')
-        except ConfigParser.NoOptionError:
-            return None
-
-    def store_batch_account(self, batch_account):
-        """Cache selected batch account for later sessions."""
-        self._cfg.set('AzureBatch', 'batch_account', batch_account)
-        self._save_config()
-
-    def get_cached_autoscale_formula(self):
-        """Attempt to retrieve an autoscale forumla from a previous session."""
-        try:
-            return self._cfg.get('AzureBatch', 'autoscale')
-        except ConfigParser.NoOptionError:
-            return None
-
-    def store_autoscale_formula(self, formula):
-        """Cache selected VM SKU for later sessions."""
-        self._cfg.set('AzureBatch', 'autoscale', formula)
-        self._save_config()
 
     def available_subscriptions(self):
         """Retrieve the currently available subscriptions to populate
@@ -529,13 +432,6 @@ class AzureBatchConfig(object):
         self.subscription_id = subscription_id
         self.subscription_name = subscription_name
         self.batch_mgmt_client = BatchManagementClient(self.mgmtCredentials, str(subscription_id))
-        #batch_accounts = self._call(self.batch_mgmt_client.batch_account.list)
-        #accounts = []
-        #for account in batch_accounts:
-        #    if account.auto_storage != None:
-        #        accounts.append(account)
-        #self.count = len(accounts)
-        #self._available_batch_accounts = accounts
 
     def init_after_batch_account_selected(self, batchaccount, subscription_id):
         self.batch_account = batchaccount.name
@@ -554,6 +450,7 @@ class AzureBatchConfig(object):
         self._storage = storage.BlockBlobService(
             self.storage_account,
             self.storage_key)
+        self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
 
         #TODO refactor move the below shared block into def configureClient(client)
         self._client = batch.BatchExtensionsClient(self.batchCredentials, 
@@ -562,11 +459,8 @@ class AzureBatchConfig(object):
 
         self._client.config.add_user_agent(self._user_agent)
         self._client.threads = self.threads
-        self.logging_level = self.default_logging()
-        self.save_changes()
         self._log = self._configure_logging(self.logging_level)
 
-        self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
 
     def init_from_config(self):
         parsedStorageAccountId = msrestazuretools.parse_resource_id(self.storage_account_resource_id)
@@ -579,6 +473,7 @@ class AzureBatchConfig(object):
         self._storage = storage.BlockBlobService(
             self.storage_account,
             self.storage_key)
+        self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
 
         #TODO refactor move the below shared block into def configureClient(client)
         self._client = batch.BatchExtensionsClient(self.batchCredentials, 
@@ -589,7 +484,6 @@ class AzureBatchConfig(object):
         self._client.threads = self.threads
         self.save_changes()
         self._log = self._configure_logging(self.logging_level)
-        self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
 
     def available_batch_accounts(self):
         """Retrieve the currently available batch accounts to populate
@@ -610,23 +504,31 @@ class AzureBatchConfig(object):
     def default_logging(self):
         return 10
 
-    
     def default_threads(self):
         return 20
 
     def convert_timezone_naive_expireson_to_utc(self, token):
         # we want to store token expiry times as UTC for consistency
-        if 'expiresOnUTC' not in token:
-            expireson_local = dateparse(token['expiresOn']).replace(tzinfo=dateutil.tz.tzlocal())
+        if token and token is not None and 'expiresOn' in token:
+            token_copy = copy.deepcopy(token)
+            expireson_local = dateparse(token_copy['expiresOn']).replace(tzinfo=dateutil.tz.tzlocal())
             expireson_utc = expireson_local.astimezone(dateutil.tz.gettz('UTC'))
-            token['expiresOnUTC'] = str(expireson_utc)
-            del token['expiresOn']
+            token_copy['expiresOnUTC'] = str(expireson_utc)
+            del token_copy['expiresOn']
+            return token_copy
+        else:
+            return token
 
     def convert_utc_expireson_to_local_timezone_naive(self, token):
         #the standard token expireson format which the various AAD libraries expect / return is a vanilla datetime string, in local time and timezone naive (no tz specified)
-        localtz = dateutil.tz.tzlocal()
-        expireson_utc = dateparse(token['expiresOnUTC']).replace(tzinfo = dateutil.tz.gettz('UTC'))
-        expireson_local = expireson_utc.astimezone(dateutil.tz.tzlocal())
-        expireson_local_tz_naive = expireson_local.replace(tzinfo = None)
-        token['expiresOn'] = str(expireson_local_tz_naive)
-        del token['expiresOnUTC']
+        if token and token is not None and 'expiresOnUTC' in token:
+            token_copy = copy.deepcopy(token)
+            localtz = dateutil.tz.tzlocal()
+            expireson_utc = dateparse(token_copy['expiresOnUTC']).replace(tzinfo = dateutil.tz.gettz('UTC'))
+            expireson_local = expireson_utc.astimezone(dateutil.tz.tzlocal())
+            expireson_local_tz_naive = expireson_local.replace(tzinfo = None)
+            token_copy['expiresOn'] = str(expireson_local_tz_naive)
+            del token_copy['expiresOnUTC']
+            return token_copy
+        else:
+            return token

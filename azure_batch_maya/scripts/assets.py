@@ -266,7 +266,7 @@ class AzureBatchAssets(object):
         Called on successful authentication.
         """
         self._session = session
-        self._upload_threads = session.get_threads
+        self._upload_threads = session.threads
         self.batch = self._session.batch
         self._set_searchpaths()
         self._assets = Assets(self.batch)
