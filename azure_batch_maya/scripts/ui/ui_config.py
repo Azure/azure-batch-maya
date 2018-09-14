@@ -518,9 +518,7 @@ class ConfigUI(object):
             #self.frame.is_logged_out()
 
             try:
-                self.base.obtain_aad_tokens()
-                self.auth_status = "Please follow instructions below to sign in."
-                maya.refresh()
+                self.base.prompt_for_and_obtain_aad_tokens()
             except AdalError as exp:
                 errors = exp.error_response['error_codes']
                 if 90002 in errors:

@@ -33,6 +33,7 @@ from msrestazure.azure_active_directory import AdalAuthentication
 from msrestazure.azure_active_directory import AADTokenCredentials
 import msrestazure.tools as msrestazuretools
 
+from adal import AdalError
 
 LOG_LEVELS = {
     'debug':10,
@@ -245,7 +246,7 @@ class AzureBatchConfig(object):
         self._auth = value
 
     def _configure_plugin(self, from_auth_button):
-        """Set up the the config file, authenticate the SDK clients
+        """Set up the config file, authenticate the SDK clients
         and set up the log file.
         """
         if not os.path.exists(self._data_dir):
@@ -271,7 +272,10 @@ class AzureBatchConfig(object):
             self.ui.prompt_for_aad_tenant()
         else:
             if self.need_to_refresh_auth_tokens([self.mgmt_auth_token, self.batch_auth_token]):
-                self.refresh_auth_tokens(self.mgmt_auth_token, self.batch_auth_token)
+                refreshedTokens = self.refresh_auth_tokens(self.mgmt_auth_token, self.batch_auth_token)
+                if not refreshedTokens:
+                    self.prompt_for_and_obtain_aad_tokens()
+                    return
             self._configure_post_auth()
 
     def _configure_post_auth(self):
@@ -311,16 +315,31 @@ class AzureBatchConfig(object):
 
         context = adal.AuthenticationContext(self.aadAuthorityHostUrl + '/' + self.aad_tenant_name, api_version=None)
 
-        self.mgmt_auth_token = context.acquire_token_with_refresh_token(
-            mgmt_token['refreshToken'],
-            self.aadClientId,
-            self.mgmtAadResource)
+        try:
+            self.mgmt_auth_token = context.acquire_token_with_refresh_token(
+                mgmt_token['refreshToken'],
+                self.aadClientId,
+                self.mgmtAadResource)
 
-        self.batch_auth_token =  context.acquire_token_with_refresh_token(
-            batch_token['refreshToken'],
-            self.aadClientId,
-            self.batchAadResource)
+            self.batch_auth_token =  context.acquire_token_with_refresh_token(
+                batch_token['refreshToken'],
+                self.aadClientId,
+                self.batchAadResource)
 
+            return True
+
+        except AdalError as exp:
+            errors = exp.error_response['error_codes']
+            if 70002 in errors or 70008 in errors:
+                #70002 is: Error validating credentials. 70008 is: The refresh token has expired due to inactivity.
+                return False
+            raise exp
+
+    def prompt_for_and_obtain_aad_tokens(self):
+        self.obtain_aad_tokens()
+        self.ui.auth_status = "Please follow instructions below to sign in."
+        maya.refresh()
+        
     def obtain_aad_tokens(self):
         context = adal.AuthenticationContext(self.aadAuthorityHostUrl + '/' + self.aad_tenant_name, api_version=None)
 
