@@ -151,9 +151,11 @@ class AzureBatchPools(object):
         """Get the OS flavor of the specified pool ID."""
         try:
             pool = self._call(self.batch.pool.get, pool_id)
-            return self.environment.os_flavor(pool.virtual_machine_configuration.image_reference)
+            if 'windows' in pool.virtual_machine_configuration.node_agent_sku_id:
+                return azurebatchutils.OperatingSystem.windows
+            return azurebatchutils.OperatingSystem.linux
         except AttributeError:
-            raise ValueError('Selected pool is not a valid Maya pool.')
+            raise ValueError('Selected pool is not valid.')
 
     def create_pool(self, size, name):
         """Create and deploy a new pool.
