@@ -80,7 +80,8 @@ class AzureBatchConfig(object):
             self._cfg.read(config_file)
             self._storage = storage.BlockBlobService(
                 self._cfg.get('AzureBatch', 'storage_account'),
-                self._cfg.get('AzureBatch', 'storage_key'))
+                self._cfg.get('AzureBatch', 'storage_key'),
+                endpoint_suffix = self._cfg.get('AzureBatch', 'storage_suffix'))
             self._storage.MAX_SINGLE_PUT_SIZE = 2 * 1024 * 1024
             credentials = SharedKeyCredentials(
                 self._cfg.get('AzureBatch', 'batch_account'),
@@ -149,6 +150,10 @@ class AzureBatchConfig(object):
         except ConfigParser.NoOptionError:
             self.ui.storage_key = ""
         try:
+            self.ui.storage_suffix = self._cfg.get('AzureBatch', 'storage_suffix')
+        except ConfigParser.NoOptionError:
+            self.ui.storage_suffix = "core.windows.net"
+        try:
             self.ui.logging = self._cfg.getint('AzureBatch', 'logging')
         except ConfigParser.NoOptionError:
             self.ui.logging = 10
@@ -207,6 +212,7 @@ class AzureBatchConfig(object):
         self._cfg.set('AzureBatch', 'batch_key', self.ui.key)
         self._cfg.set('AzureBatch', 'storage_account', self.ui.storage)
         self._cfg.set('AzureBatch', 'storage_key', self.ui.storage_key)
+        self._cfg.set('AzureBatch', 'storage_suffix', self.ui.storage_suffix)
         self._save_config()
 
     def authenticate(self):

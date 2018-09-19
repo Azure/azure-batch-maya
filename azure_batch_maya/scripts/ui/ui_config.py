@@ -80,6 +80,12 @@ class ConfigUI(object):
                     maya.text(label="Storage Key:   ", align="right")
                     self._storage_key = maya.text_field(height=25, enable=True)
 
+                with utils.Row(2, 2, (140, 180), ("right","center"),
+                               [(1, "bottom", 20),(2,"bottom",15)]):
+                    maya.text(label="Storage Suffix:   ", align="right")
+                    self._storage_suffix = maya.text_field(height=25, enable=True,
+                          annotation="Defaults to 'core.windows.net' for public cloud, other options are 'core.usgovcloudapi.net', 'core.chinacloudapi.cn' etc.")
+
         with utils.Row(1, 1, 355, "center", (1, "bottom",0)) as btn:
             self._authenticate = maya.button(label="Authenticate",
                                              command=self.authenticate,
@@ -153,6 +159,16 @@ class ConfigUI(object):
     def storage_key(self, value):
         """AzureBatch AAD Tenant. Sets contents of text field."""
         maya.text_field(self._storage_key, edit=True, text=str(value))
+
+    @property
+    def storage_suffix(self):
+        """Suffix to apply to the storage account, defaults to core.windows.net"""
+        return maya.text_field(self._storage_suffix, query=True, text=True)
+
+    @storage_suffix.setter
+    def storage_suffix(self, value):
+        """Suffix to apply to the storage account, defaults to core.windows.net"""
+        maya.text_field(self._storage_suffix, edit=True, text=str(value))
 
     @property
     def status(self):

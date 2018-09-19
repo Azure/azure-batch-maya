@@ -141,7 +141,8 @@ def _authenticate(cfg_path):
                 cfg.get("AzureBatch", "batch_key"))
         storage_client = storage.BlockBlobService(
             cfg.get("AzureBatch", "storage_account"),
-            cfg.get("AzureBatch", "storage_key"))
+            cfg.get("AzureBatch", "storage_key"),
+            endpoint_suffix = self._cfg.get('AzureBatch', 'storage_suffix'))
         batch_client = batch.BatchExtensionsClient(
             credentials, base_url=cfg.get("AzureBatch", "batch_url"),
             storage_client=storage_client)
