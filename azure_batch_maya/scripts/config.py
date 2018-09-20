@@ -89,6 +89,7 @@ class AzureBatchConfig(object):
             self._client = batch.BatchExtensionsClient(
                 credentials, base_url=self._cfg.get('AzureBatch', 'batch_url'),
                 storage_client=self._storage)
+            self._client.threads = self._cfg.getint('AzureBatch', 'threads')
             self._client.config.add_user_agent(self._user_agent)
             self._log = self._configure_logging(
                 self._cfg.get('AzureBatch', 'logging'))
