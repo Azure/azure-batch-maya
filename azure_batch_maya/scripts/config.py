@@ -157,10 +157,12 @@ class AzureBatchConfig(object):
             self.ui.logging = self._cfg.getint('AzureBatch', 'logging')
         except ConfigParser.NoOptionError:
             self.ui.logging = 10
+            self._cfg.set('AzureBatch', 'logging', LOG_LEVELS['debug'])
         try:
             self.ui.threads = self._cfg.getint('AzureBatch', 'threads')
         except ConfigParser.NoOptionError:
             self.ui.threads = 20
+            self._cfg.set('AzureBatch', 'threads', 20)
         finally:
             if self._client != None:
                 self._client.threads = self.ui.threads
