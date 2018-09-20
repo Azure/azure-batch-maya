@@ -1,8 +1,15 @@
+2018.09.21 v0.21.0
+------------------
+- Fix issue preventing auth where logging value was left at default
+- Fix issue preventing job submission on first run if threads value was left at default
+
+
 2018.09.20 v0.20.0
 ------------------
 - Add "storage_suffix" field to config for support of non-public cloud endpoints
 - Support custom-image pools created out of band, e.g. through the portal
 - Add "additionalFlags" field for Arnold, allowing e.g. camera selection 
+
 
 2018.05.02 v0.19.0
 ------------------
