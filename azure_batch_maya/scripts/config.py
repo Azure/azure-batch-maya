@@ -73,9 +73,6 @@ class AzureBatchConfig(object):
         if not os.path.exists(self._data_dir):
             os.makedirs(self._data_dir)
         config_file = os.path.join(self._data_dir, self._ini_file)
-        if not os.path.exists(config_file):
-            self._log = self._configure_logging(LOG_LEVELS['debug'])
-            return
         try:
             self._cfg.read(config_file)
             self._storage = storage.BlockBlobService(
