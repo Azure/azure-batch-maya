@@ -114,7 +114,7 @@
     ],
     "repeatTask": {
       "displayName": "Frame {0}",
-      "commandLine": "subst X: %AZ_BATCH_JOB_PREP_WORKING_DIR%\\assets & %MAYA_2017_EXEC% -renderer [parameters('renderer')] -proj \"%AZ_BATCH_JOB_PREP_WORKING_DIR%\" -ai:ltc 1 -ai:lve [parameters('logLevel')] -verb -preRender renderPrep -rd \"%AZ_BATCH_TASK_WORKING_DIR%\\images\" -s {0} -e {0} \"[parameters('sceneFile')]\" & call %MAYA_2017%\\bin\\mayapy %AZ_BATCH_JOB_PREP_WORKING_DIR%\\thumbnail.py %^errorlevel%",
+      "commandLine": "subst X: \"%AZ_BATCH_JOB_PREP_WORKING_DIR%\\assets\" & \"%MAYA_2017_EXEC%\" -renderer [parameters('renderer')] -proj \"%AZ_BATCH_JOB_PREP_WORKING_DIR%\" -ai:ltc 1 -ai:lve [parameters('logLevel')] -verb -preRender renderPrep -rd \"%AZ_BATCH_TASK_WORKING_DIR%\\images\" -s {0} -e {0} \"[parameters('sceneFile')]\" & call \"%MAYA_2017%\\bin\\mayapy\" \"%AZ_BATCH_JOB_PREP_WORKING_DIR%\\thumbnail.py\" %^errorlevel%",
       "environmentSettings": [
         {
           "name": "MAYA_SCRIPT_PATH",
