@@ -51,6 +51,7 @@ class ArnoldRenderJob(AzureBatchRenderJob):
         self.start = self.display_int("Start frame:   ", self.start_frame, edit=True)
         self.end = self.display_int("End frame:   ", self.end_frame, edit=True)
         self.step = self.display_int("Frame step:   ", self.frame_step, edit=True)
+        self.additional_flags_field = self.display_string("Additional flags:   ", self.additional_flags, edit=True)
 
         try:
             log_level = cmds.getAttr("defaultArnoldRenderOptions.log_verbosity")
@@ -63,6 +64,10 @@ class ArnoldRenderJob(AzureBatchRenderJob):
 
     def render_enabled(self):
         return True
+
+    @property
+    def additional_flags(self):
+        return str_type(" ")
 
     def get_jobdata(self):
         if self.scene_name == '':
@@ -95,6 +100,12 @@ class ArnoldRenderJob(AzureBatchRenderJob):
         params['frameStep'] = cmds.intField(self.step, query=True, value=True)
         params['renderer'] = self._renderer
         params['logLevel'] = int(cmds.optionMenu(self.logging, query=True, select=True)) - 1
+
+        #additionalFlags has to default to " " rather than an empty string, in order to be accepted by the template
+        additionalFlagsValue = str_type(cmds.textField(self.additional_flags_field, query=True, text=True))
+        if not additionalFlagsValue:
+            additionalFlagsValue = " "
+        params['additionalFlags'] = additionalFlagsValue
         return params
 
 
