@@ -1,3 +1,9 @@
+2018.09.20 v0.20.0
+------------------
+- Add "storage_suffix" field to config for support of non-public cloud endpoints
+- Support custom-image pools created out of band, e.g. through the portal
+- Add "additionalFlags" field for Arnold, allowing e.g. camera selection 
+
 2018.05.02 v0.19.0
 ------------------
 - Target the latest release of the rendering images - Windows v1.2.1 and CentOS v1.1.2
@@ -6,6 +12,7 @@
 - Dependency install now logs to Mayapy console window and to new log file
 - Drop Preview tag for VRay now it is Generally Available (GA)
 - Numerous additional details added to ReadMe.md, including install / reinstall / uninstall and Known Issue sections
+
 
 2018.04.06 v0.18.0
 ------------------
