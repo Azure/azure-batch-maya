@@ -142,6 +142,20 @@ class AzureBatchConfig(object):
         self._store_config_value('batch_account', value)
 
     @property
+    def batch_url(self):
+        return self._get_cached_config_value('batch_url')
+    @batch_url.setter
+    def batch_url(self, value):
+        self._store_config_value('batch_url', value)
+
+    @property
+    def storage_account_resource_id(self):
+        return self._get_cached_config_value('storage_account_resource_id')
+    @storage_account_resource_id.setter
+    def storage_account_resource_id(self, value):
+        self._store_config_value('storage_account_resource_id', value)
+
+    @property
     def custom_image_resource_id(self):
         return self._get_cached_config_value('custom_image_resource_id')
     @custom_image_resource_id.setter
