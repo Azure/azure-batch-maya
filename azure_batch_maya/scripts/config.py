@@ -135,13 +135,6 @@ class AzureBatchConfig(object):
         self._store_config_value('vm_sku', value)
 
     @property
-    def image(self):
-        return self._get_cached_config_value('image')
-    @image.setter
-    def image(self, value):
-        self._store_config_value('image', value)
-
-    @property
     def batch_account(self):
         return self._get_cached_config_value('batch_account')
     @batch_account.setter
