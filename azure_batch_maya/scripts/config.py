@@ -207,7 +207,7 @@ class AzureBatchConfig(object):
         value_in_config = self._get_cached_config_value('threads')
         if value_in_config is None:
             return self.default_threads()
-        return value_in_config
+        return int(value_in_config)
     @threads.setter
     def threads(self, value):
         if self._client != None:
