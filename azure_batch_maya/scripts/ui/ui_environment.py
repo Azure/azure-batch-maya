@@ -161,11 +161,11 @@ class EnvironmentUI(object):
         selection. This value will be stored in the config file.
         :param str image: The selected image name, e.g. 'Batch Windows Preview'.
         """
-        self.base.set_image(image)
+        self.base.batch_image = image
 
     def get_os_image(self):
         """Retrieve the currently selected image name."""
-        if self.select_rendernode_type == PoolImageMode.BATCH_IMAGE:
+        if self.select_rendernode_type == PoolImageMode.BATCH_IMAGE.value:
             return self._image.value()
         return self.get_custom_image_resource_id()
 

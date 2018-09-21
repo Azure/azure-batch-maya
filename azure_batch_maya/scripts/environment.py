@@ -118,11 +118,12 @@ class AzureBatchEnvironment(object):
             container_image_names=self.get_container_images())
 
     def build_virtualmachineconfiguration(self):
+        image_reference = self.get_image_reference()
         vm_config = models.VirtualMachineConfiguration(
-            image_reference=self.get_image_reference(),
+            image_reference=image_reference,
             node_agent_sku_id=self.get_node_sku_id())
 
-        if self.ui.get_image_type == PoolImageMode.CUSTOM_IMAGE_WITH_CONTAINERS:
+        if self.ui.get_image_type().value == PoolImageMode.CUSTOM_IMAGE_WITH_CONTAINERS.value or self.ui.get_image_type().value == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
             vm_config.container_configuration = models.ContainerConfiguration(
                 container_registries=self.get_container_registries(),
                 container_image_names=self.get_container_images())
@@ -156,14 +157,14 @@ class AzureBatchEnvironment(object):
         return self.node_agent_sku_id_list 
     
     def get_image_reference(self):
-        if self.get_image_type == PoolImageMode.BATCH_IMAGE:
+        if self.get_image_type().value == PoolImageMode.BATCH_IMAGE.value or self.get_image_type().value == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
             image = self.get_batch_image()
             image.pop('node_sku_id')
             return models.ImageReference(**image)
         return models.ImageReference(virtual_machine_image_id=self.ui.get_custom_image_resource_id())
 
     def get_node_sku_id(self):
-        if self.get_image_type == PoolImageMode.BATCH_IMAGE:
+        if self.get_image_type().value == PoolImageMode.BATCH_IMAGE.value:
             image = self.get_batch_image()
             return image.pop('node_sku_id')
         return self.node_sku_id
@@ -214,28 +215,28 @@ class AzureBatchEnvironment(object):
 
     @property
     def batch_image(self):
-        return self._session.batch_image(self)
+        return self._session.batch_image
     @batch_image.setter
     def batch_image(self, value):
         self._session.batch_image = value
 
     @property
     def node_sku_id(self):
-        return  self._session.node_sku_id(self)
+        return  self._session.node_sku_id
     @node_sku_id.setter
     def node_sku_id(self, value):
        self._session.node_sku_id = value
 
     @property
     def vm_sku(self):
-        return self._session.vm_sku(self)
+        return self._session.vm_sku
     @vm_sku.setter
     def vm_sku(self, value):
        self._session.vm_sku = value
 
     @property
     def custom_image_resource_id(self):
-        return  self._session.custom_image_resource_id(self)
+        return  self._session.custom_image_resource_id
     @custom_image_resource_id.setter
     def custom_image_resource_id(self, value):
        self._session.custom_image_resource_id = value
