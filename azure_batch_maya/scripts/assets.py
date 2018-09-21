@@ -217,7 +217,7 @@ class AzureBatchAssets(object):
         """Upload all selected assets in configured number of threads."""
         uploads_running = []
         progress_queue = Queue()
-        threads = self._upload_threads()
+        threads = self._upload_threads
         self._log.debug("Uploading assets in {} threads.".format(threads))
         for i in range(0, len(to_upload), threads):
             for index, asset in enumerate(to_upload[i:i + threads]):
