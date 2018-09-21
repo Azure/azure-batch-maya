@@ -160,8 +160,10 @@ class AzureBatchEnvironment(object):
         if self.get_image_type().value == PoolImageMode.BATCH_IMAGE.value or self.get_image_type().value == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
             image = self.get_batch_image()
             image.pop('node_sku_id')
-            return models.ImageReference(**image)
-        return models.ImageReference(virtual_machine_image_id=self.ui.get_custom_image_resource_id())
+            image_reference = models.ImageReference(**image)
+            return image_reference
+        if self.get_image_type().value == PoolImageMode.CUSTOM_IMAGE.value or self.get_image_type().value == PoolImageMode.CUSTOM_IMAGE_WITH_CONTAINERS.value:
+            return models.ImageReference(virtual_machine_image_id=self.ui.get_custom_image_resource_id())
 
     def get_node_sku_id(self):
         if self.get_image_type().value == PoolImageMode.BATCH_IMAGE.value:
