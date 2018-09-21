@@ -405,7 +405,6 @@ class AzureBatchConfig(object):
                                     self.batch_url, 
                                     self.batch_account, 
                                     self.storage_account_resource_id, 
-                                    self.storage_key,
                                     self.mgmt_auth_token,
                                     self.batch_auth_token]
 
@@ -427,16 +426,14 @@ class AzureBatchConfig(object):
     def save_changes(self):
         """Persist auth config changes to file for future sessions."""
         self.ensure_azurebatch_config_section_exists()
+        #TODO is this method necessary anymore?
         self._cfg.set('AzureBatch', 'batch_url', self.batch_url)
         self._cfg.set('AzureBatch', 'batch_account', self.batch_account)
         self._cfg.set('AzureBatch', 'subscription_id', self.subscription_id)
         self._cfg.set('AzureBatch', 'subscription_name', self.subscription_name)
         self._cfg.set('AzureBatch', 'storage_account_resource_id', self.storage_account_resource_id)
-        self._cfg.set('AzureBatch', 'storage_key', self.storage_key)
         self._cfg.set('AzureBatch', 'logging', self.logging_level)
         self._cfg.set('AzureBatch', 'aad_tenant_name', self.aad_tenant_name)
-        self._cfg.set('AzureBatch', 'mgmt_auth_token', self.mgmt_auth_token)
-        self._cfg.set('AzureBatch', 'batch_auth_token', self.batch_auth_token)
         self._save_config()
 
     def ensure_azurebatch_config_section_exists(self):
