@@ -71,6 +71,7 @@ class ConfigUI(object):
 
     def prompt_for_aad_tenant(self):
         self.auth_status = "Please input your AAD domain name"
+        maya.text_field(self._aad_tenant_field, edit=True, text="")
         maya.form_layout(self.page, edit=True, enable=True)
         maya.refresh() 
 
@@ -514,8 +515,6 @@ class ConfigUI(object):
 
             self.base.can_init_from_config = False
             self.base.auth = False
-            self.base.session()
-            #self.frame.is_logged_out()
 
             try:
                 self.base.prompt_for_and_obtain_aad_tokens()
