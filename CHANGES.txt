@@ -1,3 +1,8 @@
+2018.09.24 v0.22.0
+------------------
+- Revert template change which broke thumbnailing of outputs in arnold maya 2018 jobs
+
+
 2018.09.21 v0.21.0
 ------------------
 - Fix issue preventing auth where logging value was left at default
