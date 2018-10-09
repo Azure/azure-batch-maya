@@ -9,7 +9,7 @@ import os
 import logging
 import json
 
-from azure.batch import models
+from azure.batch_extensions import models
 
 from azurebatchmayaapi import MayaAPI as maya
 from azurebatchmayaapi import MayaCallbacks as callback
@@ -113,36 +113,25 @@ class AzureBatchEnvironment(object):
         return self.ui.get_image_type()
 
     def build_container_configuration(self):
-        return models.containerConfiguration(
-            container_registries=self.get_container_registries(),
-            container_image_names=self.get_container_images())
+        if self.ui.get_image_type().value == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
+            container_configuration = models.ContainerConfiguration(container_image_names=self.ui.get_pool_container_images())
+            return container_configuration
+        return None
+
+    def get_pool_container_images(self):
+        return self.ui.get_pool_container_images()
+
+    def get_task_container_image(self):
+        return self.ui.get_task_container_image()
 
     def build_virtualmachineconfiguration(self):
         image_reference = self.get_image_reference()
         vm_config = models.VirtualMachineConfiguration(
             image_reference=image_reference,
-            node_agent_sku_id=self.get_node_sku_id())
-
-        if self.ui.get_image_type().value == PoolImageMode.CUSTOM_IMAGE_WITH_CONTAINERS.value or self.ui.get_image_type().value == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
-            vm_config.container_configuration = models.ContainerConfiguration(
-                container_registries=self.get_container_registries(),
-                container_image_names=self.get_container_images())
+            node_agent_sku_id=self.get_node_sku_id(),
+            container_configuration = self.build_container_configuration())
+        
         return vm_config
-
-    def get_container_registries(self):
-        #TODO currently only a single registry is supported
-        containerRegistries = []
-        containerRegistries.append(models.ContainerRegistry(
-            user_name=self.ui.get_container_registry_username(),
-            password = self.ui.get_container_registry_password(),
-            registry_server = self.ui.get_container_registry_server()))
-        return containerRegistries
-
-    def get_container_images(self):
-        containerImages = []
-        #TODO currently only a single containerImage is supported 
-        containerImages.append(self.ui.get_container_image())
-        return containerImages
 
     def set_node_sku_id(self, node_sku_id):
         self._session.node_sku_id = node_sku_id
@@ -157,19 +146,18 @@ class AzureBatchEnvironment(object):
         return self.node_agent_sku_id_list 
     
     def get_image_reference(self):
-        if self.get_image_type().value == PoolImageMode.BATCH_IMAGE.value or self.get_image_type().value == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
+        if self.get_image_type().value == PoolImageMode.BATCH_IMAGE.value:
             image = self.get_batch_image()
             image.pop('node_sku_id')
             image_reference = models.ImageReference(**image)
             return image_reference
-        if self.get_image_type().value == PoolImageMode.CUSTOM_IMAGE.value or self.get_image_type().value == PoolImageMode.CUSTOM_IMAGE_WITH_CONTAINERS.value:
-            return models.ImageReference(virtual_machine_image_id=self.ui.get_custom_image_resource_id())
+        if self.get_image_type().value == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
+            image = self.ui.get_container_image_reference()
+            image_reference = models.ImageReference(**image)
+            return image_reference
 
     def get_node_sku_id(self):
-        if self.get_image_type().value == PoolImageMode.BATCH_IMAGE.value:
-            image = self.get_batch_image()
-            return image.pop('node_sku_id')
-        return self.node_sku_id
+        return self.ui.get_node_sku_id()
 
     def get_batch_image(self):
         selected_image = self.ui.get_os_image()
@@ -194,15 +182,6 @@ class AzureBatchEnvironment(object):
             return image_ref.offer
 
     def os_flavor(self, pool_image=None):
-        if pool_image:
-            windows_offers = [value['offer'] for value in BATCH_POOL_IMAGES.values() if 'windows' in value['node_sku_id']]
-            linux_offers = [value['offer'] for value in BATCH_POOL_IMAGES.values() if value['offer'] not in windows_offers]
-            if pool_image.offer in windows_offers:
-                return utils.OperatingSystem.windows
-            elif pool_image.offer in linux_offers:
-                return utils.OperatingSystem.linux
-            else:
-                raise ValueError('Selected pool is not using a valid Maya image.')
         node_sku_id = self.get_node_sku_id()
         if 'windows' in node_sku_id:
             self._log.debug("Detected windows for skuId: {}".format(node_sku_id))

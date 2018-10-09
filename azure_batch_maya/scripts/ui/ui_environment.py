@@ -9,6 +9,9 @@ import azurebatchutils as utils
 from enum import Enum
 from azurebatchmayaapi import MayaAPI as maya
 
+from ui_batchManagedImageWithContainers import BatchManagedImageWithContainersUI
+from poolImageProvider import PoolImageProvider
+from poolImageFilter import PoolImageFilter
 
 def edit_cell(*args):
     return 1
@@ -21,10 +24,6 @@ class PoolImageMode(Enum):
 
 class EnvironmentUI(object):
     """Class to create the 'Env' tab in the plug-in UI"""
-
-    MayaVersions = ['Maya2018-Update1', 'Maya2017-Update4']
-    AdditionalRenderers = ['VRay', 'Arnold']
-    VRayVersions = ['VRay3.52.03', 'VRay3.52.02']
 
     def __init__(self, base, frame, images, skus, licenses):
         """Create 'Env' tab and add to UI frame.
@@ -40,16 +39,16 @@ class EnvironmentUI(object):
         self.page = maya.form_layout(enableBackground=True)
         self.license_settings = {}
         self.select_rendernode_type = PoolImageMode.BATCH_IMAGE.value
-        self.batch_images = images
+        self.poolImageFilter = PoolImageFilter(PoolImageProvider())
+        self.batchManagedImageWithContainersUI = None
         self.licenses = licenses
-
-        self.custom_image_resource_id = None
-        self.image_resource_id_field = None
-
-        #self.container_registry_server = ""
-        #self.container_registry_username = ""
-        #self.container_registry_password = ""
-        #self.container_image = ""
+        self.image_arm_id = ""
+        self.node_sku_id = ""
+        self.container_registry_server = ""
+        self.container_registry_username = ""
+        self.container_registry_password = ""
+        self.container_image = ""
+        self.batch_images = images
 
         with utils.ScrollLayout(
             v_scrollbar=3, h_scrollbar=0, height=520) as scroll:
@@ -70,12 +69,13 @@ class EnvironmentUI(object):
                     with utils.Row(1,1,325):
                         maya.radio_group(
                             labelArray2=("Batch Managed Image",
-                                         "Custom Image"),
+                                         "Batch Managed Image with Containers"),
                             numberOfRadioButtons=2,
                             select=self.select_rendernode_type,
                             vertical = True,
                             onCommand1=self.set_batch_image,
-                            onCommand2=self.set_custom_image)
+                            onCommand2=self.set_batch_image_with_containers)
+
                     maya.parent()
                     self.image_config = []
                     with utils.FrameLayout(
@@ -89,7 +89,7 @@ class EnvironmentUI(object):
                             maya.text(label="Use Image: ", align='right', parent=os_image_layout)
                             with utils.Dropdown(self.set_os_image, parent=os_image_layout) as image_settings:
                                 self._image = image_settings
-                                for image in images:
+                                for image in self.batch_images:
                                     self._image.add_item(image)
 
                 with utils.FrameLayout(
@@ -204,12 +204,20 @@ class EnvironmentUI(object):
             else:
                 self._node_sku_id_dropdown.select(node_sku_id)
 
+    def get_custom_image_arm_id(self):
+        return maya.text_field(self.image_arm_id_field, query=True, text=True)
+
     def set_node_sku_id(self, node_sku_id):
         self.base.set_node_sku_id(node_sku_id)
 
     def get_node_sku_id(self):
+        if self.get_image_type().value == PoolImageMode.BATCH_IMAGE.value:
+            image = self.base.get_batch_image()
+            return image.pop('node_sku_id')
+        if self.get_image_type().value == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
+            return self.batchManagedImageWithContainersUI.selected_image_node_sku_id()
         if not self._node_sku_id_dropdown:
-            return self.node_sku_id
+            return self.base.node_sku_id
         return self._node_sku_id_dropdown.value()
 
     def get_custom_image_resource_id(self):
@@ -225,17 +233,22 @@ class EnvironmentUI(object):
     def set_custom_image_resource_id(self, custom_image_resource_id):
         self.base.set_custom_image_resource_id(custom_image_resource_id)
 
-    def get_container_registry_server(self):
-        return maya.text_field(self.container_registry_server, query=True, text=True)
+    def get_task_container_image(self):
+        if self.select_rendernode_type == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
+            selectedImageId, selectedImage = self.batchManagedImageWithContainersUI.fetch_selected_image()
+            return selectedImageId
+        return None
 
-    def get_container_registry_username(self):
-        return maya.text_field(self.container_registry_username, query=True, text=True)
-
-    def get_container_registry_password(self):
-        return maya.text_field(self.container_registry_password, query=True, text=True)
-
-    def get_container_image(self):
-        return maya.text_field(self.container_image, query=True, text=True)
+    def get_pool_container_images(self):
+        if self.select_rendernode_type == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
+            selectedImageId, selectedImage = self.batchManagedImageWithContainersUI.fetch_selected_image()
+            return [selectedImageId]
+        return []
+        
+    def get_container_image_reference(self):
+        if self.select_rendernode_type == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
+             return self.batchManagedImageWithContainersUI.selected_image_image_reference()
+        return None
 
     def get_env_vars(self):
         """Retrieve all user environment variables.
@@ -255,6 +268,8 @@ class EnvironmentUI(object):
         """Clear any data and customization. Command for refresh_button."""
         maya.table(self.env_vars, edit=True, clearTable=True, rows=0)
         self.base.refresh()
+        if self.select_rendernode_type == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
+            self.set_batch_image_with_containers()
         maya.refresh()
 
     def is_logged_in(self):
@@ -308,45 +323,12 @@ class EnvironmentUI(object):
 
 
     def set_batch_image_with_containers(self, *args):
-        """Set selected render node type to be a batch published VM image type.
-        Displays the Batch VM image selection UI control.
-        Command for select_rendernode_type radio buttons.
-        """
         self.select_rendernode_type = PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value
         maya.delete_ui(self.image_config)
         self.image_config = []
-        with utils.FrameLayout(
-            label="Batch Managed Image with Containers Settings", collapsable=True,
-            width=325, collapse=True, parent = self.rendernode_config) as framelayout:
-            self.image_config.append(framelayout)
-            with utils.ColumnLayout(
-                2, col_width=((1,80),(2,160)), row_spacing=(1,5),
-                row_offset=((1, "top", 15),(5, "bottom", 15)), parent=framelayout) as os_image_layout:  
-                self.image_config.append(os_image_layout)
-                self.image_config.append(maya.text(
-                    label="OS : ", align='left',
-                    parent=os_image_layout))
-                with utils.Dropdown(self.set_os_image, parent=os_image_layout) as os_image_settings:
-                    self.image_config.append(os_image_settings)
-                    self._image = os_image_settings 
-                    for image in self.batch_images:
-                        self._image.add_item(image)
-                self.image_config.append(maya.text( 
-                    label="Maya Version : ", align='left',
-                    parent=os_image_layout))
-                with utils.Dropdown(self.set_os_image, parent=os_image_layout) as maya_image_settings:
-                    self.image_config.append(maya_image_settings)
-                    self._mayaOnImage = maya_image_settings 
-                    for image in self.MayaVersions:
-                        self._mayaOnImage.add_item(image)
-                self.image_config.append(maya.text(
-                    label="VRay Version : ", align='left',
-                    parent=os_image_layout))
-                with utils.Dropdown(self.set_os_image, parent = os_image_layout) as vray_image_settings:
-                    self.image_config.append(vray_image_settings)
-                    self._vrayOnImage = vray_image_settings 
-                    for image in self.VRayVersions:
-                        self._vrayOnImage.add_item(image)
+
+        current_renderer = str(utils.get_current_scene_renderer())
+        self.batchManagedImageWithContainersUI = BatchManagedImageWithContainersUI(self.poolImageFilter, self.rendernode_config, self.image_config, current_renderer)
 
     def set_custom_image(self, *args):
         self.select_rendernode_type = PoolImageMode.CUSTOM_IMAGE.value
@@ -365,7 +347,6 @@ class EnvironmentUI(object):
                 self.image_config.append(maya.text(label="Image Resource ID:   ", align="left",
                     annotation="Image Resource ID is visible in the portal under Images -> Select Image -> Resource ID.",
                     parent = self.image_config[0]))
-
                 self.image_resource_id_field = maya.text_field(height=25, enable=True,
                     changeCommand=self.set_custom_image_resource_id,
                     annotation="Image Resource ID is visible in the portal under Images -> Select Image -> Resource ID.",
@@ -397,7 +378,7 @@ class EnvironmentUI(object):
         self.image_config = []
         with utils.FrameLayout(
                     label="Custom Image with Container Settings", collapsable=True,
-                    width=325, collapse=True, parent = self.rendernode_config) as framelayout:
+                    width=325, collapse=False, parent = self.rendernode_config) as framelayout:
             self.image_config.append(framelayout)
             with utils.Row(2, 2, (140, 180), ("right","center"),
                             [(1, "top", 20),(2, "top", 15)],
@@ -411,57 +392,25 @@ class EnvironmentUI(object):
                     annotation="Image Resource ID is visible in the portal under Images -> Select Image -> Resource ID.",
                     parent = self.image_config[0])
 
-            with utils.Dropdown(
-                self.set_node_sku_id, 
-                parent = node_sku_id_row) as node_sku_id_dropdown:
+            with utils.Row(2, 2, (140, 180), ("right","center"),
+                               [(1, "bottom", 20),(2,"bottom",15)],
+                            parent = self.image_config[0]) as node_sku_id_row:
+                self.image_config.append(node_sku_id_row)
+                maya.text(label="Node Agent SKU ID:    ", align="left")
+                with utils.Dropdown(
+                    self.set_node_sku_id, 
+                    parent = node_sku_id_row) as node_sku_id_dropdown:
 
-                self.image_config.append(node_sku_id_dropdown)
-                self._node_sku_id_dropdown = node_sku_id_dropdown 
+                    self.image_config.append(node_sku_id_dropdown)
+                    self._node_sku_id_dropdown = node_sku_id_dropdown 
                         
-                for nodeagentsku in self.base.node_agent_skus():
-                    self._node_sku_id_dropdown.add_item(nodeagentsku)
+                    for nodeagentsku in self.base.node_agent_skus():
+                        self._node_sku_id_dropdown.add_item(nodeagentsku)
                     
-                #check if we had to write the value to a temporary field because we read it during configure() before the dropdown was created
-                if self.node_sku_id:
-                    self.select_node_sku_id(self.node_sku_id)
+                    #check if we had to write the value to a temporary field because we read it during configure() before the dropdown was created
+                    if self.node_sku_id:
+                        self.select_node_sku_id(self.node_sku_id)
 
-            with utils.Row(2, 2, (140, 180), ("right","center"),
-                            [(1, "bottom", 20),(2,"bottom",15)], 
-                            parent = self.image_config[0]) as container_registry_server_row:
-                self.image_config.append(container_registry_server_row)
-                self.image_config.append(maya.text(label="Container Registry server:   ", align="left",
-                    parent = self.image_config[0]))
-                self.container_registry_server = maya.text_field(height=25, enable=True,
-                    parent = self.image_config[0])
+            registryTable = containerRegistryTable(self.image_config[0])
 
-            with utils.Row(2, 2, (140, 180), ("right","center"),
-                            [(1, "bottom", 20),(2,"bottom",15)], 
-                            parent = self.image_config[0]) as container_registry_username_row:
-                self.image_config.append(container_registry_username_row)
-                self.image_config.append(maya.text(label="Container Registry username:   ", align="left",
-                    parent = self.image_config[0]))
-                self.container_registry_username = maya.text_field(height=25, enable=True,
-                    parent = self.image_config[0])
-
-            with utils.Row(2, 2, (140, 180), ("right","center"),
-                            [(1, "bottom", 20),(2,"bottom",15)], 
-                            parent = self.image_config[0]) as container_registry_password_row:
-                self.image_config.append(container_registry_password_row)
-                self.image_config.append(maya.text(label="Container Registry password:   ", align="left",
-                    parent = self.image_config[0]))
-                self.container_registry_password = maya.text_field(height=25, enable=True,
-                    parent = self.image_config[0])
-
-            with utils.Row(2, 2, (140, 180), ("right","center"),
-                            [(1, "bottom", 20),(2,"bottom",15)], 
-                            parent = self.image_config[0]) as container_image_row:
-                self.image_config.append(container_image_row)
-                self.image_config.append(maya.text(label="Container image name:   ", align="left",
-                    parent = self.image_config[0]))
-                self.container_image = maya.text_field(height=25, enable=True,
-                    parent = self.image_config[0])
-
-            with utils.ColumnLayout(
-                        2, col_width=((1,120),(2,160)), row_spacing=(1,5),
-                        row_offset=((1, "top", 15),(5, "bottom", 15)), parent=framelayout) as image_layout: 
-                self.image_config.append(image_layout)
+            imageTable = containerImageTable(self.image_config[0])

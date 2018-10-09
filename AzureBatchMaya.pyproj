@@ -36,7 +36,16 @@
     <Compile Include="azure_batch_maya\scripts\assets.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="azure_batch_maya\scripts\batchManagedImageWithContainers.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="azure_batch_maya\scripts\poolImageProvider.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="azure_batch_maya\scripts\config.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="azure_batch_maya\scripts\poolImageFilter.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="azure_batch_maya\scripts\environment.py">
@@ -62,6 +71,9 @@
     <Compile Include="azure_batch_maya\scripts\tools\getpip.py" />
     <Compile Include="azure_batch_maya\scripts\tools\job_watcher.py" />
     <Compile Include="azure_batch_maya\scripts\ui\ui_assets.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="azure_batch_maya\scripts\ui\ui_batchManagedImageWithContainers.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="azure_batch_maya\scripts\ui\ui_config.py">
@@ -98,6 +110,9 @@
     <Compile Include="tests\test_jobwatcher.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="tests\test_poolImages.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tests\test_pools.py">
       <SubType>Code</SubType>
     </Compile>
@@ -115,6 +130,7 @@
     <Folder Include="azure_batch_maya\scripts\tools\" />
     <Folder Include="azure_batch_maya\scripts\ui\" />
     <Folder Include="azure_batch_maya\templates\" />
+    <Folder Include="azure_batch_maya\templates\containers\" />
     <Folder Include="docs\" />
     <Folder Include="docs\images\" />
     <Folder Include="tests\" />
@@ -145,6 +161,18 @@
     <Content Include="azure_batch_maya\templates\arnold-2017-windows.json" />
     <Content Include="azure_batch_maya\templates\arnold-2018-linux.json" />
     <Content Include="azure_batch_maya\templates\arnold-2018-windows.json" />
+    <Content Include="azure_batch_maya\templates\containers\arnold-2017-linux.json" />
+    <Content Include="azure_batch_maya\templates\containers\arnold-2017-windows.json" />
+    <Content Include="azure_batch_maya\templates\containers\arnold-2018-linux.json" />
+    <Content Include="azure_batch_maya\templates\containers\arnold-2018-windows.json" />
+    <Content Include="azure_batch_maya\templates\containers\mayaSoftware-2017-linux.json" />
+    <Content Include="azure_batch_maya\templates\containers\mayaSoftware-2017-windows.json" />
+    <Content Include="azure_batch_maya\templates\containers\mayaSoftware-2018-linux.json" />
+    <Content Include="azure_batch_maya\templates\containers\mayaSoftware-2018-windows.json" />
+    <Content Include="azure_batch_maya\templates\containers\vray-2017-linux.json" />
+    <Content Include="azure_batch_maya\templates\containers\vray-2017-windows.json" />
+    <Content Include="azure_batch_maya\templates\containers\vray-2018-linux.json" />
+    <Content Include="azure_batch_maya\templates\containers\vray-2018-windows.json" />
     <Content Include="azure_batch_maya\templates\mayaSoftware-2017-linux.json" />
     <Content Include="azure_batch_maya\templates\mayaSoftware-2017-windows.json" />
     <Content Include="azure_batch_maya\templates\mayaSoftware-2018-linux.json" />

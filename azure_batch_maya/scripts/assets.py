@@ -128,7 +128,7 @@ class AzureBatchAssets(object):
         Only called by the set_assets function, which is called on loading and
         refreshing the assets tab.
         """
-        current_renderer = maya.get_attr("defaultRenderGlobals.currentRenderer")
+        current_renderer = utils.get_current_scene_renderer()
         self._log.info("Current renderer: {0}".format(current_renderer))
 
         for module in self.modules:

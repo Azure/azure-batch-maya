@@ -7,7 +7,7 @@ import os
 import azurebatchutils as utils
 
 from azurebatchmayaapi import MayaAPI as maya
-
+from ui_environment import PoolImageMode
 
 class SubmissionUI(object):
     """Class to create the 'Submit' tab in the plug-in UI"""
@@ -26,63 +26,36 @@ class SubmissionUI(object):
         :type frame: :class:`.AzureBatchUI`
         """
         self.base = base
+        self.frame = frame
         self.label = "Submit"
-        self.page = maya.form_layout(enableBackground=True) 
-        self.select_pool_type = self.AUTO_POOL
+        self.page = maya.form_layout(enableBackground=True)
         self.select_dedicated_instances = 1
         self.select_low_pri_instances = 0
-        
+        self.selected_container_image = None
+        self.container_image_text_row = None
+        self.container_image_dropdown_row = None
+        self.reused_pool_id = None
+        self.container_config = []
+        self.select_pool_type = self.AUTO_POOL
         with utils.ScrollLayout(height=475, parent=self.page) as scroll:
             box_label = "Pool Settings"
             with utils.FrameLayout(label=box_label, collapsable=True) as pool_settings:
                 self.pool_settings = pool_settings
-                maya.col_layout(
-                    numberOfColumns=2,
-                    columnWidth=((1, 100), (2, 200)),
-                    rowSpacing=(1, 10),
-                    rowOffset=((1, "top", 20),))
-                maya.text(label="Pools:   ", align="right")
-                maya.radio_group(
-                    labelArray3=("Auto provision a pool for this job",
-                                 "Reuse an existing persistent pool",
-                                 "Create a new persistent pool"),
-                    numberOfRadioButtons=3,
-                    select=self.select_pool_type,
-                    vertical=True,
-                    onCommand1=self.set_pool_auto,
-                    onCommand2=self.set_pool_reuse,
-                    onCommand3=self.set_pool_new)
-                maya.parent()
-                self.pool_config = []
-                self.pool_config.append(maya.col_layout(
-                    numberOfColumns=4,
-                    columnWidth=((1, 100), (2, 50), (3, 100), (4, 50)),
-                    rowSpacing=(1, 10),
-                    rowOffset=((1, "bottom", 20),),
-                    parent=self.pool_settings))
-                self.pool_config.append(maya.text(
-                    label="Dedicated VMs:   ",
-                    align="right",
-                    parent=self.pool_config[0]))
-                self.pool_config.append(maya.int_field(
-                    value=self.select_dedicated_instances,
-                    minValue=1,
-                    maxValue=self.base.max_pool_size,
-                    changeCommand=self.set_dedicated_instances,
-                    annotation="Number of dedicated VMs in pool",
-                    parent=self.pool_config[0]))
-                self.pool_config.append(maya.text(
-                    label="Low-pri VMs:   ",
-                    align="right",
-                    parent=self.pool_config[0]))
-                self.pool_config.append(maya.int_field(
-                    value=self.select_low_pri_instances,
-                    minValue=0,
-                    maxValue=self.base.max_pool_size,
-                    changeCommand=self.set_low_pri_instances,
-                    annotation="Number of low-priority VMs in pool",
-                    parent=self.pool_config[0]))
-                maya.parent()
+                with utils.ColumnLayout(
+                        2, col_width=((1,100),(2,200)), row_spacing=(1,10),
+                        row_offset=((1, "top", 20),(5, "bottom", 15))):
+                    maya.text(label="Pools:   ", align="right")
+                    maya.radio_group(
+                        labelArray3=("Auto provision a pool for this job",
+                                     "Reuse an existing persistent pool",
+                                     "Create a new persistent pool"),
+                        numberOfRadioButtons=3,
+                        select=self.select_pool_type,
+                        vertical=True,
+                        onCommand1=self.set_pool_auto,
+                        onCommand2=self.set_pool_reuse,
+                        onCommand3=self.set_pool_new)
+                    self.pool_config = []
 
             box_label = "Render Settings"
             with utils.FrameLayout(label=box_label, collapsable=True) as box:
@@ -148,6 +121,7 @@ class SubmissionUI(object):
 
     def is_logged_in(self):
         """Called when the plug-in is authenticated. Enables UI."""
+        self.set_pool_auto()
         maya.form_layout(self.page, edit=True, enable=True)
 
     def is_logged_out(self):
@@ -212,7 +186,7 @@ class SubmissionUI(object):
          specification as value.
         """
         if self.select_pool_type == self.EXISTING_POOL:
-            details = str(maya.menu(self.pool_config[-1], query=True, value=True))
+            details = self.reused_pool_id
         else:
             details = (self.select_dedicated_instances, self.select_low_pri_instances)
         return {self.select_pool_type: details}
@@ -236,35 +210,59 @@ class SubmissionUI(object):
         """
         self.select_pool_type = self.NEW_POOL
         maya.delete_ui(self.pool_config)
+        if self.container_image_text_row is not None:
+            maya.delete_ui(self.container_image_text_row)
+        if self.container_image_dropdown_row is not None:
+            maya.delete_ui(self.container_image_dropdown_row)
         self.pool_config = []
-        self.pool_config.append(maya.col_layout(
-            numberOfColumns=4,
-            columnWidth=((1, 100), (2, 50), (3, 100), (4, 50)),
-            rowSpacing=(1, 10),
-            rowOffset=((1, "bottom", 20),),
-            parent=self.pool_settings))
-        self.pool_config.append(maya.text(
-            label="Dedicated VMs:   ",
-            align="right",
-            parent=self.pool_config[0]))
-        self.pool_config.append(maya.int_field(
-            value=self.select_dedicated_instances,
-            minValue=1,
-            maxValue=self.base.max_pool_size,
-            changeCommand=self.set_dedicated_instances,
-            annotation="Number of dedicated VMs in pool",
-            parent=self.pool_config[0]))
-        self.pool_config.append(maya.text(
-            label="Low-pri VMs:   ",
-            align="right",
-            parent=self.pool_config[0]))
-        self.pool_config.append(maya.int_field(
-            value=self.select_low_pri_instances,
-            minValue=0,
-            maxValue=self.base.max_pool_size,
-            changeCommand=self.set_low_pri_instances,
-            annotation="Number of low-priority VMs in pool",
-            parent=self.pool_config[0]))
+        with utils.ColumnLayout(4,
+            col_width=((1, 100), (2, 50), (3, 100), (4, 50)),
+            row_spacing=(1, 10),
+            row_offset=(1, "bottom", 5),
+            parent=self.pool_settings) as num_vms_column_layout:
+
+            self.pool_config.append(num_vms_column_layout)
+            self.pool_config.append(maya.text(
+                label="Dedicated VMs:   ",
+                align="right",
+                parent=self.pool_config[0]))
+            self.pool_config.append(maya.int_field(
+                value=self.select_dedicated_instances,
+                minValue=1,
+                maxValue=self.base.max_pool_size,
+                changeCommand=self.set_dedicated_instances,
+                annotation="Number of dedicated VMs in pool",
+                parent=self.pool_config[0]))
+            self.pool_config.append(maya.text(
+                label="Low-pri VMs:   ",
+                align="right",
+                parent=self.pool_config[0]))
+            self.pool_config.append(maya.int_field(
+                value=self.select_low_pri_instances,
+                minValue=0,
+                maxValue=self.base.max_pool_size,
+                changeCommand=self.set_low_pri_instances,
+                annotation="Number of low-priority VMs in pool",
+                parent=self.pool_config[0]))
+
+        available_images = self.base.env_manager.get_pool_container_images()
+        if len(available_images) > 1:
+            with utils.Row(1,1,100) as container_image_text_row:
+                self.container_image_text_row = container_image_text_row
+                self.pool_config.append(container_image_text_row)
+                self.pool_config.append(maya.text(label="Container Image to Render with:", align="left", parent=self.pool_config[-1]))
+
+            with utils.Row(1, 1, 355, "left", (1, "bottom", 20)) as container_image_dropdown_row:
+                self.container_image_dropdown_row = container_image_dropdown_row
+                self.pool_config.append(container_image_dropdown_row)
+                with utils.Dropdown(self.set_task_container_image, 
+                    annotation="Select the Container Image to run the Render with",
+                    width=355, parent=self.pool_config[-1]) as container_dropdown:
+                    self.pool_config.append(container_dropdown)
+                    for container_image in available_images:
+                        container_dropdown.add_item(container_image)
+                    if len(available_images) == 1:
+                            container_dropdown.enable(False)
 
     def set_pool_auto(self, *args):
         """Set selected pool type to be new pool of given size.
@@ -273,35 +271,58 @@ class SubmissionUI(object):
         """
         self.select_pool_type = self.AUTO_POOL
         maya.delete_ui(self.pool_config)
+        if self.container_image_text_row is not None:
+            maya.delete_ui(self.container_image_text_row)
+        if self.container_image_dropdown_row is not None:
+            maya.delete_ui(self.container_image_dropdown_row)
         self.pool_config = []
-        self.pool_config.append(maya.col_layout(
-            numberOfColumns=4,
-            columnWidth=((1, 100), (2, 50), (3, 100), (4, 50)),
-            rowSpacing=(1, 10),
-            rowOffset=((1, "bottom", 20),),
-            parent=self.pool_settings))
-        self.pool_config.append(maya.text(
-            label="Dedicated VMs:   ",
-            align="right",
-            parent=self.pool_config[0]))
-        self.pool_config.append(maya.int_field(
-            value=self.select_dedicated_instances,
-            minValue=1,
-            maxValue=self.base.max_pool_size,
-            changeCommand=self.set_dedicated_instances,
-            annotation="Number of dedicated VMs in pool",
-            parent=self.pool_config[0]))
-        self.pool_config.append(maya.text(
-            label="Low-pri VMs:   ",
-            align="right",
-            parent=self.pool_config[0]))
-        self.pool_config.append(maya.int_field(
-            value=self.select_low_pri_instances,
-            minValue=0,
-            maxValue=self.base.max_pool_size,
-            changeCommand=self.set_low_pri_instances,
-            annotation="Number of low-priority VMs in pool",
-            parent=self.pool_config[0]))
+        with utils.ColumnLayout(4,
+            col_width=((1, 100), (2, 50), (3, 100), (4, 50)),
+            row_spacing=(1, 10),
+            row_offset=(1, "bottom", 5),
+            parent=self.pool_settings) as num_vms_column_layout:
+                self.pool_config.append(num_vms_column_layout)
+                self.pool_config.append(maya.text(
+                    label="Dedicated VMs:   ",
+                    align="right",
+                    parent=self.pool_config[0]))
+                self.pool_config.append(maya.int_field(
+                    value=self.select_dedicated_instances,
+                    minValue=1,
+                    maxValue=self.base.max_pool_size,
+                    changeCommand=self.set_dedicated_instances,
+                    annotation="Number of dedicated VMs in pool",
+                    parent=self.pool_config[0]))
+                self.pool_config.append(maya.text(
+                    label="Low-pri VMs:   ",
+                    align="right",
+                    parent=self.pool_config[0]))
+                self.pool_config.append(maya.int_field(
+                    value=self.select_low_pri_instances,
+                    minValue=0,
+                    maxValue=self.base.max_pool_size,
+                    changeCommand=self.set_low_pri_instances,
+                    annotation="Number of low-priority VMs in pool",
+                    parent=self.pool_config[0]))
+        
+        available_images = self.base.env_manager.get_pool_container_images()
+        if len(available_images) > 1:
+            with utils.Row(1,1,100) as container_image_text_row:
+                self.container_image_text_row = container_image_text_row
+                self.pool_config.append(container_image_text_row)
+                self.pool_config.append(maya.text(label="Container Image to Render with:", align="left", parent=self.pool_config[-1]))
+
+            with utils.Row(1, 1, 355, "left", (1, "bottom", 20)) as container_image_dropdown_row:
+                self.container_image_dropdown_row = container_image_dropdown_row
+                self.pool_config.append(container_image_dropdown_row)
+                with utils.Dropdown(self.set_task_container_image, 
+                    annotation="Select the Container Image to run the Render with",
+                    width=355, parent=self.pool_config[-1]) as container_dropdown:
+                    self.pool_config.append(container_dropdown)
+                    for container_image in available_images:
+                        container_dropdown.add_item(container_image)
+                    if len(available_images) == 1:
+                            container_dropdown.enable(False)
 
     def set_pool_reuse(self, *args):
         """Set selected pool type to be an existing pool with given ID.
@@ -311,23 +332,63 @@ class SubmissionUI(object):
         """
         self.select_pool_type = self.EXISTING_POOL
         maya.delete_ui(self.pool_config)
+        if self.container_image_text_row is not None:
+            maya.delete_ui(self.container_image_text_row)
+        if self.container_image_dropdown_row is not None:
+            maya.delete_ui(self.container_image_dropdown_row)
         self.pool_config = []
-        self.pool_config.append(maya.col_layout(
-            numberOfColumns=2,
-            columnWidth=((1, 100), (2, 200)),
-            rowSpacing=(1, 10),
-            rowOffset=((1, "bottom", 20),),
-            parent=self.pool_settings))
-        self.pool_config.append(maya.text(
-            label="loading...",
-            align="right",
-            parent=self.pool_config[0]))
-        maya.refresh()
-        pool_options = self.base.available_pools()
-        maya.text(self.pool_config[-1], edit=True, label="Pool ID:   ")
-        self.pool_config.append(maya.menu(
-            annotation="Use an existing persistent pool ID",
-            parent=self.pool_config[0]))
-        for pool_id in pool_options:
-            maya.menu_option(pool_id)
-        
+        with utils.ColumnLayout(2,
+            col_width=((1, 100), (2, 200)),
+            row_spacing=(1, 10),
+            row_offset=(1, "bottom", 5),
+            parent=self.pool_settings) as reuse_pool_selection_dropdown:
+            self.pool_config.append(reuse_pool_selection_dropdown)
+            self.pool_config.append(maya.text(
+                label="loading...",
+                align="right",
+                parent=self.pool_config[0]))
+            maya.refresh()
+            pool_options = self.base.available_pools()
+            maya.text(self.pool_config[-1], edit=True, label="Pool ID:   ")
+            with utils.Dropdown(self.reuse_selected_pool_changed, parent=self.pool_config[0], annotation="Use an existing persistent pool ID") as pool_dropdown:
+                pool_dropdown.add_item("")
+                for pool_id in pool_options:
+                    pool_dropdown.add_item(pool_id)
+
+    def reuse_selected_pool_changed(self, poolId):
+        maya.delete_ui(self.container_config)
+        if self.container_image_text_row is not None:
+            maya.delete_ui(self.container_image_text_row)
+        if self.container_image_dropdown_row is not None:
+            maya.delete_ui(self.container_image_dropdown_row)
+        self.container_config = []
+        self.reused_pool_id = poolId
+        if poolId:
+            available_images = self.base.pool_manager.get_pool_container_images(poolId)
+            if len(available_images) > 0:
+                with utils.Row(1,1,100, parent=self.pool_config[0]) as container_image_text_row:
+                    self.container_image_text_row = container_image_text_row
+                    self.container_config.append(container_image_text_row)
+                    self.container_config.append(maya.text(label="Container Image to Render with:", align="left", parent=self.container_config[-1]))
+
+                with utils.Row(1, 1, 355, "left", (1, "bottom", 20)) as container_image_dropdown_row:
+                    self.container_image_dropdown_row = container_image_dropdown_row
+                    self.container_config.append(container_image_dropdown_row)
+                    with utils.Dropdown(self.set_task_container_image, 
+                        annotation="Select the Container Image to run the Render with",
+                        width=355, parent=self.container_config[-1]) as container_dropdown:
+                        self.container_config.append(container_dropdown)
+                        for container_image in available_images:
+                            container_dropdown.add_item(container_image)
+                        if len(available_images) == 1:
+                            container_dropdown.enable(False)
+
+    
+    def set_task_container_image(self, selected_container_image):
+        self.selected_container_image = selected_container_image
+
+    def get_task_container_image(self):
+        if self.select_pool_type == self.EXISTING_POOL:
+            return self.selected_container_image
+        if self.select_pool_type == self.AUTO_POOL or self.select_pool_type == self.NEW_POOL:
+            return self.base.env_manager.get_task_container_image()

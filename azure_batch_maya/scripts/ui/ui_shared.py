@@ -39,8 +39,8 @@ class AzureBatchUI(object):
         self.tabs = []
         maya.window(self.ui,
                     edit=True,
-                    width=375,
-                    height=575)
+                    width=420,
+                    height=620)
         maya.show(self.ui)
         maya.refresh()
 

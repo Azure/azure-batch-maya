@@ -10,7 +10,7 @@ import logging
 import uuid
 import datetime
 
-from azure.batch import models
+from azure.batch_extensions import models
 
 import azurebatchutils
 from azurebatchmayaapi import MayaAPI as maya
@@ -159,6 +159,16 @@ class AzureBatchPools(object):
         except AttributeError:
             raise ValueError('Selected pool is not valid.')
 
+    def get_pool_container_images(self, pool_id):
+        """Get the container images of the specified pool ID."""
+        try:
+            pool = self._call(self.batch.pool.get, pool_id)
+            if not pool.virtual_machine_configuration or not pool.virtual_machine_configuration.container_configuration:
+                return []
+            return pool.virtual_machine_configuration.container_configuration.container_image_names
+        except AttributeError:
+            raise ValueError('Selected pool is not valid.')
+
     def create_pool(self, size, name):
         """Create and deploy a new pool.
         Called on job submission by submission.py.
@@ -185,7 +195,27 @@ class AzureBatchPools(object):
         """Create a JSON auto pool specification.
         Called on job submission by submission.py.
         """
-        pool_config = self.environment.build_virtualmachineconfiguration()
+        vm_config = self.environment.build_virtualmachineconfiguration()
+        image_reference = vm_config.image_reference
+        
+        image = {
+            'publisher': image_reference.publisher,
+            'offer': image_reference.offer,
+            'sku': image_reference.sku,
+            'version': image_reference.version,
+            'virtualMachineImageId': image_reference.virtual_machine_image_id}
+        pool_config = {
+            'imageReference': image,
+            'nodeAgentSKUId': vm_config.node_agent_sku_id}
+
+        container_configuration = vm_config.container_configuration
+        if container_configuration:
+            container_config = {
+                'containerImageNames': container_configuration.container_image_names,
+                'containerRepositories': container_configuration.container_registries,
+                'type': container_configuration.type}
+            pool_config['containerConfiguration'] = container_config
+
         pool_spec = {
             'vmSize': self.environment.vm_sku,
             'displayName': "Auto Pool for {}".format(job_name),

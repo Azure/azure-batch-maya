@@ -78,7 +78,7 @@ class AzureBatchSubmission(object):
         Called by both the start and refresh functions.
         """
         self._log.info("Configuring renderer...")
-        current_renderer = maya.get_attr("defaultRenderGlobals.currentRenderer")
+        current_renderer = utils.get_current_scene_renderer()
         self._log.debug("Current renderer: {0}".format(current_renderer))
 
         for module in self.modules:
@@ -187,6 +187,9 @@ class AzureBatchSubmission(object):
             self._log.info("Creating new pool.")
             return self.pool_manager.create_pool(pool_spec[3], job_name)
 
+    def _get_task_container_image(self):
+        return self.ui.get_task_container_image()
+
     def start(self, session, assets, pools, env):
         """Load submission tab after plug-in has been authenticated.
 
@@ -242,6 +245,7 @@ class AzureBatchSubmission(object):
         try:
             pool_os = self._get_os_flavor()
             job_id = "maya-render-{}".format(uuid.uuid4())
+            container_image = self._get_task_container_image()
             self.renderer.disable(False)
             progress = utils.ProgressBar(self._log)
             maya.refresh()
@@ -253,9 +257,8 @@ class AzureBatchSubmission(object):
             batch_parameters = {'id': job_id}
             batch_parameters['displayName'] = self.renderer.get_title()
             batch_parameters['metadata'] =  [{"name": "JobType", "value": "Maya"}]
-            template_file = os.path.join(
-                os.environ['AZUREBATCH_TEMPLATES'],
-                "{}-{}-{}.json".format(self.renderer.render_engine, mayaVersion, pool_os.value.lower()))
+            template_file = utils.build_template_filename(self.renderer.render_engine, mayaVersion, pool_os.value.lower(), container_image)
+
             batch_parameters['applicationTemplateInfo'] = {'filePath': template_file}
             application_params = {}
             batch_parameters['applicationTemplateInfo']['parameters'] = application_params
@@ -275,6 +278,10 @@ class AzureBatchSubmission(object):
             application_params['thumbScript'] = job_assets['thumb_script']
             application_params['workspace'] = job_assets['workspace']
             application_params['storageURL'] = self.asset_manager.generate_sas_token(job_assets['project'])
+
+            if container_image:
+                application_params['taskContainerImageName'] = container_image
+
             self._switch_tab()
 
             self.ui.submit_status("Configuring job...")

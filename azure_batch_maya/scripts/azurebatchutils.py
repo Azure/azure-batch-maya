@@ -26,6 +26,10 @@ def copy_to_clipboard(txt):
         process.communicate(txt.encode('utf-8')) 
 
 
+def get_current_scene_renderer():
+    return maya.get_attr("defaultRenderGlobals.currentRenderer")
+
+
 def shorten_path(path, filename):
     """Iteratively remove directories from the end of a file path
     until it meets the Windows max path length requirements when
@@ -128,6 +132,18 @@ def get_root_dir():
     """
     return maya.workspace(query=True, rootDirectory=True)
 
+def build_template_filename(render_engine, maya_version, operating_system, container_image=None):
+    """Build the filename for the template to use for job submission
+    """
+    directory = os.environ['AZUREBATCH_TEMPLATES']
+    if container_image:
+        directory = os.path.join(directory, 'containers')
+
+    template_file = os.path.join(
+                directory,
+                "{}-{}-{}.json".format(render_engine, maya_version, operating_system))
+
+    return template_file
 
 class OperatingSystem(Enum):
     windows = 'Windows'
@@ -330,7 +346,25 @@ class Dropdown(object):
             maya.menu(self.menu, edit=True, select=int(value))
         except ValueError:
             maya.menu(self.menu, edit=True, value=value)
+    
+    def clear(self):
+        menuItems = maya.menu(self.menu, query=True, itemListLong=True)
+        if menuItems:
+            maya.delete_ui(menuItems)
+    
+    def enable(self, enabled):
+        """Enable or disable the dropdown.
+        :param bool enabled: Whether to enable the dropdown.
+        """
+        maya.menu(self.menu, edit=True, enable=enabled)
+        maya.refresh()
 
+    def annotation(self, annotation):
+        """Enable or disable the dropdown.
+        :param bool enabled: Whether to enable the dropdown.
+        """
+        maya.menu(self.menu, edit=True, annotation=annotation)
+        maya.refresh()
 
 class ProgressBar(object):
     """Wrapper class for :class:`maya.cmds.mainProgressBar`."""
