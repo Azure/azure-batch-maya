@@ -13,7 +13,6 @@ import sys
 import traceback
 import adal
 import copy
-import maya.utils
 
 from Queue import Queue
 

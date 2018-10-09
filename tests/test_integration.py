@@ -10,10 +10,13 @@ import time
 import uuid
 import ConfigParser
 
-try:
-    from unittest import mock
-except ImportError:
+if sys.version_info >= (3, 3):
+    import unittest2 as unittest
+    from unittest.mock import MagicMock
+else:
+    import unittest
     import mock
+    from mock import MagicMock
 
 from environment import BATCH_POOL_IMAGES
 import azurebatchutils as utils
@@ -24,7 +27,7 @@ from azure.batch_extensions import models
 from azure.batch.batch_auth import SharedKeyCredentials
 from azure.storage.blob.blockblobservice import BlockBlobService
 
-POOL_ID = "Maya_Pool_766c5218-a5a7-424d-9868-aebb43f98627"  # The OS of the pool will determine whether the job is run with the linux or windows templates.
+POOL_ID = "Maya_Pool_b7e4ae91-3c41-4237-bd0e-a66bfa2b2e23"  # The OS of the pool will determine whether the job is run with the linux or windows templates.
 
 scriptDir = os.path.dirname(__file__)
 
@@ -88,7 +91,7 @@ if __name__ == '__main__':
     batch_parameters = {'id': job_id}
     batch_parameters['displayName'] = "Maya Integration Test using {}".format(os_flavor)
     batch_parameters['metadata'] =  [{"name": "JobType", "value": "Maya"}]
-    template_file = os.path.join(TEMPLATE_DIR, 'mayaSoftware-basic-{}.json'.format(os_flavor.lower()))
+    template_file = os.path.join(TEMPLATE_DIR, 'mayaSoftware-2017-{}.json'.format(os_flavor.lower()))
     batch_parameters['applicationTemplateInfo'] = {'filePath': template_file}
     application_params = {}
     batch_parameters['applicationTemplateInfo']['parameters'] = application_params

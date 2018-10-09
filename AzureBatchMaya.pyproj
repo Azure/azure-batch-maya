@@ -98,6 +98,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="package.py" />
+    <Compile Include="tests\data\modules\default.py" />
+    <Compile Include="tests\data\modules\render_module_a.py" />
+    <Compile Include="tests\data\modules\render_module_b.py" />
+    <Compile Include="tests\data\modules\render_module_c.py" />
     <Compile Include="tests\test_assets.py">
       <SubType>Code</SubType>
     </Compile>
@@ -134,7 +138,12 @@
     <Folder Include="docs\" />
     <Folder Include="docs\images\" />
     <Folder Include="tests\" />
-    <Folder Include="tests\test_scene\" />
+    <Folder Include="tests\basic_test_scene\" />
+    <Folder Include="tests\data\modules\" />
+    <Folder Include="tests\json_data\" />
+    <Folder Include="tests\json_data\file_tests\" />
+    <Folder Include="tests\json_data\file_tests\sample_data\" />
+    <Folder Include="tests\data\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="azure_batch_maya\icons\btn_background.png" />
@@ -192,6 +201,28 @@
     <Content Include="requirements.txt">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="tests\basic_test_scene\asset_map.mel" />
+    <Content Include="tests\basic_test_scene\test_scene.mb" />
+    <Content Include="tests\basic_test_scene\workspace.mel" />
+    <Content Include="tests\data\azure_batch_test.ini" />
+    <Content Include="tests\data\empty.mb" />
+    <Content Include="tests\data\star.png" />
+    <Content Include="tests\json_data\batch-applicationTemplate-parameters.json" />
+    <Content Include="tests\json_data\batch-applicationTemplate-prohibitedApplicationTemplateInfo.json" />
+    <Content Include="tests\json_data\batch-applicationTemplate-prohibitedId.json" />
+    <Content Include="tests\json_data\batch-applicationTemplate-prohibitedPoolInfo.json" />
+    <Content Include="tests\json_data\batch-applicationTemplate-prohibitedPriority.json" />
+    <Content Include="tests\json_data\batch-applicationTemplate-static.json" />
+    <Content Include="tests\json_data\batch-applicationTemplate-unsupportedProperty.json" />
+    <Content Include="tests\json_data\batch-applicationTemplate-untypedParameter.json" />
+    <Content Include="tests\json_data\batch.job.parameters.json" />
+    <Content Include="tests\json_data\batch.job.parametricsweep.json" />
+    <Content Include="tests\json_data\batch.job.simple.json" />
+    <Content Include="tests\json_data\batch.pool.parameters.json" />
+    <Content Include="tests\json_data\batch.pool.simple.json" />
+    <Content Include="tests\json_data\file_tests\bar.bmp" />
+    <Content Include="tests\json_data\file_tests\foo.txt" />
+    <Content Include="tests\json_data\file_tests\sample_data\test.txt" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
