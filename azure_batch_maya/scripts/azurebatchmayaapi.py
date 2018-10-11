@@ -157,9 +157,20 @@ class MayaAPI(object):
 
     @staticmethod
     def delete_ui(*args, **kwargs):
+
+        def isListEmpty(inList):
+            if isinstance(inList, list): # Is a list
+                return all( map(isListEmpty, inList) )
+            return False # Not a list
+
         try:
-            cmds.deleteUI(*args, **kwargs)
+            argsNoFalsies = [x for x in args if x]
+            if isListEmpty(argsNoFalsies):
+                return      # cmds.deleteUI throws if called with an empty list
+            cmds.deleteUI(*argsNoFalsies, **kwargs)
         except Exception as exp:
+            if exp.message.endswith('not found.\n'):
+                return    # ignore exceptions from attempting to delete an object which is already deleted
             LOG.debug("MayaAPI exception in 'delete_ui': {0}".format(exp).strip())
 
     @staticmethod
