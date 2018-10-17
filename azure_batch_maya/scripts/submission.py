@@ -230,7 +230,9 @@ class AzureBatchSubmission(object):
         """Retrieve the currently available pools to populate
         the job submission pool selection drop down.
         """
-        pools = self.pool_manager.list_pools(lazy=True)
+        self.env_manager._get_plugin_licenses()
+        required_app_licenses = self.env_manager.get_application_licenses()
+        pools = self.pool_manager.list_pools(lazy=True, requiredAppLicenses=required_app_licenses)
         return pools
 
     def submit(self, watch_job=False, download_dir=None):

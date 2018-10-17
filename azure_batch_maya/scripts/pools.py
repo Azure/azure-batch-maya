@@ -52,7 +52,7 @@ class AzureBatchPools(object):
         self.batch = self._session.batch
         self.environment = env
 
-    def list_pools(self, lazy=False):
+    def list_pools(self, lazy=False, requiredAppLicenses=None):
         """Retrieves the currently running pools. Is called on loading and
         refreshing the pools tab, also when populating the job submission
         pool selection drop down menu.
@@ -63,6 +63,9 @@ class AzureBatchPools(object):
         self.pools = []
         for pool in all_pools:
             if pool.virtual_machine_configuration:
+                if requiredAppLicenses:
+                    if not set(requiredAppLicenses).issubset(pool.application_licenses):
+                        continue
                 self.pools.append(pool)
         self.pools.sort(key=lambda x: x.creation_time, reverse=True)
         self.count = len(self.pools)
