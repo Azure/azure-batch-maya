@@ -34,6 +34,7 @@ class SubmissionUI(object):
         self.selected_container_image = None
         self.container_image_text_row = None
         self.container_image_dropdown_row = None
+        self.persistent_pool_dropdown_row = None
         self.reused_pool_id = None
         self.container_config = []
         self.select_pool_type = self.AUTO_POOL
@@ -145,6 +146,12 @@ class SubmissionUI(object):
         self.base.refresh_renderer(self.render_module)
         self.selected_dir = utils.get_default_output_path()
         maya.text_field(self.dir, edit=True, text=self.selected_dir)
+        if self.persistent_pool_dropdown_row is not None:
+            pool_options = self.base.available_pools()
+            self.pool_dropdown.clear()
+            self.pool_dropdown.add_item("")
+            for pool_id in pool_options:
+                self.pool_dropdown.add_item(pool_id)
         self.refresh_button.finish()
 
     def submit_status(self, status):
@@ -215,6 +222,9 @@ class SubmissionUI(object):
             maya.delete_ui(self.container_image_text_row)
         if self.container_image_dropdown_row is not None:
             maya.delete_ui(self.container_image_dropdown_row)
+        if self.persistent_pool_dropdown_row is not None:
+            maya.delete_ui(self.persistent_pool_dropdown_row)
+            self.persistent_pool_dropdown_row = None
         self.pool_config = []
         with utils.ColumnLayout(4,
             col_width=((1, 100), (2, 50), (3, 100), (4, 50)),
@@ -275,6 +285,9 @@ class SubmissionUI(object):
             maya.delete_ui(self.container_image_text_row)
         if self.container_image_dropdown_row is not None:
             maya.delete_ui(self.container_image_dropdown_row)
+        if self.persistent_pool_dropdown_row is not None:
+            maya.delete_ui(self.persistent_pool_dropdown_row)
+            self.persistent_pool_dropdown_row = None
         self.pool_config = []
         with utils.ColumnLayout(4,
             col_width=((1, 100), (2, 50), (3, 100), (4, 50)),
@@ -312,7 +325,7 @@ class SubmissionUI(object):
                 self.pool_config.append(container_image_text_row)
                 maya.text(label="Container Image to Render with:", align="left")
 
-            with utils.Row(1, 1, 355, "left", (1, "bottom", 20), parent=self.pool_settings) as container_image_dropdown_row:
+            with utils.Row(1, 1, 355, "left", (1, "bottom", 10), parent=self.pool_settings) as container_image_dropdown_row:
                 self.container_image_dropdown_row = container_image_dropdown_row
                 self.pool_config.append(container_image_dropdown_row)
                 with utils.Dropdown(self.set_task_container_image, 
@@ -335,26 +348,32 @@ class SubmissionUI(object):
             maya.delete_ui(self.container_image_text_row)
         if self.container_image_dropdown_row is not None:
             maya.delete_ui(self.container_image_dropdown_row)
+        if self.persistent_pool_dropdown_row is not None:
+            maya.delete_ui(self.persistent_pool_dropdown_row)
         self.pool_config = []
-        with utils.ColumnLayout(2,
-            col_width=((1, 100), (2, 300)),
-            row_spacing=(1, 10),
-            row_offset=(1, "bottom", 5),
-            parent=self.pool_settings) as reuse_pool_selection_layout:
-            self.pool_config.append(reuse_pool_selection_layout)
+
+        with utils.Row(1,1,100, parent=self.pool_settings) as reuse_pool_row:
+            self.pool_config.append(reuse_pool_row)
             loading_message = maya.text(
                 label="loading...",
-                align="right")
+                align="left")
             self.pool_config.append(loading_message)
             maya.refresh()
             pool_options = self.base.available_pools()
-            maya.text(loading_message, edit=True, label="Pool ID:   ")
-            with utils.Dropdown(self.reuse_selected_pool_changed, annotation="Use an existing persistent pool ID") as pool_dropdown:
+            maya.text(loading_message, edit=True, label="Reused Pool ID:   ")
+
+        with utils.Row(1, 1, 355, "left", (1, "bottom", 5), parent=self.pool_settings) as persistent_pool_dropdown_row:
+            self.persistent_pool_dropdown_row = persistent_pool_dropdown_row
+            self.pool_config.append(persistent_pool_dropdown_row)
+
+            with utils.Dropdown(self.reuse_selected_pool_dropdown_changed, annotation="Select an existing persistent pool.") as pool_dropdown:
+                self.pool_config.append(pool_dropdown)
+                self.pool_dropdown = pool_dropdown
                 pool_dropdown.add_item("")
                 for pool_id in pool_options:
                     pool_dropdown.add_item(pool_id)
 
-    def reuse_selected_pool_changed(self, poolId):
+    def reuse_selected_pool_dropdown_changed(self, poolId):
         maya.delete_ui(self.container_config)
         if self.container_image_text_row is not None:
             maya.delete_ui(self.container_image_text_row)
@@ -373,7 +392,7 @@ class SubmissionUI(object):
                     self.container_config.append(container_image_text_row)
                     maya.text(label="Container Image to Render with:   ", align="left")
 
-                with utils.Row(1, 1, 355, "left", (1, "bottom", 20), parent=self.pool_settings) as container_image_dropdown_row:
+                with utils.Row(1, 1, 355, "left", (1, "bottom", 10), parent=self.pool_settings) as container_image_dropdown_row:
                     self.container_image_dropdown_row = container_image_dropdown_row
                     self.container_config.append(container_image_dropdown_row)
                     with utils.Dropdown(self.set_task_container_image, 
