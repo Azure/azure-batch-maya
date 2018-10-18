@@ -36,7 +36,6 @@
     <Compile Include="azure_batch_maya\scripts\assets.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="azure_batch_maya\scripts\batchManagedImageWithContainers.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="azure_batch_maya\scripts\poolImageProvider.py">
