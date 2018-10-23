@@ -50,9 +50,6 @@ class AzureBatchSubmission(object):
         self.env_manager = None
         self.batch = None
 
-        #callback.after_new(self.ui.refresh)
-        #callback.after_open(self.ui.refresh)
-
     def _collect_modules(self):
         """Collect the renderer-specific submission modules. This is where
         the renderer-specfic job processing is defined.

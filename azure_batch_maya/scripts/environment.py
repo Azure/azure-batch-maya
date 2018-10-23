@@ -67,8 +67,6 @@ class AzureBatchEnvironment(object):
         self.skus = self._load_skus()
         self.ui = EnvironmentUI(self, frame, BATCH_POOL_IMAGES.keys(), self.skus, self.licenses)
         self.refresh()
-        #callback.after_new(self.ui.refresh)
-        #callback.after_read(self.ui.refresh)
 
     def _load_skus(self):
         """Populate the list of available hardware SKUs."""
