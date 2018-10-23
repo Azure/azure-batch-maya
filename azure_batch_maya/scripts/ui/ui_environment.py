@@ -17,10 +17,8 @@ def edit_cell(*args):
     return 1
 
 class PoolImageMode(Enum):
-    BATCH_IMAGE = 1
-    BATCH_IMAGE_WITH_CONTAINERS = 2
-    CUSTOM_IMAGE = 3
-    CUSTOM_IMAGE_WITH_CONTAINERS = 4
+    MARKETPLACE_IMAGE= 1
+    CONTAINER_IMAGE = 2
 
 class EnvironmentUI(object):
     """Class to create the 'Env' tab in the plug-in UI"""
@@ -38,7 +36,7 @@ class EnvironmentUI(object):
         self.ready = False
         self.page = maya.form_layout(enableBackground=True)
         self.license_settings = {}
-        self.select_rendernode_type = PoolImageMode.BATCH_IMAGE.value
+        self.select_rendernode_type = PoolImageMode.MARKETPLACE_IMAGE.value
         self.poolImageFilter = PoolImageFilter(PoolImageProvider())
         self.batchManagedImageWithContainersUI = None
         self.licenses = licenses
@@ -68,18 +66,18 @@ class EnvironmentUI(object):
 
                     with utils.Row(1,1,325):
                         maya.radio_group(
-                            labelArray2=("Batch Managed Image",
-                                         "Batch Managed Image with Containers"),
+                            labelArray2=("Marketplace Image",
+                                         "Container Image"),
                             numberOfRadioButtons=2,
                             select=self.select_rendernode_type,
                             vertical = True,
-                            onCommand1=self.set_batch_image,
-                            onCommand2=self.set_batch_image_with_containers)
+                            onCommand1=self.set_marketplace_image_mode,
+                            onCommand2=self.set_container_image_mode)
 
                     maya.parent()
                     self.image_config = []
                     with utils.FrameLayout(
-                        label="Batch Managed Image Settings", collapsable=True,
+                        label="Marketplace Image Settings", collapsable=True,
                         width=325, collapse=False, parent = self.rendernode_config) as framelayout:
                         self.image_config.append(framelayout)
                         with utils.ColumnLayout(
@@ -179,7 +177,7 @@ class EnvironmentUI(object):
 
     def get_os_image(self):
         """Retrieve the currently selected image name."""
-        if self.select_rendernode_type == PoolImageMode.BATCH_IMAGE.value:
+        if self.select_rendernode_type == PoolImageMode.MARKETPLACE_IMAGE.value:
             return self._image.value()
         return self.get_custom_image_resource_id()
 
@@ -225,10 +223,10 @@ class EnvironmentUI(object):
         self.base.set_node_sku_id(node_sku_id)
 
     def get_node_sku_id(self):
-        if self.get_image_type().value == PoolImageMode.BATCH_IMAGE.value:
+        if self.get_image_type().value == PoolImageMode.MARKETPLACE_IMAGE.value:
             image = self.base.get_batch_image()
             return image.pop('node_sku_id')
-        if self.get_image_type().value == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
+        if self.get_image_type().value == PoolImageMode.CONTAINER_IMAGE.value:
             return self.batchManagedImageWithContainersUI.selected_image_node_sku_id()
         if not self._node_sku_id_dropdown:
             return self.base.node_sku_id
@@ -248,19 +246,19 @@ class EnvironmentUI(object):
         self.base.set_custom_image_resource_id(custom_image_resource_id)
 
     def get_task_container_image(self):
-        if self.select_rendernode_type == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
+        if self.select_rendernode_type == PoolImageMode.CONTAINER_IMAGE.value:
             selectedImageId, selectedImage = self.batchManagedImageWithContainersUI.fetch_selected_image()
             return selectedImageId
         return None
 
     def get_pool_container_images(self):
-        if self.select_rendernode_type == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
+        if self.select_rendernode_type == PoolImageMode.CONTAINER_IMAGE.value:
             selectedImageId, selectedImage = self.batchManagedImageWithContainersUI.fetch_selected_image()
             return [selectedImageId]
         return []
         
     def get_container_image_reference(self):
-        if self.select_rendernode_type == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
+        if self.select_rendernode_type == PoolImageMode.CONTAINER_IMAGE.value:
              return self.batchManagedImageWithContainersUI.selected_image_image_reference()
         return None
 
@@ -304,8 +302,8 @@ class EnvironmentUI(object):
         """Clear any data and customization. Command for refresh_button."""
         maya.table(self.env_vars, edit=True, clearTable=True, rows=0)
         self.base.refresh()
-        if self.select_rendernode_type == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
-            self.set_batch_image_with_containers()
+        if self.select_rendernode_type == PoolImageMode.CONTAINER_IMAGE.value:
+            self.set_container_image_mode()
         self.refresh_licenses()
         maya.refresh()
 
@@ -336,16 +334,16 @@ class EnvironmentUI(object):
                 self.is_logged_out()
         maya.refresh()
 
-    def set_batch_image(self, *args):
+    def set_marketplace_image_mode(self, *args):
         """Set selected render node type to be a batch published VM image type.
         Displays the Batch VM image selection UI control.
         Command for select_rendernode_type radio buttons.
         """
-        self.select_rendernode_type = PoolImageMode.BATCH_IMAGE.value
+        self.select_rendernode_type = PoolImageMode.MARKETPLACE_IMAGE.value
         maya.delete_ui(self.image_config)
         self.image_config = []
         with utils.FrameLayout(
-            label="Batch Managed Image Settings", collapsable=True,
+            label="Marketplace Image Settings", collapsable=True,
             width=325, collapse=False, parent = self.rendernode_config) as framelayout:
             self.image_config.append(framelayout)
             with utils.ColumnLayout(
@@ -359,8 +357,8 @@ class EnvironmentUI(object):
                         self._image.add_item(image)
 
 
-    def set_batch_image_with_containers(self, *args):
-        self.select_rendernode_type = PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value
+    def set_container_image_mode(self, *args):
+        self.select_rendernode_type = PoolImageMode.CONTAINER_IMAGE.value
         maya.delete_ui(self.image_config)
         self.image_config = []
 

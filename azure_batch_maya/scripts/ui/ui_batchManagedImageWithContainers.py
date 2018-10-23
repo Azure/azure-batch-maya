@@ -22,7 +22,7 @@ class BatchManagedImageWithContainersUI(object):
         self.selected_arnold = None
         
         with utils.FrameLayout(
-            label="Batch Managed Image with Containers Settings", collapsable=True,
+            label="Container Image Settings", collapsable=True,
             width=325, collapse=False, parent = parent) as framelayout:
 
             image_config.append(framelayout)

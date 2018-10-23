@@ -115,7 +115,7 @@ class AzureBatchEnvironment(object):
         return self.ui.get_image_type()
 
     def build_container_configuration(self):
-        if self.ui.get_image_type().value == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
+        if self.ui.get_image_type().value == PoolImageMode.CONTAINER_IMAGE.value:
             container_configuration = models.ContainerConfiguration(container_image_names=self.ui.get_pool_container_images())
             return container_configuration
         return None
@@ -148,12 +148,12 @@ class AzureBatchEnvironment(object):
         return self.node_agent_sku_id_list 
     
     def get_image_reference(self):
-        if self.get_image_type().value == PoolImageMode.BATCH_IMAGE.value:
+        if self.get_image_type().value == PoolImageMode.MARKETPLACE_IMAGE.value:
             image = self.get_batch_image()
             image.pop('node_sku_id')
             image_reference = models.ImageReference(**image)
             return image_reference
-        if self.get_image_type().value == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
+        if self.get_image_type().value == PoolImageMode.CONTAINER_IMAGE.value:
             image = self.ui.get_container_image_reference()
             image_reference = models.ImageReference(**image)
             return image_reference
