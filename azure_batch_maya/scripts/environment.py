@@ -17,6 +17,8 @@ import azurebatchutils as utils
 from ui_environment import EnvironmentUI
 from ui_environment import PoolImageMode
 
+from collections import OrderedDict
+
 BATCH_POOL_IMAGES = {
     'Windows 2016':
         {
@@ -56,10 +58,11 @@ class AzureBatchEnvironment(object):
         self._log = logging.getLogger('AzureBatchMaya')
         self._call = call
         self._session = None
+        self._submission = None
         self._tab_index = index
         self.node_agent_sku_id_list = None
 
-        self.licenses = {}
+        self.licenses = OrderedDict()
         self._get_plugin_licenses()
         self.skus = self._load_skus()
         self.ui = EnvironmentUI(self, frame, BATCH_POOL_IMAGES.keys(), self.skus, self.licenses)
@@ -87,11 +90,12 @@ class AzureBatchEnvironment(object):
             else:
                 self.licenses[license['label']] = False
 
-    def configure(self, session):
+    def configure(self, session, submission):
         """Populate the current session of the environment tab.
         Called on successful authentication.
         """
         self._session = session
+        self._submission = submission
         self.batch = self._session.batch
         self.ui.select_image(self._session.batch_image)
         self.ui.select_sku(self._session.vm_sku)

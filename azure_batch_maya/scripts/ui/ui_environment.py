@@ -93,6 +93,20 @@ class EnvironmentUI(object):
                                     self._image.add_item(image)
 
                 with utils.FrameLayout(
+                    label="Application Licenses", collapsable=True,
+                    width=325, collapse=True):
+
+                   with utils.ColumnLayout(
+                        2, col_width=((1,160),(2,160)), row_spacing=(1,5),
+                        row_offset=((1, "top", 15),(5, "bottom", 15))):
+
+                        maya.text(label="Use licenses:   ", align='right')
+                        for label, checked in licenses.items():
+                            self.license_settings[label] = maya.check_box(
+                                    label=label, value=checked, changeCommand=self.use_license)
+                            maya.text(label="", align='right')
+
+                with utils.FrameLayout(
                     label="Environment Variables", collapsable=True,
                     width=325, collapse=True):
                     
@@ -115,7 +129,7 @@ class EnvironmentUI(object):
 
         with utils.Row(1, 1, 355, "center", (1,"bottom",0)) as btn:
             self.refresh_button = utils.ProcButton(
-                "Refresh", "Refreshing...", self.refresh)
+                "Refresh", "Refreshing...", self.refresh_btn_clicked)
         maya.form_layout(self.page, edit=True, 
                          attachForm=[(scroll, 'top', 5), (scroll, 'left', 5),
                                      (scroll, 'right', 5), (btn, 'bottom', 5),
@@ -264,12 +278,35 @@ class EnvironmentUI(object):
             vars[row_key[0]] = row_val[0]
         return vars
 
+    def use_license(self, enabled):
+        """Enable the license service for the specified apps.
+        Enable use of custom Maya license server. Command for use_license
+        check box.
+        """
+        for label, checkbox in self.license_settings.items():
+            checked = maya.check_box(checkbox, query=True, value=True)
+            self.base.licenses[label] = checked
+
+    def refresh_licenses(self):
+        """Refresh the use of plugin licenses based on scene."""
+        for label, checked in self.base.licenses.items():
+            maya.check_box(self.license_settings[label], edit=True, value=checked)
+
+    def refresh_btn_clicked(self, *args):
+        """Command for refresh_button.
+        """
+        self.refresh_button.start()
+        self.base._submission.ui.refresh()
+        self.refresh()
+        self.refresh_button.finish()
+
     def refresh(self, *args):
         """Clear any data and customization. Command for refresh_button."""
         maya.table(self.env_vars, edit=True, clearTable=True, rows=0)
         self.base.refresh()
         if self.select_rendernode_type == PoolImageMode.BATCH_IMAGE_WITH_CONTAINERS.value:
             self.set_batch_image_with_containers()
+        self.refresh_licenses()
         maya.refresh()
 
     def is_logged_in(self):

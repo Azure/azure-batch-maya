@@ -71,7 +71,7 @@ class SubmissionUI(object):
 
         with utils.Row(1, 1, 355, "center", (1,"bottom",0)) as r_btn:
             self.refresh_button = utils.ProcButton(
-                "Refresh", "Refreshing...", self.refresh)
+                "Refresh", "Refreshing...", self.refresh_btn_clicked)
 
         maya.form_layout(
             self.page, edit=True,
@@ -137,12 +137,19 @@ class SubmissionUI(object):
         """
         pass
 
+    def refresh_btn_clicked(self, *args):
+        """Command for refresh_button.
+        """
+        self.refresh_button.start()
+        self.base.env_manager.ui.refresh()
+        self.refresh()
+        self.refresh_button.finish()
+
     def refresh(self, *args):
-        """Refresh Submit tab. Command for refresh_button.
+        """Refresh Submit tab.
         Remove all existing UI elements and renderer details and re-build
         from scratch.
         """
-        self.refresh_button.start()
         self.base.refresh_renderer(self.render_module)
         self.selected_dir = utils.get_default_output_path()
         maya.text_field(self.dir, edit=True, text=self.selected_dir)
@@ -152,7 +159,6 @@ class SubmissionUI(object):
             self.pool_dropdown.add_item("")
             for pool_id in pool_options:
                 self.pool_dropdown.add_item(pool_id)
-        self.refresh_button.finish()
 
     def submit_status(self, status):
         """Report submission status in UI. Called from base class.
