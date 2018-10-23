@@ -508,9 +508,13 @@ class AzureBatchConfig(object):
 
         self.storage_mgmt_client = StorageManagementClient(self.mgmtCredentials, str(subscription_id),
             base_url=self.aad_environment_provider.getResourceManager(self.aad_environment_id))
-
-        self.storage_key = self._call(self.storage_mgmt_client.storage_accounts.list_keys, parsedStorageAccountId['resource_group'], self.storage_account).keys[0].value
         
+        try:
+            self.storage_key = self._call(self.storage_mgmt_client.storage_accounts.list_keys, parsedStorageAccountId['resource_group'], self.storage_account).keys[0].value
+        except Exception as exp:
+            self.remove_old_batch_account_from_config()
+            raise exp
+
         self._storage = storage.BlockBlobService(
             self.storage_account,
             self.storage_key)
