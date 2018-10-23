@@ -33,6 +33,7 @@ class ConfigUI(object):
         self.subscription_ui_elements = None
         self.auth_temp_ui_elements = []
         self.batch_account_framelayout = None
+        self.aad_environment_dropdown = None
 
         with utils.ScrollLayout(height=475, width = 375, parent = self.page) as scroll_layout:
             self.scroll_layout = scroll_layout
@@ -52,12 +53,31 @@ class ConfigUI(object):
             self.aad_framelayout = aad_framelayout
         with utils.Row(1, 1, (300), ("left"), [(1, "top", 15)], parent=self.aad_framelayout):
             self.auth_status_field = maya.text(label="", align="center")
-        with utils.Row(2, 2, (75,255), ("right","center"), [(1, "bottom", 20),(2,"bottom",15)], parent = self.aad_framelayout) as aad_tenant_row:
-            self.aad_tenant_row = aad_tenant_row
-            maya.text(label="AAD Domain:   ", align="left", parent = self.aad_tenant_row,
+        with utils.Row(2, 2, (100,200), ("right","center"), [(1, "top", 15),(2,"top",15)], parent = self.aad_framelayout) as aad_environment_row:
+            self.aad_environment_row = aad_environment_row
+            maya.text(label="Environment:   ", align="right", parent = self.aad_environment_row,
                 annotation=aad_domain_hover_message)
-            self._aad_tenant_field = maya.text_field(height=25, enable=True,
+            
+            with utils.Dropdown(self.aad_environment_changed, parent=aad_environment_row) as aad_environment_dropdown:
+                self.aad_environment_dropdown = aad_environment_dropdown
+                for id in self.base.aad_environment_provider.getAADEnvironments():
+                    self.aad_environment_dropdown.add_item(id)
+                if self.base.aad_environment_id:
+                    self.aad_environment_dropdown.select(self.base.aad_environment_id)
+                else:
+                    self.aad_environment_dropdown.select("AzureCloud")
+
+        with utils.Row(2, 2, (100,200), ("right","center"), [(1, "bottom", 20),(2,"bottom",15)], parent = self.aad_framelayout) as aad_tenant_row:
+            self.aad_tenant_row = aad_tenant_row
+            maya.text(label="AAD Domain:   ", align="right", parent = self.aad_tenant_row,
+                annotation=aad_domain_hover_message)
+
+            #Registering changeCommand captures changes to the field when not confirmed with enter. 
+            #Registering enterCommand with alwaysInvokeEnterCommandOnReturn allows the same value to be reentered so as to generate a new login prompt.
+            self.aad_tenant_field = maya.text_field(height=25, enable=True,
                 changeCommand=self.aad_tenant_name_changed,
+                enterCommand=self.aad_tenant_name_changed,
+                alwaysInvokeEnterCommandOnReturn=True,
                 annotation=aad_domain_hover_message,
                 parent = self.aad_tenant_row)
 
@@ -67,11 +87,11 @@ class ConfigUI(object):
 
         cached_tenant_name =  self.base.aad_tenant_name
         if cached_tenant_name and cached_tenant_name != None and cached_tenant_name != 'None':
-            maya.text_field(self._aad_tenant_field, edit=True, text=cached_tenant_name)
+            maya.text_field(self.aad_tenant_field, edit=True, text=cached_tenant_name)
 
     def prompt_for_aad_tenant(self):
         self.auth_status = "Please input your AAD domain name"
-        maya.text_field(self._aad_tenant_field, edit=True, text="")
+        maya.text_field(self.aad_tenant_field, edit=True, text="")
         maya.form_layout(self.page, edit=True, enable=True)
         maya.refresh() 
 
@@ -218,7 +238,6 @@ class ConfigUI(object):
 
         self.auth_status = "Authenticated"
         self.disable(True)
-        maya.form_layout(self.page, edit=True, enable=True)
         maya.refresh()
 
     def change_subscription_button_pressed(self, *args):
@@ -385,6 +404,8 @@ class ConfigUI(object):
                 self._logging.add_item("Warning")
                 self._logging.add_item("Error")
 
+        
+        maya.form_layout(self.page, edit=True, enable=True)
         self.settings.init_after_account_selected()
 
     def get_selected_subscription_from_dropdown(self):
@@ -397,6 +418,8 @@ class ConfigUI(object):
         if selected_subscription_name:
             self._subscription_dropdown.select(selected_subscription_name)
         else:
+            if self._subscription_dropdown.length() < 2:
+                return None
             self._subscription_dropdown.select(2)
             selected_subscription_name =  self._subscription_dropdown.value()
         self.base.subscription_id = self.subscriptions_by_displayname[selected_subscription_name].subscription_id
@@ -435,6 +458,16 @@ class ConfigUI(object):
     def account(self, value):
         """AzureBatch Unattended Account ID. Sets contents of text field."""
         maya.text_field(self._account, edit=True, text=str(value))
+
+    @property
+    def aadTenant(self):
+        """AADTenant name. Retrieves contents of text field."""
+        return maya.text_field(self.aad_tenant_field, query=True, text=True)
+
+    @aadTenant.setter
+    def aadTenant(self, value):
+        """AADTenant name. Sets contents of text field."""
+        maya.text_field(self.aad_tenant_field, edit=True, text=str(value))
 
     @property
     def storage(self):
@@ -502,27 +535,32 @@ class ConfigUI(object):
         """Called when the plug-in is logged out."""
         maya.form_layout(self.page, edit=True, enable=True)
 
+    def aad_environment_changed(self, value):
+        self.re_prompt_for_login()
+
     def aad_tenant_name_changed(self, aad_tenant_name):
         if aad_tenant_name != None:
-            self.base.aad_tenant_name = aad_tenant_name
+            self.re_prompt_for_login()
 
-            if self.batch_account_framelayout is not None:
-                maya.delete_ui(self.batch_account_framelayout)
+    def re_prompt_for_login(self):
+        if self.batch_account_framelayout is not None:
+            maya.delete_ui(self.batch_account_framelayout)
             
-            if self.auth_temp_ui_elements is not None:
-                maya.delete_ui(self.auth_temp_ui_elements)
-            self.auth_temp_ui_elements = []
+        if self.auth_temp_ui_elements is not None:
+            maya.delete_ui(self.auth_temp_ui_elements)
+        self.auth_temp_ui_elements = []
 
-            self.base.can_init_from_config = False
-            self.base.auth = False
+        self.base.can_init_from_config = False
+        self.base.auth = False
+        self.frame.is_logged_out()
 
-            try:
-                self.base.prompt_for_and_obtain_aad_tokens()
-            except AdalError as exp:
-                errors = exp.error_response['error_codes']
-                if 90002 in errors:
-                    self.auth_status = "AAD Tenant not found or contains no subscriptions"
-                    maya.refresh()
+        try:
+            self.base.prompt_for_and_obtain_aad_tokens()
+        except AdalError as exp:
+            errors = exp.error_response['error_codes']
+            if 90002 in errors:
+                self.auth_status = "AAD Tenant not found or contains no subscriptions"
+                maya.refresh()
 
     def copy_devicelogincode_to_clipboard(self, *args):
         utils.copy_to_clipboard(self.devicelogin_code.rstrip())

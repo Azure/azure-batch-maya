@@ -366,6 +366,10 @@ class Dropdown(object):
         maya.menu(self.menu, edit=True, annotation=annotation)
         maya.refresh()
 
+    def length(self):
+        length = maya.menu(self.menu, query=True, numberOfItems=True)
+        return length
+
 class ProgressBar(object):
     """Wrapper class for :class:`maya.cmds.mainProgressBar`."""
 

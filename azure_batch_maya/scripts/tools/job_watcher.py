@@ -25,6 +25,8 @@ from azure.batch.models import BatchErrorException
 
 from msrestazure.azure_exceptions import CloudError
 
+from aadEnvironmentProvider import AADEnvironmentProvider
+
 try:
     str = unicode
 except NameError:
@@ -33,9 +35,6 @@ batch_client = None
 storage_client = None
 header_line_length = 50
 
-batchAadResource = "https://batch.core.windows.net/"
-mgmtAadResource = "https://management.core.windows.net/"
-aadAuthorityHostUrl = "https://login.microsoftonline.com"
 aadClientId = "04b07795-8ddb-461a-bbee-02f9e1bf7b46" #Azure CLI
 
 aadTenant = None
@@ -168,19 +167,19 @@ def need_to_refresh_auth_tokens(auth_token_list):
             return True
     return False
 
-def refresh_auth_tokens(mgmt_token, batch_token):
+def refresh_auth_tokens(mgmt_token, batch_token, environment_provider, aad_environment_id):
 
-    context = adal.AuthenticationContext(aadAuthorityHostUrl + '/' + aadTenant, api_version=None)
+    context = adal.AuthenticationContext(environment_provider.getAadAuthorityHostUrl(aad_environment_id) + '/' + aadTenant, api_version=None)
 
     mgmt_auth_token = context.acquire_token_with_refresh_token(
         mgmt_token['refreshToken'],
         aadClientId,
-        mgmtAadResource)
+        environment_provider.getAadManagementUrl(aad_environment_id))
 
     batch_auth_token =  context.acquire_token_with_refresh_token(
         batch_token['refreshToken'], 
         aadClientId,
-        batchAadResource)
+        environment_provider.getBatchResourceUrl(aad_environment_id))
     
     return mgmt_auth_token, batch_auth_token
 
@@ -237,7 +236,7 @@ def update_batch_and_storage_client_creds(batch_auth_token, mgmt_auth_token):
     batch_client._client._mgmt_credentials = mgmtCredentials
     batch_client._client.creds = batchCredentials
 
-def _authenticate(cfg_path):
+def _authenticate(cfg_path, environment_provider):
     global batch_client, storage_client, mgmt_auth_token, batch_auth_token, aadTenant
     cfg = ConfigParser.ConfigParser()
     try:
@@ -250,6 +249,10 @@ def _authenticate(cfg_path):
 
         aadTenant = cfg.get('AzureBatch', 'aad_tenant_name')
 
+        aad_environment_id = cfg.get('AzureBatch', 'aad_environment_id')
+
+        resource_url = environment_provider.getResourceManager(aad_environment_id)
+
         mgmt_auth_token = json.loads(cfg.get('AzureBatch', 'mgmt_auth_token'))
         convert_utc_expireson_to_local_timezone_naive(mgmt_auth_token)
 
@@ -257,17 +260,22 @@ def _authenticate(cfg_path):
         convert_utc_expireson_to_local_timezone_naive(batch_auth_token)
 
         if need_to_refresh_auth_tokens([mgmt_auth_token, batch_auth_token]):
-            mgmt_auth_token, batch_auth_token = refresh_auth_tokens(mgmt_auth_token, batch_auth_token)
+            mgmt_auth_token, batch_auth_token = refresh_auth_tokens(mgmt_auth_token, batch_auth_token, environment_provider, aad_environment_id)
 
-        mgmtCredentials = AADTokenCredentials(mgmt_auth_token)
-        batchCredentials = AADTokenCredentials(batch_auth_token)
+        mgmtCredentials = AADTokenCredentials(mgmt_auth_token,  
+            cloud_environment= environment_provider.getEnvironmentForId(aad_environment_id),
+            tenant=aadTenant)
+
+        batchCredentials = AADTokenCredentials(batch_auth_token, 
+            cloud_environment= environment_provider.getEnvironmentForId(aad_environment_id),
+            tenant=aadTenant)
 
         storage_account_resource_id = cfg.get('AzureBatch', 'storage_account_resource_id')
 
         parsedStorageAccountId = msrestazuretools.parse_resource_id(storage_account_resource_id)
         storage_account = parsedStorageAccountId['name']
 
-        storage_mgmt_client = StorageManagementClient(mgmtCredentials, subscription_id)
+        storage_mgmt_client = StorageManagementClient(mgmtCredentials, subscription_id,  base_url=resource_url)
 
         storage_key = call(storage_mgmt_client.storage_accounts.list_keys, parsedStorageAccountId['resource_group'], storage_account).keys[0].value
 
@@ -305,13 +313,16 @@ if __name__ == "__main__":
         from azure.mgmt.resource.subscriptions import SubscriptionClient
         from azure.mgmt.batch import BatchManagementClient
         from azure.mgmt.storage import StorageManagementClient
+        
+        from aadEnvironmentProvider import AADEnvironmentProvider
 
         data_path = sys.argv[1].decode('utf-8')
         job_id = sys.argv[2]
         download_dir = sys.argv[3].decode('utf-8')
 
+        environment_provider = AADEnvironmentProvider()
         _check_valid_dir(download_dir)
-        _authenticate(data_path) 
+        _authenticate(data_path, environment_provider) 
 
         EXIT_STRING = ""
         track_job_progress(job_id, download_dir)

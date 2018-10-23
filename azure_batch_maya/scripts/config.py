@@ -34,6 +34,8 @@ import msrestazure.tools as msrestazuretools
 
 from adal import AdalError
 
+from aadEnvironmentProvider import AADEnvironmentProvider
+
 LOG_LEVELS = {
     'debug':10,
     'info':20,
@@ -44,9 +46,6 @@ LOG_LEVELS = {
 class AzureBatchConfig(object):
     """Handler for authentication and configuration of the SDK clients."""
 
-    batchAadResource = "https://batch.core.windows.net/"
-    mgmtAadResource = "https://management.core.windows.net/"
-    aadAuthorityHostUrl = "https://login.microsoftonline.com"
     aadClientId = "04b07795-8ddb-461a-bbee-02f9e1bf7b46" #Azure CLI
 
     def __init__(self, index, settings, frame, start, call):
@@ -64,11 +63,13 @@ class AzureBatchConfig(object):
         self._user_agent = "batchmaya/{}".format(os.environ.get('AZUREBATCH_VERSION'))
         self._cfg = ConfigParser.ConfigParser()
         self._call = call
+        self.aad_environment_provider = AADEnvironmentProvider()
         
         self._log = self._configure_logging(LOG_LEVELS['debug'])    #config hasn't been loaded yet so use a default logging level
 
         self.ui = ConfigUI(self, settings, frame)
         self._configure_plugin(False)
+        self.aad_environment = None
 
         #TODO as part of init should check batch and storage clients work somehow 
         #old method with dummy listPool etc calls slowed down opening,
@@ -86,7 +87,7 @@ class AzureBatchConfig(object):
             return None
 
     def _store_config_value(self, identifier, value):
-        self._cfg.set('AzureBatch', identifier, value)
+        self._cfg.set('AzureBatch', identifier, str(value))
         self._save_config()
 
     #properties from config file
@@ -128,7 +129,10 @@ class AzureBatchConfig(object):
 
     @property
     def vm_sku(self):
-        return self._get_cached_config_value('vm_sku')
+        value_in_config = self._get_cached_config_value('vm_sku')
+        if value_in_config is None:
+            return self.default_vm_sku()
+        return value_in_config
     @vm_sku.setter
     def vm_sku(self, value):
         self._store_config_value('vm_sku', value)
@@ -188,6 +192,14 @@ class AzureBatchConfig(object):
     @aad_tenant_name.setter
     def aad_tenant_name(self, value):
         self._store_config_value('aad_tenant_name', value)
+
+    @property
+    def aad_environment_id(self):
+        value = self._get_cached_config_value('aad_environment_id')
+        return value
+    @aad_environment_id.setter
+    def aad_environment_id(self, value):
+        self._store_config_value('aad_environment_id', value)
 
     #properties from config file with additional behaviour
     @property
@@ -289,22 +301,30 @@ class AzureBatchConfig(object):
             self._configure_post_auth()
 
     def _configure_post_auth(self):
-        self.mgmtCredentials = AADTokenCredentials(self.mgmt_auth_token)
-        self.batchCredentials = AADTokenCredentials(self.batch_auth_token)
+        self.mgmtCredentials = AADTokenCredentials(self.mgmt_auth_token, 
+            cloud_environment=self.aad_environment_provider.getEnvironmentForId(self.aad_environment_id),
+            tenant=self.aad_tenant_name)
+        self.batchCredentials = AADTokenCredentials(self.batch_auth_token, 
+            cloud_environment=self.aad_environment_provider.getEnvironmentForId(self.aad_environment_id),
+            tenant=self.aad_tenant_name)
 
         if self.can_init_from_config:
             self.init_from_config()
             self.ui.init_from_config()
 
         else:
-            self.subscription_client = SubscriptionClient(self.mgmtCredentials)
+            self.subscription_client = SubscriptionClient(self.mgmtCredentials, 
+                base_url=self.aad_environment_provider.getResourceManager(self.aad_environment_id))
             self.ui.init_post_auth() 
 
     def update_batch_and_storage_client_creds(self, batch_auth_token, mgmt_auth_token):
 
-        self.batchCredentials = AADTokenCredentials(batch_auth_token)
-        self.mgmtCredentials = AADTokenCredentials(mgmt_auth_token)
-
+        self.batchCredentials = AADTokenCredentials(batch_auth_token,
+            cloud_environment=self.aad_environment_provider.getEnvironmentForId(self.aad_environment_id),
+            tenant=self.aad_tenant_name)
+        self.mgmtCredentials = AADTokenCredentials(mgmt_auth_token,
+            cloud_environment=self.aad_environment_provider.getEnvironmentForId(self.aad_environment_id),
+            tenant=self.aad_tenant_name)
         self._client._mgmt_credentials = self.mgmtCredentials
         self._client._client.creds = self.batchCredentials
         
@@ -323,18 +343,18 @@ class AzureBatchConfig(object):
 
     def refresh_auth_tokens(self, mgmt_token, batch_token):
 
-        context = adal.AuthenticationContext(self.aadAuthorityHostUrl + '/' + self.aad_tenant_name, api_version=None)
+        context = adal.AuthenticationContext(self.aad_environment_provider.getAadAuthorityHostUrl(self.aad_environment_id) + '/' + self.aad_tenant_name, api_version=None)
 
         try:
             self.mgmt_auth_token = context.acquire_token_with_refresh_token(
                 mgmt_token['refreshToken'],
                 self.aadClientId,
-                self.mgmtAadResource)
+                self.aad_environment_provider.getAadManagementUrl(self.aad_environment_id))
 
             self.batch_auth_token =  context.acquire_token_with_refresh_token(
                 batch_token['refreshToken'],
                 self.aadClientId,
-                self.batchAadResource)
+                self.aad_environment_provider.getBatchResourceUrl(self.aad_environment_id))
 
             return True
 
@@ -351,16 +371,21 @@ class AzureBatchConfig(object):
         maya.refresh()
         
     def obtain_aad_tokens(self):
-        context = adal.AuthenticationContext(self.aadAuthorityHostUrl + '/' + self.aad_tenant_name, api_version=None)
+        ui_environment_id = self.ui.aad_environment_dropdown.value()
+        ui_tenant_name = self.ui.aadTenant
+        context = adal.AuthenticationContext(self.aad_environment_provider.getAadAuthorityHostUrl(ui_environment_id) + '/' + ui_tenant_name, api_version=None)
 
-        code = context.acquire_user_code(self.mgmtAadResource, self.aadClientId)
+        code = context.acquire_user_code(self.aad_environment_provider.getAadManagementUrl(ui_environment_id), self.aadClientId)
         self._log.info(code['message'])
         
         self.ui.prompt_for_login(code['message'])
 
         def aad_auth_thread_func(context, code):
-            self.mgmt_auth_token = context.acquire_token_with_device_code(self.mgmtAadResource, code, self.aadClientId)
-            self.batch_auth_token = context.acquire_token(self.batchAadResource, self.mgmt_auth_token['userId'], self.aadClientId)
+            self.mgmt_auth_token = context.acquire_token_with_device_code(self.aad_environment_provider.getAadManagementUrl(ui_environment_id), code, self.aadClientId)
+            self.batch_auth_token = context.acquire_token(self.aad_environment_provider.getBatchResourceUrl(ui_environment_id), self.mgmt_auth_token['userId'], self.aadClientId)
+            self.aad_environment_id = ui_environment_id
+            self.aad_tenant_name = ui_tenant_name
+            self.remove_old_batch_account_from_config()
             maya.execute_in_main_thread(self._configure_post_auth)
 
         authThread = threading.Thread(
@@ -368,6 +393,14 @@ class AzureBatchConfig(object):
             args=(context, code))
 
         authThread.start()
+
+    def remove_old_batch_account_from_config(self):
+        self._cfg.remove_option('AzureBatch', 'batch_url')
+        self._cfg.remove_option('AzureBatch', 'batch_account')
+        self._cfg.remove_option('AzureBatch', 'subscription_id')
+        self._cfg.remove_option('AzureBatch', 'subscription_name')
+        self._cfg.remove_option('AzureBatch', 'storage_account_resource_id')
+        self._save_config()
 
     def _configure_logging(self, log_level):
         """Configure the logger. Setup the file output and format
@@ -401,6 +434,7 @@ class AzureBatchConfig(object):
         required_config_values = [self.subscription_id, 
                                     self.aad_tenant_name, 
                                     self.subscription_name, 
+                                    self.aad_environment_id,
                                     self.batch_url, 
                                     self.batch_account, 
                                     self.storage_account_resource_id, 
@@ -431,8 +465,9 @@ class AzureBatchConfig(object):
         self._cfg.set('AzureBatch', 'subscription_id', self.subscription_id)
         self._cfg.set('AzureBatch', 'subscription_name', self.subscription_name)
         self._cfg.set('AzureBatch', 'storage_account_resource_id', self.storage_account_resource_id)
-        self._cfg.set('AzureBatch', 'logging', self.logging_level)
+        self._cfg.set('AzureBatch', 'logging', str(self.logging_level))
         self._cfg.set('AzureBatch', 'aad_tenant_name', self.aad_tenant_name)
+        self._cfg.set('AzureBatch', 'aad_environment_id', self.aad_environment_id)
         self._save_config()
 
     def ensure_azurebatch_config_section_exists(self):
@@ -446,7 +481,8 @@ class AzureBatchConfig(object):
         the subscription selection drop down.
         """
         if not self.subscription_client:
-            self.subscription_client = SubscriptionClient(self.mgmtCredentials)
+            self.subscription_client = SubscriptionClient(self.mgmtCredentials,
+                 base_url=self.aad_environment_provider.getResourceManager(self.aad_environment_id))
         all_subscriptions = self._call(self.subscription_client.subscriptions.list)
         self.subscriptions = []
         for subscription in all_subscriptions:
@@ -457,7 +493,8 @@ class AzureBatchConfig(object):
     def init_after_subscription_selected(self, subscription_id, subscription_name):
         self.subscription_id = subscription_id
         self.subscription_name = subscription_name
-        self.batch_mgmt_client = BatchManagementClient(self.mgmtCredentials, str(subscription_id))
+        self.batch_mgmt_client = BatchManagementClient(self.mgmtCredentials, str(subscription_id), 
+             base_url=self.aad_environment_provider.getResourceManager(self.aad_environment_id))
 
     def init_after_batch_account_selected(self, batchaccount, subscription_id):
         self.batch_account = batchaccount.name
@@ -469,7 +506,8 @@ class AzureBatchConfig(object):
         parsedStorageAccountId = msrestazuretools.parse_resource_id(storageAccountId)
         self.storage_account = parsedStorageAccountId['name']
 
-        self.storage_mgmt_client = StorageManagementClient(self.mgmtCredentials, str(subscription_id))
+        self.storage_mgmt_client = StorageManagementClient(self.mgmtCredentials, str(subscription_id),
+            base_url=self.aad_environment_provider.getResourceManager(self.aad_environment_id))
 
         self.storage_key = self._call(self.storage_mgmt_client.storage_accounts.list_keys, parsedStorageAccountId['resource_group'], self.storage_account).keys[0].value
         
@@ -492,7 +530,8 @@ class AzureBatchConfig(object):
         parsedStorageAccountId = msrestazuretools.parse_resource_id(self.storage_account_resource_id)
         self.storage_account = parsedStorageAccountId['name']
 
-        self.storage_mgmt_client = StorageManagementClient(self.mgmtCredentials, str(self.subscription_id))
+        self.storage_mgmt_client = StorageManagementClient(self.mgmtCredentials, str(self.subscription_id),
+            base_url=self.aad_environment_provider.getResourceManager(self.aad_environment_id))
 
         self.storage_key = self._call(self.storage_mgmt_client.storage_accounts.list_keys, parsedStorageAccountId['resource_group'], self.storage_account).keys[0].value
         
@@ -516,7 +555,8 @@ class AzureBatchConfig(object):
         the account selection drop down.
         """
         if not self.batch_mgmt_client:
-             self.batch_mgmt_client = BatchManagementClient(self.mgmtCredentials, str(self.subscription_id))
+             self.batch_mgmt_client = BatchManagementClient(self.mgmtCredentials, str(self.subscription_id),
+                base_url=self.aad_environment_provider.getResourceManager(self.aad_environment_id))
         batch_accounts = self._call(self.batch_mgmt_client.batch_account.list)
         accounts = []
         for account in batch_accounts:
@@ -532,6 +572,9 @@ class AzureBatchConfig(object):
 
     def default_threads(self):
         return 20
+
+    def default_vm_sku(self):
+        return "STANDARD_A1"
 
     def convert_timezone_naive_expireson_to_utc(self, token):
         # we want to store token expiry times as UTC for consistency
