@@ -152,28 +152,7 @@ class ConfigUI(object):
                 maya.text(label="Storage Account:", align="left")
                 self.storage_account_field = maya.text_field(height=25, enable=True, editable=False, text=self.base.storage_account)
 
-            #TODO: Allow set to 0 to disable threads
-            with utils.Row(2, 2, (100,200), ("left","left"), parent=self.batch_account_framelayout) as threadsRow:
-                self.account_ui_elements.append(threadsRow)
-                maya.text(label="Threads:    ", align="right")
-                self._threads = maya.int_field(
-                    changeCommand=self.set_threads,
-                    height=25,
-                    minValue=1,
-                    maxValue=40,
-                    enable=True,
-                    value=self.base.threads)
-            
-            with utils.Row(2, 2, (100,200), ("left","center"),
-                            [(1, "bottom", 20),(2,"bottom",15)], parent=self.batch_account_framelayout) as loggingRow:
-                self.account_ui_elements.append(loggingRow)
-                maya.text(label="Logging:    ", align="right")
-                with utils.Dropdown(self.set_logging) as log_settings:
-                    self._logging = log_settings
-                    self._logging.add_item("Debug")
-                    self._logging.add_item("Info")
-                    self._logging.add_item("Warning")
-                    self._logging.add_item("Error")
+            self.draw_threads_and_logging_rows(self.batch_account_framelayout, self.account_ui_elements)
 
         self.account_status = "Batch Account Configured"
         self.auth_status = "Authenticated"
@@ -213,28 +192,7 @@ class ConfigUI(object):
                     for sub in subscriptions:
                         self._subscription_dropdown.add_item(sub.display_name)
 
-            #TODO: Allow set to 0 to disable threads
-            with utils.Row(2, 2, (100,200), ("left","left"), parent=self.batch_account_framelayout) as threadsRow:
-                self.account_ui_elements.append(threadsRow)
-                maya.text(label="Threads:    ", align="right")
-                self._threads = maya.int_field(
-                    changeCommand=self.set_threads,
-                    height=25,
-                    minValue=1,
-                    maxValue=40,
-                    enable=True,
-                    value=self.base.threads)
-            
-            with utils.Row(2, 2, (100,200), ("left","center"),
-                            [(1, "bottom", 20),(2,"bottom",15)], parent=self.batch_account_framelayout) as loggingRow:
-                self.account_ui_elements.append(loggingRow)
-                maya.text(label="Logging:    ", align="right")
-                with utils.Dropdown(self.set_logging) as log_settings:
-                    self._logging = log_settings
-                    self._logging.add_item("Debug")
-                    self._logging.add_item("Info")
-                    self._logging.add_item("Warning")
-                    self._logging.add_item("Error")
+            self.draw_threads_and_logging_rows(self.batch_account_framelayout, self.account_ui_elements)
 
         self.auth_status = "Authenticated"
         self.disable(True)
@@ -266,28 +224,7 @@ class ConfigUI(object):
             maya.menu(self._subscription_dropdown.menu, edit=True, enable=True)
             self.account_status = "Please select Subscription"
 
-        #TODO: Allow set to 0 to disable threads
-        with utils.Row(2, 2, (100,200), ("left","left"), parent=self.batch_account_framelayout) as threadsRow:
-            self.account_ui_elements.append(threadsRow)
-            maya.text(label="Threads:    ", align="right")
-            self._threads = maya.int_field(
-                changeCommand=self.set_threads,
-                height=25,
-                minValue=1,
-                maxValue=40,
-                enable=True,
-                value=self.base.threads)
-            
-        with utils.Row(2, 2, (100,200), ("left","center"),
-                        [(1, "bottom", 20),(2,"bottom",15)], parent=self.batch_account_framelayout) as loggingRow:
-            self.account_ui_elements.append(loggingRow)
-            maya.text(label="Logging:    ", align="right")
-            with utils.Dropdown(self.set_logging) as log_settings:
-                self._logging = log_settings
-                self._logging.add_item("Debug")
-                self._logging.add_item("Info")
-                self._logging.add_item("Warning")
-                self._logging.add_item("Error")
+        self.draw_threads_and_logging_rows(self.batch_account_framelayout, self.account_ui_elements)
         maya.form_layout(self.page, edit=True, enable=True)
         maya.refresh()
 
@@ -312,28 +249,7 @@ class ConfigUI(object):
             self._account_dropdown.add_item(account.name)
         self.account_status = "Account Configured"
 
-        #TODO: Allow set to 0 to disable threads
-        with utils.Row(2, 2, (100,200), ("left","left"), parent=self.batch_account_framelayout) as threadsRow:
-            self.account_ui_elements.append(threadsRow)
-            maya.text(label="Threads:    ", align="right")
-            self._threads = maya.int_field(
-                changeCommand=self.set_threads,
-                height=25,
-                minValue=1,
-                maxValue=40,
-                enable=True,
-                value=self.base.threads)
-            
-        with utils.Row(2, 2, (100,200), ("left","center"),
-                        [(1, "bottom", 20),(2,"bottom",15)], parent=self.batch_account_framelayout) as loggingRow:
-            self.account_ui_elements.append(loggingRow)
-            maya.text(label="Logging:    ", align="right")
-            with utils.Dropdown(self.set_logging) as log_settings:
-                self._logging = log_settings
-                self._logging.add_item("Debug")
-                self._logging.add_item("Info")
-                self._logging.add_item("Warning")
-                self._logging.add_item("Error")
+        self.draw_threads_and_logging_rows(self.batch_account_framelayout, self.account_ui_elements)
         maya.form_layout(self.page, edit=True, enable=True)
         maya.refresh()
 
@@ -358,27 +274,7 @@ class ConfigUI(object):
                     self._account_dropdown.add_item(account.name)
         self.account_status = "Please select Batch Account"
 
-        with utils.Row(2, 2, (100,200), ("left","left"), parent=self.batch_account_framelayout) as threadsRow:
-            self.account_ui_elements.append(threadsRow)
-            maya.text(label="Threads:    ", align="right")
-            self._threads = maya.int_field(
-                changeCommand=self.set_threads,
-                height=25,
-                minValue=1,
-                maxValue=40,
-                enable=True,
-                value=self.base.threads)
-
-        with utils.Row(2, 2, (100,200), ("left","center"),
-                        [(1, "bottom", 20),(2,"bottom",15)], parent=self.batch_account_framelayout) as loggingRow:
-            self.account_ui_elements.append(loggingRow)
-            maya.text(label="Logging:    ", align="right")
-            with utils.Dropdown(self.set_logging) as log_settings:
-                self._logging = log_settings
-                self._logging.add_item("Debug") 
-                self._logging.add_item("Info")
-                self._logging.add_item("Warning")
-                self._logging.add_item("Error")
+        self.draw_threads_and_logging_rows(self.batch_account_framelayout, self.account_ui_elements)
         self.disable(True)
         maya.refresh()
 
@@ -392,29 +288,7 @@ class ConfigUI(object):
             maya.text(label="Storage Account:", align="right")
             self.storage_account_field = maya.text_field(height=25, enable=True, editable=False, text=self.base.storage_account)
 
-        #TODO: Allow set to 0 to disable threads
-        with utils.Row(2, 2, (100,200), ("left","left"), parent=self.batch_account_framelayout) as threadsRow:
-            self.account_ui_elements.append(threadsRow)
-            maya.text(label="Threads:    ", align="right")
-            self._threads = maya.int_field(
-                changeCommand=self.set_threads,
-                height=25,
-                minValue=1,
-                maxValue=40,
-                enable=True,
-                value=self.base.threads)
-            
-        with utils.Row(2, 2, (100,200), ("left","center"),
-                        [(1, "bottom", 20),(2,"bottom",15)], parent=self.batch_account_framelayout) as loggingRow:
-            self.account_ui_elements.append(loggingRow)
-            maya.text(label="Logging:    ", align="right")
-            with utils.Dropdown(self.set_logging) as log_settings:
-                self._logging = log_settings
-                self._logging.add_item("Debug")
-                self._logging.add_item("Info")
-                self._logging.add_item("Warning")
-                self._logging.add_item("Error")
-
+        self.draw_threads_and_logging_rows(self.batch_account_framelayout, self.account_ui_elements)
         
         maya.form_layout(self.page, edit=True, enable=True)
         self.settings.init_after_account_selected()
@@ -455,6 +329,29 @@ class ConfigUI(object):
         self.selected_batchaccount = self.accounts_by_name[account_displayName]
         self.base.init_after_batch_account_selected(self.selected_batchaccount, self.base.subscription_id)
         self.init_after_batch_account_selected()
+
+    def draw_threads_and_logging_rows(self, parent, element_list):
+        with utils.Row(2, 2, (100,200), ("left","left"), parent=parent) as threadsRow:
+            element_list.append(threadsRow)
+            maya.text(label="Threads:    ", align="right")
+            self._threads = maya.int_field(
+                changeCommand=self.set_threads,
+                height=25,
+                minValue=1,
+                maxValue=40,
+                enable=True,
+                value=self.base.threads)
+            
+        with utils.Row(2, 2, (100,200), ("left","center"),
+                        [(1, "bottom", 20),(2,"bottom",15)], parent=parent) as loggingRow:
+            element_list.append(loggingRow)
+            maya.text(label="Logging:    ", align="right")
+            with utils.Dropdown(self.set_logging) as log_settings:
+                self._logging = log_settings
+                self._logging.add_item("Debug")
+                self._logging.add_item("Info")
+                self._logging.add_item("Warning")
+                self._logging.add_item("Error")
 
     @property
     def threads(self):

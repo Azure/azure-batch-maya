@@ -35,18 +35,15 @@ class EnvironmentUI(object):
         self.label = " Env  "
         self.ready = False
         self.page = maya.form_layout(enableBackground=True)
-        self.license_settings = {}
-        self.select_rendernode_type = PoolImageMode.MARKETPLACE_IMAGE.value
-        self.poolImageFilter = PoolImageFilter(PoolImageProvider())
-        self.containerImageUI = None
         self.licenses = licenses
-        self.image_arm_id = ""
-        self.node_sku_id = ""
-        self.container_registry_server = ""
-        self.container_registry_username = ""
-        self.container_registry_password = ""
-        self.container_image = ""
         self.batch_images = images
+        self.poolImageFilter = PoolImageFilter(PoolImageProvider())
+
+        self.image_config = None
+        self.license_settings = {}
+        self.node_sku_id = ""
+        self.containerImageUI = None
+        self.select_rendernode_type = PoolImageMode.MARKETPLACE_IMAGE.value
 
         with utils.ScrollLayout(
             v_scrollbar=3, h_scrollbar=0, height=520) as scroll:
@@ -75,20 +72,7 @@ class EnvironmentUI(object):
                             onCommand2=self.set_container_image_mode)
 
                     maya.parent()
-                    self.image_config = []
-                    with utils.FrameLayout(
-                        label="Marketplace Image Settings", collapsable=True,
-                        width=325, collapse=False, parent = self.rendernode_config) as framelayout:
-                        self.image_config.append(framelayout)
-                        with utils.ColumnLayout(
-                            2, col_width=((1,160),(2,160)), row_spacing=(1,5),
-                            row_offset=((1, "top", 15),(5, "bottom", 15)), parent=framelayout) as os_image_layout:
-                            self.image_config.append(os_image_layout)
-                            maya.text(label="Use Image: ", align='right', parent=os_image_layout)
-                            with utils.Dropdown(self.set_os_image, parent=os_image_layout) as image_settings:
-                                self._image = image_settings
-                                for image in self.batch_images:
-                                    self._image.add_item(image)
+                    self.set_marketplace_image_mode()
 
                 with utils.FrameLayout(
                     label="Application Licenses", collapsable=True,
@@ -322,7 +306,8 @@ class EnvironmentUI(object):
         Command for select_rendernode_type radio buttons.
         """
         self.select_rendernode_type = PoolImageMode.MARKETPLACE_IMAGE.value
-        maya.delete_ui(self.image_config)
+        if self.image_config != None:
+            maya.delete_ui(self.image_config)
         self.image_config = []
         with utils.FrameLayout(
             label="Marketplace Image Settings", collapsable=True,
