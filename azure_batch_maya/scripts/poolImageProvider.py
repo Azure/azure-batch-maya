@@ -27,6 +27,47 @@ MARKETPLACE_IMAGES = {
 }
 
 CONTAINER_IMAGES = {
+    'azurebatchrendering/centos_maya2017update5:latest':
+    {
+        'OS': 'CentOS 75',
+        'Maya': '2017-Update5',
+        'node_sku_id': 'batch.node.centos 7',
+        'ImageReference' : 
+        {
+            'publisher' : 'microsoft-azure-batch',
+            'offer' : 'centos-container',
+            'sku' : '7-5',
+            'version' : 'latest'
+        },
+    },
+    'azurebatchrendering/centos_maya2017update5_arnold2011:latest':
+    {
+        'OS': 'CentOS 75',
+        'Maya': '2017-Update5',
+        'Arnold': '2.0.1.1',
+        'node_sku_id': 'batch.node.centos 7',
+        'ImageReference' : 
+        {
+            'publisher' : 'microsoft-azure-batch',
+            'offer' : 'centos-container',
+            'sku' : '7-5',
+            'version' : 'latest'
+        },
+    },
+    'azurebatchrendering/centos_maya2017update5_vray36004:latest':
+    {
+        'OS': 'CentOS 75',
+        'Maya': '2017-Update5',
+        'VRay': '3.60.04',
+        'node_sku_id': 'batch.node.centos 7',
+        'ImageReference' : 
+        {
+            'publisher' : 'microsoft-azure-batch',
+            'offer' : 'centos-container',
+            'sku' : '7-5',
+            'version' : 'latest'
+        },
+    },
     'azurebatchrendering/centos_maya2018update3:latest':
     {
         'OS': 'CentOS 75',
@@ -108,7 +149,7 @@ CONTAINER_IMAGES = {
             'sku' : '7-5',
             'version' : 'latest'
         },
-    },
+    }
 }
 
 class PoolImageProvider(object):
