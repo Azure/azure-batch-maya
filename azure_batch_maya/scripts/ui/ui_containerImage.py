@@ -88,16 +88,19 @@ class ContainerImageUI(object):
         self.maya_dropdown.clear()
         for version in self.poolImageFilter.getMayaDisplayList(selected_os):
             self.maya_dropdown.add_item(version)
-        
+        self.selected_maya = self.maya_dropdown.value()
+            
         if self.renderer == "vray":
             self.vray_dropdown.clear()
             for version in self.poolImageFilter.getVrayDisplayList(selected_os):
                 self.vray_dropdown.add_item(version)
+            self.selected_vray = self.vray_dropdown.value()
 
         if self.renderer == "arnold":
             self.arnold_dropdown.clear()
             for version in self.poolImageFilter.getArnoldDisplayList(selected_os):
                 self.arnold_dropdown.add_item(version)
+            self.selected_arnold = self.arnold_dropdown.value()
         
     def maya_dropdown_set(self, selected_maya):
         self.selected_maya = selected_maya
@@ -106,11 +109,13 @@ class ContainerImageUI(object):
             self.vray_dropdown.clear()
             for version in self.poolImageFilter.getVrayDisplayList(self.selected_os, selected_maya):
                 self.vray_dropdown.add_item(version)
+            self.selected_vray = self.vray_dropdown.value()
 
         if self.renderer == "arnold":
             self.arnold_dropdown.clear()
             for version in self.poolImageFilter.getArnoldDisplayList(self.selected_os, selected_maya):
                 self.arnold_dropdown.add_item(version)
+            self.selected_arnold = self.arnold_dropdown.value()
 
     def vray_dropdown_set(self, selected_vray):
         self.selected_vray = selected_vray
