@@ -37,7 +37,9 @@ class ConfigUI(object):
 
         with utils.ScrollLayout(height=475, width = 375, parent = self.page) as scroll_layout:
             self.scroll_layout = scroll_layout
-            self.heading = maya.text(label="Loading plug-in...", align="center", font="boldLabelFont", wordWrap=True)
+            with utils.RowLayout(row_spacing=20, width = 375) as sublayout:
+                self.frames_layout = sublayout
+                self.heading = maya.text(label="Loading plug-in...", align="center", font="boldLabelFont", wordWrap=True)
            
         frame.add_tab(self)
         maya.form_layout(self.page, edit=True, enable=False)
@@ -49,11 +51,11 @@ class ConfigUI(object):
         box_label = "AzureActiveDirectory Authentication"
         aad_domain_hover_message = "Sign in to the Azure portal and hover over your account name on the upper right-hand side, your AAD Domain will be the bottom value shown, e.g. \"contoso.onmicrosoft.com\""
         
-        with utils.FrameLayout(label=box_label, collapsable=True, width=345, collapse=False, parent = self.scroll_layout) as aad_framelayout:
+        with utils.FrameLayout(label=box_label, collapsable=True, width=345, collapse=False, parent = self.frames_layout) as aad_framelayout:
             self.aad_framelayout = aad_framelayout
-        with utils.Row(1, 1, (300), ("left"), [(1, "top", 15)], parent=self.aad_framelayout):
+        with utils.Row(1, 1, (300), ("left"), [1, "top", 15], parent=self.aad_framelayout):
             self.auth_status_field = maya.text(label="", align="center")
-        with utils.Row(2, 2, (100,200), ("right","center"), [(1, "top", 15),(2,"top",15)], parent = self.aad_framelayout) as aad_environment_row:
+        with utils.Row(2, 2, (100,200), ("right","center"),parent = self.aad_framelayout) as aad_environment_row:
             self.aad_environment_row = aad_environment_row
             maya.text(label="Environment:   ", align="right", parent = self.aad_environment_row,
                 annotation=aad_domain_hover_message)
@@ -67,7 +69,7 @@ class ConfigUI(object):
                 else:
                     self.aad_environment_dropdown.select("AzureCloud")
 
-        with utils.Row(2, 2, (100,200), ("right","center"), [(1, "bottom", 20),(2,"bottom",15)], parent = self.aad_framelayout) as aad_tenant_row:
+        with utils.Row(2, 2, (100,200), ("right","center"), parent = self.aad_framelayout) as aad_tenant_row:
             self.aad_tenant_row = aad_tenant_row
             maya.text(label="AAD Domain:   ", align="right", parent = self.aad_tenant_row,
                 annotation=aad_domain_hover_message)
@@ -119,9 +121,9 @@ class ConfigUI(object):
         maya.delete_ui(self.auth_temp_ui_elements)
         self.subscription_ui_elements = []
         box_label = "Batch Account Settings"
-        with utils.FrameLayout(label=box_label, collapsable=True, width=345, collapse=False, parent = self.scroll_layout) as batch_account_framelayout:
+        with utils.FrameLayout(label=box_label, collapsable=True, width=345, collapse=False, parent = self.frames_layout) as batch_account_framelayout:
             self.batch_account_framelayout = batch_account_framelayout
-            with utils.Row(1, 1, (300), ("left"), [(1, "top", 15)], parent=self.batch_account_framelayout):
+            with utils.Row(1, 1, (300), ("left"), [1, "top", 15], parent=self.batch_account_framelayout):
                 self.account_status_field = maya.text(label="", align="center")
                 self.account_status = maya.text(label="", align="center")
 
@@ -147,7 +149,7 @@ class ConfigUI(object):
 
             #TODO test the case that autostorage is removed from a stored account in config
             self.account_ui_elements = []
-            with utils.Row(2, 2, (100, 200), ("left","left"),[(1, "bottom", 20),(2,"bottom",15)], parent=self.batch_account_framelayout) as storageAccountRow:
+            with utils.Row(2, 2, (100, 200), ("left","left"), parent=self.batch_account_framelayout) as storageAccountRow:
                 self.account_ui_elements.append(storageAccountRow)
                 maya.text(label="Storage Account:", align="left")
                 self.storage_account_field = maya.text_field(height=25, enable=True, editable=False, text=self.base.storage_account)
@@ -174,9 +176,9 @@ class ConfigUI(object):
         self.subscription_ui_elements = []
 
         box_label = "Batch Account Settings"
-        with utils.FrameLayout(label=box_label, collapsable=True, width=345, collapse=False, parent = self.scroll_layout) as batch_account_framelayout:
+        with utils.FrameLayout(label=box_label, collapsable=True, width=345, collapse=False, parent = self.frames_layout) as batch_account_framelayout:
             self.batch_account_framelayout = batch_account_framelayout
-            with utils.Row(1, 1, (300), ("left"), [(1, "top", 15)]):
+            with utils.Row(1, 1, (300), ("left"), [1, "top", 15]):
                 self.account_status_field = maya.text(label="", align="center")
                 self.account_status = "Please select Subscription"
             with utils.Row(2, 2, (100,200), ("left","left")) as subscriptionRow:
@@ -283,7 +285,7 @@ class ConfigUI(object):
             maya.delete_ui(self.account_ui_elements)
         self.account_ui_elements = []
         self.account_status = "Batch Account Configured"
-        with utils.Row(2, 2, (100, 200), ("left","left"),[(1, "bottom", 20),(2,"bottom",15)], parent=self.batch_account_framelayout) as storageAccountRow:
+        with utils.Row(2, 2, (100, 200), ("left","left"), parent=self.batch_account_framelayout) as storageAccountRow:
             self.account_ui_elements.append(storageAccountRow)
             maya.text(label="Storage Account:", align="right")
             self.storage_account_field = maya.text_field(height=25, enable=True, editable=False, text=self.base.storage_account)
@@ -331,27 +333,30 @@ class ConfigUI(object):
         self.init_after_batch_account_selected()
 
     def draw_threads_and_logging_rows(self, parent, element_list):
-        with utils.Row(2, 2, (100,200), ("left","left"), parent=parent) as threadsRow:
-            element_list.append(threadsRow)
-            maya.text(label="Threads:    ", align="right")
-            self._threads = maya.int_field(
-                changeCommand=self.set_threads,
-                height=25,
-                minValue=1,
-                maxValue=40,
-                enable=True,
-                value=self.base.threads)
+        box_label = "Plugin Settings"
+        with utils.FrameLayout(label=box_label, collapsable=True, width=345, collapse=True, parent = self.frames_layout) as plugin_settings_framelayout:
+            element_list.append(plugin_settings_framelayout)
+            with utils.Row(2, 2, (100,200), ("left","left"), parent=plugin_settings_framelayout) as threadsRow:
+                element_list.append(threadsRow)
+                maya.text(label="Threads:    ", align="right")
+                self._threads = maya.int_field(
+                    changeCommand=self.set_threads,
+                    annotation="The maximum number of parallel threads to use for uploading of assets",
+                    height=25,
+                    minValue=1,
+                    maxValue=40,
+                    enable=True,
+                    value=self.base.threads)
             
-        with utils.Row(2, 2, (100,200), ("left","center"),
-                        [(1, "bottom", 20),(2,"bottom",15)], parent=parent) as loggingRow:
-            element_list.append(loggingRow)
-            maya.text(label="Logging:    ", align="right")
-            with utils.Dropdown(self.set_logging) as log_settings:
-                self._logging = log_settings
-                self._logging.add_item("Debug")
-                self._logging.add_item("Info")
-                self._logging.add_item("Warning")
-                self._logging.add_item("Error")
+            with utils.Row(2, 2, (100,200), ("left","center"), parent=plugin_settings_framelayout) as loggingRow:
+                element_list.append(loggingRow)
+                maya.text(label="Logging:    ", align="right")
+                with utils.Dropdown(self.set_logging) as log_settings:
+                    self._logging = log_settings
+                    self._logging.add_item("Debug")
+                    self._logging.add_item("Info")
+                    self._logging.add_item("Warning")
+                    self._logging.add_item("Error")
 
     @property
     def threads(self):
