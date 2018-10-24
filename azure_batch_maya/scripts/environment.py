@@ -16,33 +16,16 @@ from azurebatchmayaapi import MayaCallbacks as callback
 import azurebatchutils as utils
 from ui_environment import EnvironmentUI
 from ui_environment import PoolImageMode
+from poolImageProvider import MARKETPLACE_IMAGES
 
 from collections import OrderedDict
 
-BATCH_POOL_IMAGES = {
-    'Windows 2016':
-        {
-            'node_sku_id': 'batch.node.windows amd64',
-            'publisher': 'batch',
-            'offer': 'rendering-windows2016',
-            'sku': 'rendering',
-            'version': '1.2.1'
-        },
-    'Centos 73':
-        {
-            'node_sku_id': 'batch.node.centos 7',
-            'publisher': 'batch',
-            'offer': 'rendering-centos73',
-            'sku': 'rendering',
-            'version': '1.1.2'
-        },
-}
 LICENSES = [
     {'label': 'Maya', 'id': 'maya', 'plugin': None },
     {'label': 'Arnold', 'id': 'arnold', 'plugin': 'mtoa' },
     {'label': 'V-Ray', 'id': 'vray', 'plugin': 'vrayformaya' }
 ]
-#
+
 
 class AzureBatchEnvironment(object):
     """Handler for rendering environment configuration functionality."""
@@ -65,7 +48,7 @@ class AzureBatchEnvironment(object):
         self.licenses = OrderedDict()
         self._get_plugin_licenses()
         self.skus = self._load_skus()
-        self.ui = EnvironmentUI(self, frame, BATCH_POOL_IMAGES.keys(), self.skus, self.licenses)
+        self.ui = EnvironmentUI(self, frame, MARKETPLACE_IMAGES.keys(), self.skus, self.licenses)
         self.refresh()
 
     def _load_skus(self):
@@ -163,11 +146,11 @@ class AzureBatchEnvironment(object):
 
     def get_batch_image(self):
         selected_image = self.ui.get_os_image()
-        return dict(BATCH_POOL_IMAGES[selected_image])
+        return dict(MARKETPLACE_IMAGES[selected_image])
 
     def get_custom_image_resource_id(self):
         selected_image = self.ui.get_os_image()
-        return dict(BATCH_POOL_IMAGES[selected_image])
+        return dict(MARKETPLACE_IMAGES[selected_image])
 
     def set_custom_image_resource_id(self, custom_image_resource_id):
         self._session.store_custom_image_resource_id(custom_image_resource_id)
@@ -176,7 +159,7 @@ class AzureBatchEnvironment(object):
         """Retrieve the image label from the data in a pool image
         reference object.
         """
-        pool_image = [k for k,v in BATCH_POOL_IMAGES.items() if v['offer'] == image_ref.offer]
+        pool_image = [k for k,v in MARKETPLACE_IMAGES.items() if v['offer'] == image_ref.offer]
         if pool_image:
             return pool_image[0]
         else:

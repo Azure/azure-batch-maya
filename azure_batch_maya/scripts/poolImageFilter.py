@@ -22,10 +22,10 @@ class PoolImageFilter(object):
     #TODO add support for "Any" in dropdown
     def __init__(self, poolImageProvider):
 
-        self.batchManagedImagesWithContainers = poolImageProvider.getBatchManagedImagesWithContainers()
+        self.containerImages = poolImageProvider.getContainerImages()
 
     def getSelectedImage(self, selectedOS, selectedMaya, selectedVRay = None, selectedArnold = None):
-        results = self.batchManagedImagesWithContainers
+        results = self.containerImages
 
         results = filterImagesByOS(results, selectedOS)
 
@@ -42,24 +42,24 @@ class PoolImageFilter(object):
 
     def getOSDisplayList(self):
 
-        results = set(i["OS"] for i in self.batchManagedImagesWithContainers.viewvalues())
+        results = set(i.get("OS") for i in self.containerImages.viewvalues())
 
         return results
 
     def getMayaDisplayList(self, selectedOS = None):
-        results = self.batchManagedImagesWithContainers
+        results = self.containerImages
 
         if selectedOS:
             results = filterImagesByOS(results, selectedOS)
 
-        resultset = set([i['Maya'] for i in results.viewvalues()])
-        resultset.discard('Unsupported')
+        resultset = set([i.get('Maya') for i in results.viewvalues()])
+        resultset.discard(None)
         return resultset
 
 
     def getVrayDisplayList(self, selectedOS = None, selectedMaya = None, selectedArnold = None):
 
-        results = self.batchManagedImagesWithContainers
+        results = self.containerImages
 
         if selectedOS:
             results = filterImagesByOS(results, selectedOS)
@@ -70,14 +70,14 @@ class PoolImageFilter(object):
         if selectedArnold:
             results = filterImagesByArnold(results, selectedArnold)
 
-        resultset = set([i["VRay"] for i in results.viewvalues()])
-        resultset.discard('Unsupported')
+        resultset = set([i.get("VRay") for i in results.viewvalues()])
+        resultset.discard(None)
         return resultset
 
 
     def getArnoldDisplayList(self, selectedOS = None, selectedMaya = None, selectedVRay = None):
 
-        results = self.batchManagedImagesWithContainers
+        results = self.containerImages
 
         if selectedOS:
             results = filterImagesByOS(results, selectedOS)
@@ -88,23 +88,23 @@ class PoolImageFilter(object):
         if selectedVRay:
             results = filterImagesByVRay(results, selectedVRay)
 
-        resultset = set([i["Arnold"] for i in results.viewvalues()])
-        resultset.discard('Unsupported')
+        resultset = set([i.get("Arnold") for i in results.viewvalues()])
+        resultset.discard(None)
         return resultset
 
 #private methods
 def filterImagesByOS(images, selection):
-    imagesFiltered = [i for i in images.viewitems() if i[1]["OS"] == selection]
+    imagesFiltered = [i for i in images.viewitems() if i[1].get("OS") == selection]
     return dict(imagesFiltered)
 
 def filterImagesByMaya(images, selection):
-    imagesFiltered = [i for i in images.viewitems() if i[1]["Maya"] == selection]
+    imagesFiltered = [i for i in images.viewitems() if i[1].get("Maya") == selection]
     return dict(imagesFiltered)
 
 def filterImagesByArnold(images, selection):
-    imagesFiltered = [i for i in images.viewitems() if i[1]["Arnold"] == selection]
+    imagesFiltered = [i for i in images.viewitems() if i[1].get("Arnold") == selection]
     return dict(imagesFiltered)
 
 def filterImagesByVRay(images, selection):
-    imagesFiltered = [i for i in images.viewitems() if i[1]["VRay"] == selection]
+    imagesFiltered = [i for i in images.viewitems() if i[1].get("VRay") == selection]
     return dict(imagesFiltered)

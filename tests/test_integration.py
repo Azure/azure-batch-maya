@@ -18,7 +18,7 @@ else:
     import mock
     from mock import MagicMock
 
-from environment import BATCH_POOL_IMAGES
+from poolImageProvider import MARKETPLACE_IMAGES
 import azurebatchutils as utils
 from azure.batch_extensions import _file_utils as fileutils
 
@@ -47,8 +47,8 @@ SCRIPT_DIR = os.path.abspath('azure_batch_maya/scripts/tools')
 os.environ['AZUREBATCH_MODULES'] = os.path.abspath('azure_batch_maya/modules')#os.path.join(os.path.split(scriptDir)[0], 'azure_batch_maya/Modules')
 
 def os_flavor(pool_image):
-    windows_offers = [value['offer'] for value in BATCH_POOL_IMAGES.values() if 'windows' in value['node_sku_id']]
-    linux_offers = [value['offer'] for value in BATCH_POOL_IMAGES.values() if value['offer'] not in windows_offers]
+    windows_offers = [value['offer'] for value in MARKETPLACE_IMAGES.values() if 'windows' in value['node_sku_id']]
+    linux_offers = [value['offer'] for value in MARKETPLACE_IMAGES.values() if value['offer'] not in windows_offers]
     if pool_image.offer in windows_offers:
         return 'Windows'
     elif pool_image.offer in linux_offers:

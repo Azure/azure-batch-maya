@@ -14,20 +14,17 @@ import sys
 from poolImageFilter import PoolImageFilter
 from poolImageProvider import PoolImageProvider
 
-BATCH_MANAGED_IMAGES_WITH_CONTAINERS_JSON = {
+CONTAINER_IMAGES = {
     'batchrendering/linux/maya2017:update5':
         {
             'OS': 'CentOS 73',
             'Maya': '2017-Update5',
-            'VRay': 'Unsupported',
-            'Arnold': 'Unsupported',
             'ImageReference' : 'CentOS73WithContainers'
         },
     'batchrendering/linux/mtoa-maya2017:2.0.1.1':
         {
             'OS': 'CentOS 73',
             'Maya': '2017-Update5',
-            'VRay': 'Unsupported',
             'Arnold': '2.0.1.1',
             'ImageReference' : 'CentOS73WithContainers'
         },
@@ -36,7 +33,6 @@ BATCH_MANAGED_IMAGES_WITH_CONTAINERS_JSON = {
             'OS': 'CentOS 73',
             'Maya': '2017-Update5',
             'VRay': '3.52.03',
-            'Arnold': 'Unsupported',
             'ImageReference' : 'CentOS73WithContainers'
         },
     'batchrendering/linux/vrayformaya-maya2017:35203':
@@ -44,7 +40,6 @@ BATCH_MANAGED_IMAGES_WITH_CONTAINERS_JSON = {
             'OS': 'CentOS 73',
             'Maya': '2017-Update5',
             'VRay': '3.52.03',
-            'Arnold': 'Unsupported',
             'ImageReference' : 'CentOS73WithContainers'
         },
     'dummyCombinedVrayArnold':
@@ -60,15 +55,12 @@ BATCH_MANAGED_IMAGES_WITH_CONTAINERS_JSON = {
         {
             'OS': 'CentOS 73',
             'Maya': '2018-Update1',
-            'VRay': 'Unsupported',
-            'Arnold': 'Unsupported',
             'ImageReference' : 'CentOS73WithContainers'
         },
    'dummy2018-2':
         {
             'OS': 'CentOS 73',
             'Maya': '2018-Update1',
-            'VRay': 'Unsupported',
             'Arnold': '2.0.1.1',
             'ImageReference' : 'CentOS73WithContainers'
         },
@@ -77,7 +69,6 @@ BATCH_MANAGED_IMAGES_WITH_CONTAINERS_JSON = {
             'OS': 'CentOS 73',
             'Maya': '2018-Update1',
             'VRay': '3.52.03',
-            'Arnold': 'Unsupported',
             'ImageReference' : 'CentOS73WithContainers'
         },
     'dummy2018-4':
@@ -85,7 +76,6 @@ BATCH_MANAGED_IMAGES_WITH_CONTAINERS_JSON = {
             'OS': 'CentOS 73',
             'Maya': '2018-Update1',
             'VRay': '3.52.03',
-            'Arnold': 'Unsupported',
             'ImageReference' : 'CentOS73WithContainers'
         },
       'dummy2018-5':
@@ -152,7 +142,7 @@ BATCH_MANAGED_IMAGES_WITH_CONTAINERS_JSON = {
 class TestPoolImages(unittest.TestCase):
 
     def setUp(self):
-        self.poolImages = PoolImageFilter(PoolImageProvider(BATCH_MANAGED_IMAGES_WITH_CONTAINERS_JSON))
+        self.poolImages = PoolImageFilter(PoolImageProvider(CONTAINER_IMAGES))
         return super(TestPoolImages, self).setUp()
 
 #getOSDisplayList
