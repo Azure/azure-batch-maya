@@ -132,7 +132,7 @@ class AzureBatchEnvironment(object):
     
     def get_image_reference(self):
         if self.get_image_type().value == PoolImageMode.MARKETPLACE_IMAGE.value:
-            image = self.get_batch_image()
+            image = self.get_marketplace_image()
             image.pop('node_sku_id')
             image_reference = models.ImageReference(**image)
             return image_reference
@@ -144,16 +144,9 @@ class AzureBatchEnvironment(object):
     def get_node_sku_id(self):
         return self.ui.get_node_sku_id()
 
-    def get_batch_image(self):
-        selected_image = self.ui.get_os_image()
+    def get_marketplace_image(self):
+        selected_image = self.ui.get_selected_marketplace_image()
         return dict(MARKETPLACE_IMAGES[selected_image])
-
-    def get_custom_image_resource_id(self):
-        selected_image = self.ui.get_os_image()
-        return dict(MARKETPLACE_IMAGES[selected_image])
-
-    def set_custom_image_resource_id(self, custom_image_resource_id):
-        self._session.store_custom_image_resource_id(custom_image_resource_id)
 
     def get_image_label(self, image_ref):
         """Retrieve the image label from the data in a pool image
@@ -201,13 +194,3 @@ class AzureBatchEnvironment(object):
     @vm_sku.setter
     def vm_sku(self, value):
        self._session.vm_sku = value
-
-    @property
-    def custom_image_resource_id(self):
-        return  self._session.custom_image_resource_id
-    @custom_image_resource_id.setter
-    def custom_image_resource_id(self, value):
-       self._session.custom_image_resource_id = value
-
-
-

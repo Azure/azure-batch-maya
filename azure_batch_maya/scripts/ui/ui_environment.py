@@ -175,11 +175,9 @@ class EnvironmentUI(object):
         """
         self.base.batch_image = image
 
-    def get_os_image(self):
+    def get_selected_marketplace_image(self):
         """Retrieve the currently selected image name."""
-        if self.select_rendernode_type == PoolImageMode.MARKETPLACE_IMAGE.value:
-            return self._image.value()
-        return self.get_custom_image_resource_id()
+        return self._image.value()
 
     def get_image_type(self):
         """Retrieve the currently selected image type."""
@@ -216,34 +214,18 @@ class EnvironmentUI(object):
             else:
                 self._node_sku_id_dropdown.select(node_sku_id)
 
-    def get_custom_image_arm_id(self):
-        return maya.text_field(self.image_arm_id_field, query=True, text=True)
-
     def set_node_sku_id(self, node_sku_id):
         self.base.set_node_sku_id(node_sku_id)
 
     def get_node_sku_id(self):
         if self.get_image_type().value == PoolImageMode.MARKETPLACE_IMAGE.value:
-            image = self.base.get_batch_image()
+            image = self.base.get_marketplace_image()
             return image.pop('node_sku_id')
         if self.get_image_type().value == PoolImageMode.CONTAINER_IMAGE.value:
             return self.batchManagedImageWithContainersUI.selected_image_node_sku_id()
         if not self._node_sku_id_dropdown:
             return self.base.node_sku_id
         return self._node_sku_id_dropdown.value()
-
-    def get_custom_image_resource_id(self):
-        value_in_text_field = maya.text_field(self.image_resource_id_field, query=True, text=True)
-        if value_in_text_field == None:
-            return self.custom_image_resource_id
-        return value_in_text_field
-
-    def select_custom_image_resource_id(self, custom_image_resource_id):
-        if custom_image_resource_id:
-             self.custom_image_resource_id = custom_image_resource_id
-
-    def set_custom_image_resource_id(self, custom_image_resource_id):
-        self.base.set_custom_image_resource_id(custom_image_resource_id)
 
     def get_task_container_image(self):
         if self.select_rendernode_type == PoolImageMode.CONTAINER_IMAGE.value:
@@ -356,7 +338,6 @@ class EnvironmentUI(object):
                     for image in self.batch_images:
                         self._image.add_item(image)
 
-
     def set_container_image_mode(self, *args):
         self.select_rendernode_type = PoolImageMode.CONTAINER_IMAGE.value
         maya.delete_ui(self.image_config)
@@ -364,88 +345,3 @@ class EnvironmentUI(object):
 
         current_renderer = str(utils.get_current_scene_renderer())
         self.batchManagedImageWithContainersUI = BatchManagedImageWithContainersUI(self.poolImageFilter, self.rendernode_config, self.image_config, current_renderer)
-
-    def set_custom_image(self, *args):
-        self.select_rendernode_type = PoolImageMode.CUSTOM_IMAGE.value
-        maya.delete_ui(self.image_config)
-        self.image_config = []
-        with utils.FrameLayout(
-                    label="Custom Image Settings", collapsable=True,
-                    width=325, collapse=False, parent = self.rendernode_config) as framelayout:
-            self.image_config.append(framelayout)
-          
-            with utils.Row(2, 2, (140, 180), ("right","center"),
-                            [(1, "top", 20),(2, "top", 15)],
-                            parent = self.image_config[0]) as image_resource_id_row:
-                self.image_config.append(image_resource_id_row)
-                
-                self.image_config.append(maya.text(label="Image Resource ID:   ", align="left",
-                    annotation="Image Resource ID is visible in the portal under Images -> Select Image -> Resource ID.",
-                    parent = self.image_config[0]))
-                self.image_resource_id_field = maya.text_field(height=25, enable=True,
-                    changeCommand=self.set_custom_image_resource_id,
-                    annotation="Image Resource ID is visible in the portal under Images -> Select Image -> Resource ID.",
-                    text = self.get_custom_image_resource_id(),
-                    parent = self.image_config[0])
-
-            with utils.Row(2, 2, (140, 180), ("right","center"),
-                               [(1, "bottom", 20),(2,"bottom",15)],
-                            parent = self.image_config[0]) as node_sku_id_row:
-                self.image_config.append(node_sku_id_row)
-                maya.text(label="Node Agent SKU ID:    ", align="left")
-                with utils.Dropdown(
-                    self.set_node_sku_id, 
-                    parent = node_sku_id_row) as node_sku_id_dropdown:
-
-                    self.image_config.append(node_sku_id_dropdown)
-                    self._node_sku_id_dropdown = node_sku_id_dropdown 
-                        
-                    for nodeagentsku in self.base.node_agent_skus():
-                        self._node_sku_id_dropdown.add_item(nodeagentsku)
-                    
-                    #check if we had to write the value to a temporary field because we read it during configure() before the dropdown was created
-                    if self.node_sku_id:
-                        self.select_node_sku_id(self.node_sku_id)
-
-    def set_custom_image_with_containers(self, *args):
-        self.select_rendernode_type = PoolImageMode.CUSTOM_IMAGE_WITH_CONTAINERS.value
-        maya.delete_ui(self.image_config)
-        self.image_config = []
-        with utils.FrameLayout(
-                    label="Custom Image with Container Settings", collapsable=True,
-                    width=325, collapse=False, parent = self.rendernode_config) as framelayout:
-            self.image_config.append(framelayout)
-            with utils.Row(2, 2, (140, 180), ("right","center"),
-                            [(1, "top", 20),(2, "top", 15)],
-                            parent = self.image_config[0]) as image_resource_id_row:
-                self.image_config.append(image_resource_id_row)
-                self.image_config.append(maya.text(label="Image Resource ID:   ", align="left", 
-                    annotation="Image Resource ID is visible in the portal under Images -> Select Image -> Resource ID.",
-                    parent = self.image_config[0]))
-                self.image_resource_id_field = maya.text_field(height=25, enable=True,
-                    changeCommand=self.set_custom_image_resource_id,
-                    annotation="Image Resource ID is visible in the portal under Images -> Select Image -> Resource ID.",
-                    parent = self.image_config[0])
-
-            with utils.Row(2, 2, (140, 180), ("right","center"),
-                               [(1, "bottom", 20),(2,"bottom",15)],
-                            parent = self.image_config[0]) as node_sku_id_row:
-                self.image_config.append(node_sku_id_row)
-                maya.text(label="Node Agent SKU ID:    ", align="left")
-                with utils.Dropdown(
-                    self.set_node_sku_id, 
-                    parent = node_sku_id_row) as node_sku_id_dropdown:
-
-                    self.image_config.append(node_sku_id_dropdown)
-                    self._node_sku_id_dropdown = node_sku_id_dropdown 
-                        
-                    for nodeagentsku in self.base.node_agent_skus():
-                        self._node_sku_id_dropdown.add_item(nodeagentsku)
-                    
-                    #check if we had to write the value to a temporary field because we read it during configure() before the dropdown was created
-                    if self.node_sku_id:
-                        self.select_node_sku_id(self.node_sku_id)
-
-            registryTable = containerRegistryTable(self.image_config[0])
-
-            imageTable = containerImageTable(self.image_config[0])
