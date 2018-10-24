@@ -222,6 +222,7 @@ class SubmissionUI(object):
         Command for select_pool_type radio buttons.
         """
         self.submit_enabled(True)
+        self.base.env_manager.ui.set_enabled(True)
         self.select_pool_type = self.NEW_POOL
         maya.delete_ui(self.pool_config)
         if self.container_image_text_row is not None:
@@ -285,6 +286,7 @@ class SubmissionUI(object):
         Command for select_pool_type radio buttons.
         """
         self.select_pool_type = self.AUTO_POOL
+        self.base.env_manager.ui.set_enabled(True)
         self.submit_enabled(True)
         maya.delete_ui(self.pool_config)
         if self.container_image_text_row is not None:
@@ -348,6 +350,8 @@ class SubmissionUI(object):
         Command for select_pool_type radio buttons.
         """
         self.submit_enabled(False)
+        self.base.env_manager.ui.set_enabled(False)
+
         self.select_pool_type = self.EXISTING_POOL
         maya.delete_ui(self.pool_config)
         if self.container_image_text_row is not None:
@@ -357,7 +361,6 @@ class SubmissionUI(object):
         if self.persistent_pool_dropdown_row is not None:
             maya.delete_ui(self.persistent_pool_dropdown_row)
         self.pool_config = []
-
         with utils.Row(1,1,100, parent=self.pool_settings) as reuse_pool_row:
             self.pool_config.append(reuse_pool_row)
             loading_message = maya.text(

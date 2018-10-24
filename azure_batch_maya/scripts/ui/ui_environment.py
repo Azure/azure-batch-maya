@@ -284,6 +284,11 @@ class EnvironmentUI(object):
         maya.form_layout(self.page, edit=True, enable=False)
         self.ready = False
 
+    def set_enabled(self, enabled):
+        """Sets the enabled state of the page.
+        """
+        maya.form_layout(self.page, edit=True, enable=enabled)
+
     def prepare(self):
         """Called when the tab is loaded (clicked into) for the first time.
         Once loaded, remains so for the rest of the plug-in session unless
