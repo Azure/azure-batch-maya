@@ -8,7 +8,7 @@ import azurebatchutils as utils
 from enum import Enum
 from azurebatchmayaapi import MayaAPI as maya
 
-class BatchManagedImageWithContainersUI(object):
+class ContainerImageUI(object):
 
     def __init__(self, poolImageFilter, parent, image_config, renderer):
 

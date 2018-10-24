@@ -15,9 +15,8 @@ import adal
 
 class PoolImageFilter(object):
 
-    #batchManagedImagesWithContainers should be a dict[string, dictWithFields<OS, Maya, VRay, Arnold, ImageReference>]
-    ##TODO batchManagedImagesWithContainers can be static initially, but should be dynamic by reading from Table Storage via a client with read-only access
-    
+    #containerImages should be a dict[string, dictWithFields<OS, Maya, VRay, Arnold, ImageReference>]
+    ##TODO containerImages can be static initially, but should be dynamic by reading from Table Storage via a client with read-only access
 
     #TODO add support for "Any" in dropdown
     def __init__(self, poolImageProvider):

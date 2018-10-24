@@ -9,7 +9,7 @@ import azurebatchutils as utils
 from enum import Enum
 from azurebatchmayaapi import MayaAPI as maya
 
-from ui_batchManagedImageWithContainers import BatchManagedImageWithContainersUI
+from ui_containerImage import ContainerImageUI
 from poolImageProvider import PoolImageProvider
 from poolImageFilter import PoolImageFilter
 
@@ -38,7 +38,7 @@ class EnvironmentUI(object):
         self.license_settings = {}
         self.select_rendernode_type = PoolImageMode.MARKETPLACE_IMAGE.value
         self.poolImageFilter = PoolImageFilter(PoolImageProvider())
-        self.batchManagedImageWithContainersUI = None
+        self.containerImageUI = None
         self.licenses = licenses
         self.image_arm_id = ""
         self.node_sku_id = ""
@@ -222,26 +222,26 @@ class EnvironmentUI(object):
             image = self.base.get_marketplace_image()
             return image.pop('node_sku_id')
         if self.get_image_type().value == PoolImageMode.CONTAINER_IMAGE.value:
-            return self.batchManagedImageWithContainersUI.selected_image_node_sku_id()
+            return self.containerImageUI.selected_image_node_sku_id()
         if not self._node_sku_id_dropdown:
             return self.base.node_sku_id
         return self._node_sku_id_dropdown.value()
 
     def get_task_container_image(self):
         if self.select_rendernode_type == PoolImageMode.CONTAINER_IMAGE.value:
-            selectedImageId, selectedImage = self.batchManagedImageWithContainersUI.fetch_selected_image()
+            selectedImageId, selectedImage = self.containerImageUI.fetch_selected_image()
             return selectedImageId
         return None
 
     def get_pool_container_images(self):
         if self.select_rendernode_type == PoolImageMode.CONTAINER_IMAGE.value:
-            selectedImageId, selectedImage = self.batchManagedImageWithContainersUI.fetch_selected_image()
+            selectedImageId, selectedImage = self.containerImageUI.fetch_selected_image()
             return [selectedImageId]
         return []
         
     def get_container_image_reference(self):
         if self.select_rendernode_type == PoolImageMode.CONTAINER_IMAGE.value:
-             return self.batchManagedImageWithContainersUI.selected_image_image_reference()
+             return self.containerImageUI.selected_image_image_reference()
         return None
 
     def get_env_vars(self):
@@ -344,4 +344,4 @@ class EnvironmentUI(object):
         self.image_config = []
 
         current_renderer = str(utils.get_current_scene_renderer())
-        self.batchManagedImageWithContainersUI = BatchManagedImageWithContainersUI(self.poolImageFilter, self.rendernode_config, self.image_config, current_renderer)
+        self.containerImageUI = ContainerImageUI(self.poolImageFilter, self.rendernode_config, self.image_config, current_renderer)

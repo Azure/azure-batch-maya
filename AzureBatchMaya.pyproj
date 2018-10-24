@@ -73,7 +73,7 @@
     <Compile Include="azure_batch_maya\scripts\ui\ui_assets.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="azure_batch_maya\scripts\ui\ui_batchManagedImageWithContainers.py">
+    <Compile Include="azure_batch_maya\scripts\ui\ui_containerImage.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="azure_batch_maya\scripts\ui\ui_config.py">
