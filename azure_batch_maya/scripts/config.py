@@ -286,15 +286,15 @@ class AzureBatchConfig(object):
 
         self.ui.init_post_config_file_read()
 
-        if(not self.mgmt_auth_token or not self.batch_auth_token):
+        if(not self.batch_auth_token or not self.mgmt_auth_token):
             self.ui.prompt_for_aad_tenant()
             if self.aad_tenant_name and self.aad_tenant_name != None and self.aad_tenant_name != 'None':
                 maya.text_field(self.ui._aad_tenant_field, edit=True, text=self.aad_tenant_name)
                 self.ui.aad_tenant_name_changed(self.aad_tenant_name)
                 maya.refresh()
         else:
-            if self.need_to_refresh_auth_tokens([self.mgmt_auth_token, self.batch_auth_token]):
-                refreshedTokens = self.refresh_auth_tokens(self.mgmt_auth_token, self.batch_auth_token)
+            if self.need_to_refresh_auth_tokens([self.batch_auth_token, self.mgmt_auth_token]):
+                refreshedTokens = self.refresh_auth_tokens(self.batch_auth_token, self.mgmt_auth_token)
                 if not refreshedTokens:
                     self.prompt_for_and_obtain_aad_tokens()
                     return
@@ -341,7 +341,7 @@ class AzureBatchConfig(object):
                 return True
         return False
 
-    def refresh_auth_tokens(self, mgmt_token, batch_token):
+    def refresh_auth_tokens(self, batch_token, mgmt_token):
 
         context = adal.AuthenticationContext(self.aad_environment_provider.getAadAuthorityHostUrl(self.aad_environment_id) + '/' + self.aad_tenant_name, api_version=None)
 
