@@ -167,7 +167,7 @@ def need_to_refresh_auth_tokens(auth_token_list):
             return True
     return False
 
-def refresh_auth_tokens(mgmt_token, batch_token, environment_provider, aad_environment_id):
+def refresh_auth_tokens(batch_token, mgmt_token, environment_provider, aad_environment_id):
 
     context = adal.AuthenticationContext(environment_provider.getAadAuthorityHostUrl(aad_environment_id) + '/' + aadTenant, api_version=None)
 
@@ -194,8 +194,8 @@ def call(command, *args, **kwargs):
         return ensure_iter_called(result)
     except (BatchErrorException) as exp: #cloudError is type thrown by storageMgmtClient listKeys, clouderror.status_code will be 401
         if exp.response.status_code in [401]:
-            mgmt_auth_token, batch_auth_token = refresh_auth_tokens(mgmt_auth_token, batch_auth_token)
-            update_batch_and_storage_client_creds(batch_auth_token, mgmt_auth_token)
+            mgmt_auth_token, batch_auth_token = refresh_auth_tokens(batch_auth_token, mgmt_auth_token, environment_provider, aad_environment_id)
+            update_batch_and_storage_client_creds(batch_auth_token, mgmt_auth_token, environment_provider, aad_environment_id)
 
             result = command(*args, **kwargs)
             try:
@@ -228,10 +228,14 @@ def ensure_iter_called(result):
             pass
     return result
 
-def update_batch_and_storage_client_creds(batch_auth_token, mgmt_auth_token):
+def update_batch_and_storage_client_creds(batch_auth_token, mgmt_auth_token, environment_provider, aad_environment_id):
     global batch_client
-    batchCredentials = AADTokenCredentials(batch_auth_token)
-    mgmtCredentials = AADTokenCredentials(mgmt_auth_token)
+    batchCredentials = AADTokenCredentials(batch_auth_token,
+        cloud_environment= environment_provider.getEnvironmentForId(aad_environment_id),
+        tenant=aadTenant)
+    mgmtCredentials = AADTokenCredentials(mgmt_auth_token,
+        cloud_environment= environment_provider.getEnvironmentForId(aad_environment_id),
+        tenant=aadTenant)
 
     batch_client._client._mgmt_credentials = mgmtCredentials
     batch_client._client.creds = batchCredentials
