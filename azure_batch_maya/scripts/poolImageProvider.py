@@ -7,6 +7,8 @@ import json
 import sys
 import traceback
 
+from collections import OrderedDict
+
 MARKETPLACE_IMAGES = {
     'Windows 2016':
     {
@@ -54,10 +56,93 @@ CONTAINER_IMAGES = {
             'version' : 'latest'
         },
     },
+    'azurebatchrendering/centos_maya2017update5_arnold3101:latest':
+    {
+        'OS': 'CentOS 75',
+        'Maya': '2017-Update5',
+        'Arnold': '3.1.0.1',
+        'node_sku_id': 'batch.node.centos 7',
+        'ImageReference' : 
+        {
+            'publisher' : 'microsoft-azure-batch',
+            'offer' : 'centos-container',
+            'sku' : '7-5',
+            'version' : 'latest'
+        },
+    },
     'azurebatchrendering/centos_maya2017update5_vray36004:latest':
     {
         'OS': 'CentOS 75',
         'Maya': '2017-Update5',
+        'VRay': '3.60.04',
+        'node_sku_id': 'batch.node.centos 7',
+        'ImageReference' : 
+        {
+            'publisher' : 'microsoft-azure-batch',
+            'offer' : 'centos-container',
+            'sku' : '7-5',
+            'version' : 'latest'
+        },
+    },
+    'azurebatchrendering/centos_maya2018update2:latest':
+    {
+        'OS': 'CentOS 75',
+        'Maya': '2018-Update2',
+        'node_sku_id': 'batch.node.centos 7',
+        'ImageReference' : 
+        {
+            'publisher' : 'microsoft-azure-batch',
+            'offer' : 'centos-container',
+            'sku' : '7-5',
+            'version' : 'latest'
+        },
+    },
+    'azurebatchrendering/centos_maya2018update2_arnold2023:latest':
+    {
+        'OS': 'CentOS 75',
+        'Maya': '2018-Update2',
+        'Arnold': '2.0.2.3',
+        'node_sku_id': 'batch.node.centos 7',
+        'ImageReference' : 
+        {
+            'publisher' : 'microsoft-azure-batch',
+            'offer' : 'centos-container',
+            'sku' : '7-5',
+            'version' : 'latest'
+        },
+    },
+    'azurebatchrendering/centos_maya2018update2_arnold2103:latest':
+    {
+        'OS': 'CentOS 75',
+        'Maya': '2018-Update2',
+        'Arnold': '2.1.0.3',
+        'node_sku_id': 'batch.node.centos 7',
+        'ImageReference' : 
+        {
+            'publisher' : 'microsoft-azure-batch',
+            'offer' : 'centos-container',
+            'sku' : '7-5',
+            'version' : 'latest'
+        },
+    },
+    'azurebatchrendering/centos_maya2018update2_arnold3101:latest':
+    {
+        'OS': 'CentOS 75',
+        'Maya': '2018-Update2',
+        'Arnold': '3.1.0.1',
+        'node_sku_id': 'batch.node.centos 7',
+        'ImageReference' : 
+        {
+            'publisher' : 'microsoft-azure-batch',
+            'offer' : 'centos-container',
+            'sku' : '7-5',
+            'version' : 'latest'
+        },
+    },
+    'azurebatchrendering/centos_maya2018update2_vray36004:latest':
+    {
+        'OS': 'CentOS 75',
+        'Maya': '2018-Update2',
         'VRay': '3.60.04',
         'node_sku_id': 'batch.node.centos 7',
         'ImageReference' : 
@@ -81,11 +166,39 @@ CONTAINER_IMAGES = {
             'version' : 'latest'
         },
     },
+    'azurebatchrendering/centos_maya2018update3_arnold2023:latest':
+    {
+        'OS': 'CentOS 75',
+        'Maya': '2018-Update3',
+        'Arnold': '2.0.2.3',
+        'node_sku_id': 'batch.node.centos 7',
+        'ImageReference' : 
+        {
+            'publisher' : 'microsoft-azure-batch',
+            'offer' : 'centos-container',
+            'sku' : '7-5',
+            'version' : 'latest'
+        },
+    },
     'azurebatchrendering/centos_maya2018update3_arnold2103:latest':
     {
         'OS': 'CentOS 75',
         'Maya': '2018-Update3',
         'Arnold': '2.1.0.3',
+        'node_sku_id': 'batch.node.centos 7',
+        'ImageReference' : 
+        {
+            'publisher' : 'microsoft-azure-batch',
+            'offer' : 'centos-container',
+            'sku' : '7-5',
+            'version' : 'latest'
+        },
+    },
+    'azurebatchrendering/centos_maya2018update3_arnold3101:latest':
+    {
+        'OS': 'CentOS 75',
+        'Maya': '2018-Update3',
+        'Arnold': '3.1.0.1',
         'node_sku_id': 'batch.node.centos 7',
         'ImageReference' : 
         {
@@ -122,6 +235,34 @@ CONTAINER_IMAGES = {
             'version' : 'latest'
         },
     },
+    'azurebatchrendering/centos_maya2018update4_arnold2023:latest':
+    {
+        'OS': 'CentOS 75',
+        'Maya': '2018-Update4',
+        'Arnold': '2.0.2.3',
+        'node_sku_id': 'batch.node.centos 7',
+        'ImageReference' : 
+        {
+            'publisher' : 'microsoft-azure-batch',
+            'offer' : 'centos-container',
+            'sku' : '7-5',
+            'version' : 'latest'
+        },
+    },
+    'azurebatchrendering/centos_maya2018update4_arnold2103:latest':
+    {
+        'OS': 'CentOS 75',
+        'Maya': '2018-Update4',
+        'Arnold': '2.1.0.3',
+        'node_sku_id': 'batch.node.centos 7',
+        'ImageReference' : 
+        {
+            'publisher' : 'microsoft-azure-batch',
+            'offer' : 'centos-container',
+            'sku' : '7-5',
+            'version' : 'latest'
+        },
+    },
     'azurebatchrendering/centos_maya2018update4_arnold3101:latest':
     {
         'OS': 'CentOS 75',
@@ -149,7 +290,7 @@ CONTAINER_IMAGES = {
             'sku' : '7-5',
             'version' : 'latest'
         },
-    }
+    },
 }
 
 class PoolImageProvider(object):
@@ -159,4 +300,4 @@ class PoolImageProvider(object):
         self.container_images = container_images
 
     def getContainerImages(self):
-        return self.container_images
+        return OrderedDict(sorted(self.container_images.items(), key=lambda t: t[0]))
