@@ -34,6 +34,7 @@ class ConfigUI(object):
         self.auth_temp_ui_elements = []
         self.batch_account_framelayout = None
         self.aad_environment_dropdown = None
+        self.plugin_settings_framelayout = None
 
         with utils.ScrollLayout(height=475, width = 375, parent = self.page) as scroll_layout:
             self.scroll_layout = scroll_layout
@@ -154,7 +155,7 @@ class ConfigUI(object):
                 maya.text(label="Storage Account:", align="left")
                 self.storage_account_field = maya.text_field(height=25, enable=True, editable=False, text=self.base.storage_account)
 
-            self.draw_threads_and_logging_rows(self.batch_account_framelayout, self.account_ui_elements)
+            self.draw_threads_and_logging_rows(self.frames_layout, self.account_ui_elements)
 
         self.account_status = "Batch Account Configured"
         self.auth_status = "Authenticated"
@@ -194,7 +195,7 @@ class ConfigUI(object):
                     for sub in subscriptions:
                         self._subscription_dropdown.add_item(sub.display_name)
 
-            self.draw_threads_and_logging_rows(self.batch_account_framelayout, self.account_ui_elements)
+            self.draw_threads_and_logging_rows(self.frames_layout, self.account_ui_elements)
 
         self.auth_status = "Authenticated"
         self.disable(True)
@@ -226,7 +227,7 @@ class ConfigUI(object):
             maya.menu(self._subscription_dropdown.menu, edit=True, enable=True)
             self.account_status = "Please select Subscription"
 
-        self.draw_threads_and_logging_rows(self.batch_account_framelayout, self.account_ui_elements)
+        self.draw_threads_and_logging_rows(self.frames_layout, self.account_ui_elements)
         maya.form_layout(self.page, edit=True, enable=True)
         maya.refresh()
 
@@ -251,7 +252,7 @@ class ConfigUI(object):
             self._account_dropdown.add_item(account.name)
         self.account_status = "Account Configured"
 
-        self.draw_threads_and_logging_rows(self.batch_account_framelayout, self.account_ui_elements)
+        self.draw_threads_and_logging_rows(self.frames_layout, self.account_ui_elements)
         maya.form_layout(self.page, edit=True, enable=True)
         maya.refresh()
 
@@ -276,7 +277,7 @@ class ConfigUI(object):
                     self._account_dropdown.add_item(account.name)
         self.account_status = "Please select Batch Account"
 
-        self.draw_threads_and_logging_rows(self.batch_account_framelayout, self.account_ui_elements)
+        self.draw_threads_and_logging_rows(self.frames_layout, self.account_ui_elements)
         self.disable(True)
         maya.refresh()
 
@@ -290,7 +291,7 @@ class ConfigUI(object):
             maya.text(label="Storage Account:", align="right")
             self.storage_account_field = maya.text_field(height=25, enable=True, editable=False, text=self.base.storage_account)
 
-        self.draw_threads_and_logging_rows(self.batch_account_framelayout, self.account_ui_elements)
+        self.draw_threads_and_logging_rows(self.frames_layout, self.account_ui_elements)
         
         maya.form_layout(self.page, edit=True, enable=True)
         self.settings.init_after_account_selected()
@@ -334,7 +335,10 @@ class ConfigUI(object):
 
     def draw_threads_and_logging_rows(self, parent, element_list):
         box_label = "Plugin Settings"
-        with utils.FrameLayout(label=box_label, collapsable=True, width=345, collapse=True, parent = self.frames_layout) as plugin_settings_framelayout:
+        if self.plugin_settings_framelayout is not None:
+            maya.delete_ui(self.plugin_settings_framelayout)
+        with utils.FrameLayout(label=box_label, collapsable=True, width=345, collapse=True, parent = parent) as plugin_settings_framelayout:
+            self.plugin_settings_framelayout = plugin_settings_framelayout
             element_list.append(plugin_settings_framelayout)
             with utils.Row(2, 2, (100,200), ("left","left"), parent=plugin_settings_framelayout) as threadsRow:
                 element_list.append(threadsRow)
