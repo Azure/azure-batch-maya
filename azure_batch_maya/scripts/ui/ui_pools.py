@@ -254,7 +254,6 @@ class AzureBatchPoolInfo(object):
         self._state = self.display_info("State:   ")
         self._image = self.display_info("Image:   ")
         self._allocation = self.display_info("Allocation State:   ")
-        self._allocation = self.display_info("Allocation State:   ")
         self._licenses = self.display_info("Licenses:   ")
         self._vm_sku = self.display_info("VM type:   ")
         
