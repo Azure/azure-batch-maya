@@ -3,7 +3,7 @@
 ## Job configuration
 
 The `Submit` tab of the plug-in is where you will configure the basic parameters for the job.
-The plug-in will detect which rendering engine you're currently using and display the applicabale settings.
+The plug-in will detect which rendering engine you're currently using and display the applicable settings.
 The plug-in will also warn you if your selected render engine is not supported.
 
 If you load a new scene while the plug-in is open, click the `Refresh` button to make sure the settings are updated.
@@ -20,6 +20,8 @@ You have the option to determine which VM pool the render will run on. You can p
 When creating a new pool, you can choose to make an `auto pool`, which will run exclusively for this job, and will automatically shut down
 on completion of the render. Alternatively you can create a new persistent pool, that will remain available after the render has completed and can
 be used for any number of jobs. For more information on managing persistent pools see [managing pools](#managing-pools).
+If reusing an existing pool, only pools which have application licenses required by the current scene will be displayed for selection. If reusing a pool
+with multiple container images available, a dropdown is presented which allows selection of the container image to use for the job.
 
 ![](./images/submit.png)
 
@@ -55,11 +57,13 @@ If there are referenced files that you wish to exclude from uploading, simply un
 
 ## Environment configuration
 
-The `Env` tab will allow you to configure the VMs to be deployed when you create a pool. You can select the image to be run (Windows or CentOS) and the VM type. You can see a list
+The `Env` tab will allow you to configure the VMs to be deployed when you create a pool. You can select the VM type and either the marketplace image (Windows / CentOS) or the 
+container image to be run (currently CentOS only). The container image options displayed will change depending on which renderer is active for the current scene. 
+If you change scenes with the plugin window open, you will need to click 'Refresh' to trigger this list to update. You can see a list
 of VM types and their descriptions in [this article](https://azure.microsoft.com/pricing/details/virtual-machines/series/).
 You can also select whether you wish to have the pool licensed for Maya, VRay Arnold. Maya licensing will be enabled by default, whereas VRay or Arnold licensing will be enabled if either
 is detected as the active render engine (you may need to click `Refresh` to get the latest scene settings).
-If you wish to render using your own license server, you can deselet the license options and configure your license end point be adding the applicable environment variables in the table.
+If you wish to render using your own license server, you can deselet the license options and configure your license end point by adding the applicable environment variables in the table.
 Note that you will be billed for the licensing of applications for the entire up-time of VMs running in the pool, regardless of whether they are being used for rendering.
 
 ![](./images/environment.png)

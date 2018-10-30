@@ -1,13 +1,11 @@
 # Azure Batch for Maya
 
-This project demonstrates cloud rendering using the Azure Batch service with integrated licensing for Maya, VRay and Arnold.
+This project demonstrates cloud rendering using the Azure Batch service with integrated licensing for Maya, VRay and Arnold. It is supported for Windows and Mac.
 
-Please note that the Azure Batch licensing service for Maya is currently in preview.
-For more information and to register your interest, please see [rendering.azure.com](rendering.azure.com).
+For more information, please see [rendering.azure.com](https://rendering.azure.com).
 
-In order to run this sample, you will need to [create an Azure Batch account](https://docs.microsoft.com/azure/batch/batch-account-create-portal).
-You will also need a storage account. You will have the option to create a storage account as part of the Batch account setup for use as `Auto Storage`.
-You can use this, or you can [set up a storage account independently](https://docs.microsoft.com/azure/storage/storage-create-storage-account).
+In order to run this plugin, you will need to [create an Azure Batch account](https://docs.microsoft.com/azure/batch/batch-account-create-portal).
+You will also need an `Auto Storage` account configured, which you will have the option to create as part of the Batch account setup.
 
 
 ## Loading the plug-in in Maya and installing dependencies
@@ -27,7 +25,9 @@ The first time the plug-in is loaded, you will be prompted to agree to some term
 The downloading and installing of the Python dependencies may take a few minutes, after which you will need to close and reopen Maya to
 ensure the updated dependencies are loaded correctly.
 
-Any errors in the dependency install will be logged to the file "AzureBatchInstall.log" in the "azure-batch-libs" folder, which is created for holding dependencies. In windows this is located at: Users\<username>\Documents\maya\<version>\scripts\azure-batch-libs
+Any errors in the dependency install will be logged to the file "AzureBatchInstall.log" in the "azure-batch-libs" folder, which is created for holding dependencies. 
+On Windows this is located at: Users\<username>\Documents\maya\<version>\scripts\azure-batch-libs
+On Mac this is located at: /Users/<username>/Library/Preferences/Autodesk/maya/<version>/scripts/azure-batch-libs
 
 
 ![](./docs/images/install_dependencies.png)
@@ -35,19 +35,19 @@ Any errors in the dependency install will be logged to the file "AzureBatchInsta
 
 ## Authentication
 
-Before using the plug-in, it will need to be authenticated using your Azure Batch and Azure Storage account keys.
-In order to retrieve this information:
+Before using the plug-in, it will need to be authenticated using your Azure Active Directory (AAD) credentials.
+In order to retrieve your AAD tenant:
 
-1. Open the Azure management portal (portal.azure.com).
-2. Select Azure Batch Accounts in the left-hand menu. This can be found under `More Services` in the `Compute` category.
-3. Select your account in the list. Copy and paste the account URL into `Service` field of the plug-in UI. Paste the account name into the `Batch Account` field.
-4. In the portal, select `Keys` on the left-hand menu. Copy and paste one of the access keys into the `Batch Key` field in the plug-in.
-5. Return to the management portal home, and select Storage Accounts from the left-hand menu. This can be found under `More Services` in the `Storage` category.
-6. Select your account from the list. Copy and paste the account name into the `Storage Account` field.
-7. In the portal, select `Access Keys` on the left-hand menu. Copy and paste one of the access keys into the `Storage Key` field.
-8. Click `Authenticate`.
+1. Open the Azure management portal (for public cloud this is [portal.azure.com](https://portal.azure.com) ).
+2. Hover over your account name on the upper right-hand side, your AAD Domain will be the bottom value shown, e.g. `contoso.onmicrosoft.com`
+3. Open the plugin, select Cloud Environment using the dropdown and copy your AAD domain into the appropriate field
+4. Follow the instructions to sign-in by entering the device code provided at [aka.ms/devicelogin](https://aka.ms/devicelogin)
 
 ![](./docs/images/authentication.png)
+
+5. Select a Subscription and Batch Account from the dropdown menus in order to complete Batch Account configuration
+
+![](./docs/images/accountConfiguration.png)
 
 ## Using the Azure Batch plug-in
 
@@ -69,8 +69,9 @@ To uninstall the plug-in:
 5. Confirm the removal of the shelf 
 6. Confirm to remove the dependencies if you wish a clean uninstall
 
-To remove config which is retained for a reinstall, delete the config file "azure_batch.ini". For Windows this is located in:
-Users\<username>\Documents\maya\2017\prefs\AzureBatchData
+To remove config which is retained for a reinstall, delete the config file "azure_batch.ini". 
+On Windows this is located in: Users\<username>\Documents\maya\2017\prefs\AzureBatchData
+On Mac this is located at: /Users/<username>/Library/Preferences/Autodesk/maya/<version>/prefs/AzureBatchData
 
 ##  Upgrading or reinstalling
 
