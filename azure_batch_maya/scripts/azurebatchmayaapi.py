@@ -360,6 +360,7 @@ class MayaAPI(object):
 
     @staticmethod
     def table(*args, **kwargs):
+        #note in order to have a horizontal scroll bar displayable on resize, the table must contain at least 2 columns
         try:
             return cmds.scriptTable(*args, **kwargs)
         except Exception as exp:
