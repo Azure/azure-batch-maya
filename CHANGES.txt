@@ -1,3 +1,10 @@
+2018.10.24 v0.23.0
+------------------
+- Change authentication mode to AAD, including support for private cloud
+- Support for Batch Container Images + initial set of images for Maya2017 and 2018
+- Updated VM SKU list to match what is available for Maya in BatchExplorer
+- Arnold supports "additionalFlags" field which allows custom Maya / Arnold parameters to be passed along to rendering nodes
+
 2018.09.24 v0.22.0
 ------------------
 - Revert template change which broke thumbnailing of outputs in arnold maya 2018 jobs
