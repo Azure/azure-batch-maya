@@ -53,13 +53,13 @@ class EnvironmentUI(object):
                     label="Render Node Configuration", collapsable=True, width=325, collapse=False) as rendernode_config:
                     self.rendernode_config = rendernode_config
                     with utils.ColumnLayout(
-                        2, col_width=((1,80),(2,160)), row_spacing=(1,5),
-                        row_offset=((1, "top", 15),(5, "bottom", 15))):
-                        maya.text(label="Use VM SKU: ", align='left')
-                        with utils.Dropdown(self.set_sku) as sku_settings:
-                            self._sku = sku_settings
-                            for sku in skus:
-                                self._sku.add_item(sku)
+                        2, col_width=((1,100),(2,200)), row_spacing=(1,5),
+                        row_offset=((1, "top", 15),(2, "bottom", 20))):
+                            maya.text(label="Use VM SKU: ", align='right')
+                            with utils.Dropdown(self.set_sku) as sku_settings:
+                                self._sku = sku_settings
+                                for sku in skus:
+                                    self._sku.add_item(sku)
 
                     with utils.Row(1,1,325):
                         maya.radio_group(
@@ -79,8 +79,8 @@ class EnvironmentUI(object):
                     width=325, collapse=True):
 
                    with utils.ColumnLayout(
-                        2, col_width=((1,160),(2,160)), row_spacing=(1,5),
-                        row_offset=((1, "top", 15),(5, "bottom", 15))):
+                        2, col_width=((1,100),(2,200)), row_spacing=(1,5),
+                        row_offset=((1, "top", 15))):
 
                         maya.text(label="Use licenses:   ", align='right')
                         for label, checked in licenses.items():
@@ -93,13 +93,13 @@ class EnvironmentUI(object):
                     width=325, collapse=True):
                     
                     with utils.Row(1,1,325):
-                        self.env_vars = maya.table(height=120,
-                            rows=0, columns=2, columnWidth=[(1,155), (2,155)],
+                        self.env_vars = maya.table(height=95,
+                            rows=0, columns=2, columnWidth=[(1,190), (2,190)],
                             label=[(1,"Setting"), (2,"Value")], rowHeight=15,
                             editable=False, selectionBehavior=1,
                             getCellCmd=self.populate_row)
 
-                    with utils.ColumnLayout(2, col_width=((1,160),(2,160))):
+                    with utils.ColumnLayout(2, col_width=((1,200),(2,200))):
                         self.custom_env_var = maya.text_field(
                             placeholderText='Env Variable' )
                         self.custom_env_val = maya.text_field(

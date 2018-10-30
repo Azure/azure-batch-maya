@@ -28,7 +28,7 @@ class ContainerImageUI(object):
             image_config.append(framelayout)
 
             with utils.ColumnLayout(
-                2, col_width=((1,80),(2,160)), row_spacing=(1,5),
+                2, col_width=((1,100),(2,200)), row_spacing=(1,5),
                 row_offset=((1, "top", 15),(5, "bottom", 15)), parent=framelayout) as imageLayout:  
 
                 image_config.append(imageLayout)
