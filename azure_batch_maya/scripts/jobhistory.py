@@ -38,7 +38,7 @@ class AzureBatchJobHistory(object):
         self._tab_index = index
         self.batch = None
         self.index = 0
-        self.jobs_per_page = 5
+        self.jobs_per_page = 10
         self.count = 0
         self.min = True
         self.max = False
