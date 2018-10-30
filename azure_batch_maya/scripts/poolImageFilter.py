@@ -40,10 +40,10 @@ class PoolImageFilter(object):
         return imageName, image
 
     def getOSDisplayList(self):
-
         results = set(i.get("OS") for i in self.containerImages.viewvalues())
 
-        return results
+        results.discard(None)
+        return sorted(results)
 
     def getMayaDisplayList(self, selectedOS = None):
         results = self.containerImages
@@ -51,9 +51,10 @@ class PoolImageFilter(object):
         if selectedOS:
             results = filterImagesByOS(results, selectedOS)
 
-        resultset = set([i.get('Maya') for i in results.viewvalues()])
-        resultset.discard(None)
-        return resultset
+        results = set([i.get('Maya') for i in results.viewvalues()])
+
+        results.discard(None)
+        return sorted(results)
 
 
     def getVrayDisplayList(self, selectedOS = None, selectedMaya = None, selectedArnold = None):
@@ -69,9 +70,10 @@ class PoolImageFilter(object):
         if selectedArnold:
             results = filterImagesByArnold(results, selectedArnold)
 
-        resultset = set([i.get("VRay") for i in results.viewvalues()])
-        resultset.discard(None)
-        return resultset
+        results = set([i.get("VRay") for i in results.viewvalues()])
+
+        results.discard(None)
+        return sorted(results)
 
 
     def getArnoldDisplayList(self, selectedOS = None, selectedMaya = None, selectedVRay = None):
@@ -87,9 +89,11 @@ class PoolImageFilter(object):
         if selectedVRay:
             results = filterImagesByVRay(results, selectedVRay)
 
-        resultset = set([i.get("Arnold") for i in results.viewvalues()])
-        resultset.discard(None)
-        return resultset
+        results = set([i.get("Arnold") for i in results.viewvalues()])
+
+        results.discard(None)
+        return sorted(results)
+
 
 #private methods
 def filterImagesByOS(images, selection):
