@@ -252,11 +252,11 @@ class AzureBatchPoolInfo(object):
         self._low_pri_size = self.display_info("Low Priority VMs:   ")
         self._created = self.display_info("Created:   ")
         self._state = self.display_info("State:   ")
-        self._image = self.display_info("Image:   ")
         self._allocation = self.display_info("Allocation State:   ")
         self._licenses = self.display_info("Licenses:   ")
         self._vm_sku = self.display_info("VM type:   ")
-        
+        self._image = self.display_info("Image:   ")
+
         self._container_images = None
         self._container_images_table = self.display_table("Container Images:   ", lambda row, column: self.container_image_to_add)
         maya.table(self._container_images_table, edit=True, visible=False)
