@@ -60,7 +60,8 @@ If there are referenced files that you wish to exclude from uploading, simply un
 The `Env` tab will allow you to configure the VMs to be deployed when you create a pool. You can select the VM type and either the marketplace image (Windows / CentOS) or the 
 container image to be run (currently CentOS only). The container image options displayed will change depending on which renderer is active for the current scene. 
 If you change scenes with the plugin window open, you will need to click 'Refresh' to trigger this list to update. You can see a list
-of VM types and their descriptions in [this article](https://azure.microsoft.com/pricing/details/virtual-machines/series/).
+of VM types and their descriptions in [this article](https://azure.microsoft.com/pricing/details/virtual-machines/series/). 
+Only VM's which include 8GB of Memory or greater are available for selection through the plugin, to match the minimum requirements of Maya 2017 / 2018.'
 You can also select whether you wish to have the pool licensed for Maya, VRay Arnold. Maya licensing will be enabled by default, whereas VRay or Arnold licensing will be enabled if either
 is detected as the active render engine (you may need to click `Refresh` to get the latest scene settings).
 If you wish to render using your own license server, you can deselet the license options and configure your license end point by adding the applicable environment variables in the table.
