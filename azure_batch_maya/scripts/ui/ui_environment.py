@@ -55,7 +55,7 @@ class EnvironmentUI(object):
                     with utils.ColumnLayout(
                         2, col_width=((1,100),(2,200)), row_spacing=(1,5),
                         row_offset=((1, "top", 15),(2, "bottom", 20))):
-                            maya.text(label="Use VM SKU: ", align='right')
+                            maya.text(label="Use VM SKU: ", align='left')
                             with utils.Dropdown(self.set_sku) as sku_settings:
                                 self._sku = sku_settings
                                 for sku in skus:
