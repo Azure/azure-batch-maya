@@ -1,9 +1,11 @@
-python("from shared import AzureBatchSettings");
+python("import refreshsession");
 
 $batch_path = `getenv "AZUREBATCH_ICONS"`;
 
 global proc run_guiStarter()
 {
+    python("refreshsession.refreshSessionModules()");
+    python("from shared import AzureBatchSettings");
     python("AzureBatchSettings.starter()");
 }
 
