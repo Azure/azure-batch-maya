@@ -42,7 +42,7 @@ class AssetsUI(object):
 
         with utils.Row(1, 1, 355, "center", (1,"bottom",0)) as r_btn:
             self.refresh_button = utils.ProcButton(
-                "Refresh", "Refreshing...", self.refresh)
+                "Refresh", "Refreshing...", self.refresh_btn_clicked)
 
         maya.form_layout(
             self.page, edit=True,
@@ -65,21 +65,27 @@ class AssetsUI(object):
         frame.add_tab(self)
         self.is_logged_out()
 
-    def refresh(self, *args):
+    def refresh_btn_clicked(self, *args):
+        self.refresh_button.start()
+        self.base._submission.ui.refresh()
+        self.base._environment.ui.refresh()
+        self.refresh()
+        self.refresh_button.finish()
+
+    def refresh(self):
         """Refresh Assets tab. Command for refresh_button.
         Remove all existing UI elements and gathered
         assets and re-build from scratch. This is also called to populate 
         the tab for the first time.
         """
-        self.refresh_button.start()
         self.clear_ui()
         maya.refresh()
+        
         project_name = self.base.get_project()
         maya.text_field(self._asset_group, edit=True, text=project_name)
         self.base.set_assets()
         for f in self.base.get_assets():
             f.display(self, self.asset_display, self.scroll_layout)
-        self.refresh_button.finish()
 
     def upload(self, *args):
         """Upload gathered assets. Command for upload_button.
@@ -163,7 +169,9 @@ class AssetsUI(object):
         if not self.ready:
             maya.refresh()
             try:
+                self.refresh_button.start()
                 self.refresh()
+                self.refresh_button.finish()
                 self.is_logged_in()
                 self.ready = True
             except Exception as exp:

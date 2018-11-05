@@ -71,12 +71,13 @@ class AzureBatchEnvironment(object):
             else:
                 self.licenses[license['label']] = False
 
-    def configure(self, session, submission):
+    def configure(self, session, submission, assets):
         """Populate the current session of the environment tab.
         Called on successful authentication.
         """
         self._session = session
         self._submission = submission
+        self._assets = assets
         self.batch = self._session.batch
         self.ui.select_image(self._session.batch_image)
         self.ui.select_sku(self._session.vm_sku)

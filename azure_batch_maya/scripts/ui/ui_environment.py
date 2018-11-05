@@ -261,6 +261,7 @@ class EnvironmentUI(object):
         """
         self.refresh_button.start()
         self.base._submission.ui.refresh()
+        self.base._assets.ui.refresh()
         self.refresh()
         self.refresh_button.finish()
 

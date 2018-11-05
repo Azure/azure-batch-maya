@@ -142,6 +142,7 @@ class SubmissionUI(object):
         """
         self.refresh_button.start()
         self.base.env_manager.ui.refresh()
+        self.base.asset_manager.ui.refresh()
         self.refresh()
         self.refresh_button.finish()
 

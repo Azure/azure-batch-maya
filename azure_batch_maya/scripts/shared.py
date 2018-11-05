@@ -93,9 +93,9 @@ class AzureBatchSettings(object):
             self._log.debug("Starting AzureBatchShared...")
             if self.config.auth:
                 self.frame.is_logged_in()
-                self.env.configure(self.config, self.submission)
+                self.env.configure(self.config, self.submission, self.assets)
                 self.jobhistory.configure(self.config)
-                self.assets.configure(self.config)
+                self.assets.configure(self.config, self.submission, self.env)
                 self.pools.configure(self.config, self.env)
                 self.submission.start(self.config, self.assets, self.pools, self.env)
             else:

@@ -63,9 +63,6 @@ class AzureBatchAssets(object):
         self.ui = AssetsUI(self, frame)
         self.frame = frame
 
-        #callback.after_new(self._callback_refresh)
-        #callback.after_read(self._callback_refresh)
-
     def _callback_refresh(self, *args):
         """Called by Maya when a new scene file is loaded, so we reset
         the asset and submission pages of the UI, as the file references
@@ -261,11 +258,13 @@ class AzureBatchAssets(object):
             data += asset.size
         return data/BYTES/BYTES
 
-    def configure(self, session):
+    def configure(self, session, submission, environment):
         """Populate the Batch client for the current sessions of the asset tab.
         Called on successful authentication.
         """
         self._session = session
+        self._submission = submission
+        self._environment = environment
         self._upload_threads = session.threads
         self.batch = self._session.batch
         self._set_searchpaths()
