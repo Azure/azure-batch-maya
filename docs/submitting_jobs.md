@@ -57,7 +57,7 @@ If there are referenced files that you wish to exclude from uploading, simply un
 
 ## Environment configuration
 
-The `Env` tab will allow you to configure the VMs to be deployed when you create a pool. You can select the VM type and either the marketplace image (Windows / CentOS) or the 
+The `Env` tab will allow you to configure the VMs to be deployed when you create a pool. You can select the VM type and either the Batch provided image (Windows / CentOS) or the 
 container image to be run (currently CentOS only). The container image options displayed will change depending on which renderer is active for the current scene. 
 If you change scenes with the plugin window open, you will need to click 'Refresh' to trigger this list to update. You can see a list
 of VM types and their descriptions in [this article](https://azure.microsoft.com/pricing/details/virtual-machines/series/). 

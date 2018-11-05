@@ -63,7 +63,7 @@ class EnvironmentUI(object):
 
                     with utils.Row(1,1,325):
                         maya.radio_group(
-                            labelArray2=("Marketplace Image",
+                            labelArray2=("Batch Provided Image",
                                          "Container Image"),
                             numberOfRadioButtons=2,
                             select=self.select_rendernode_type,
@@ -314,7 +314,7 @@ class EnvironmentUI(object):
             maya.delete_ui(self.image_config)
         self.image_config = []
         with utils.FrameLayout(
-            label="Marketplace Image Settings", collapsable=True,
+            label="Batch Provided Image Settings", collapsable=True,
             width=325, collapse=False, parent = self.rendernode_config) as framelayout:
             self.image_config.append(framelayout)
             with utils.ColumnLayout(
