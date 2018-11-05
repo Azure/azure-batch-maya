@@ -261,13 +261,11 @@ class EnvironmentUI(object):
         """
         self.refresh_button.start()
         self.base._submission.ui.refresh()
-        self.base._assets.ui.refresh()
         self.refresh()
         self.refresh_button.finish()
 
     def refresh(self, *args):
-        """Clear any data and customization. Command for refresh_button."""
-        maya.table(self.env_vars, edit=True, clearTable=True, rows=0)
+        """Ensure settings are up to date with the current scene and renderer."""
         self.base.refresh()
         if self.select_rendernode_type == PoolImageMode.CONTAINER_IMAGE.value:
             self.set_container_image_mode()
