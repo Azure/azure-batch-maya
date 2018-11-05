@@ -155,6 +155,10 @@ class SubmissionUI(object):
         self.selected_dir = utils.get_default_output_path()
         maya.text_field(self.dir, edit=True, text=self.selected_dir)
         if self.persistent_pool_dropdown_row is not None:
+            if self.container_image_text_row is not None:
+                maya.delete_ui(self.container_image_text_row)
+            if self.container_image_dropdown_row is not None:
+                maya.delete_ui(self.container_image_dropdown_row)
             pool_options = self.base.available_pools()
             self.pool_dropdown.clear()
             self.pool_dropdown.add_item("")
@@ -280,6 +284,7 @@ class SubmissionUI(object):
                     self.pool_config.append(container_dropdown)
                     for container_image in available_images:
                         container_dropdown.add_item(container_image)
+                    self.set_task_container_image(container_dropdown.value())
 
     def set_pool_auto(self, *args):
         """Set selected pool type to be new pool of given size.
@@ -343,6 +348,7 @@ class SubmissionUI(object):
                     self.pool_config.append(container_dropdown)
                     for container_image in available_images:
                         container_dropdown.add_item(container_image)
+                    self.set_task_container_image(container_dropdown.value())
 
     def set_pool_reuse(self, *args):
         """Set selected pool type to be an existing pool with given ID.
@@ -411,6 +417,7 @@ class SubmissionUI(object):
                         #self.container_config.append(container_dropdown)
                         for container_image in available_images:
                             container_dropdown.add_item(container_image)
+                        self.set_task_container_image(container_dropdown.value())
     
     def set_task_container_image(self, selected_container_image):
         self.selected_container_image = selected_container_image
