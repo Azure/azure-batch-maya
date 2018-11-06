@@ -453,7 +453,7 @@ class TestAzureBatchAssets(unittest.TestCase):
     @mock.patch("assets.Assets")
     def test_batchassets_configure(self, mock_assets):
         session = mock.Mock(batch="batch")
-        AzureBatchAssets.configure(self.mock_self, session)
+        AzureBatchAssets.configure(self.mock_self, session, None, None)
         mock_assets.assert_called_with("batch")
         self.assertEqual(self.mock_self._set_searchpaths.call_count, 1)
 
