@@ -70,6 +70,9 @@
     </Compile>
     <Compile Include="azure_batch_maya\scripts\tools\getpip.py" />
     <Compile Include="azure_batch_maya\scripts\tools\job_watcher.py" />
+    <Compile Include="azure_batch_maya\scripts\tools\refreshsession.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="azure_batch_maya\scripts\ui\ui_assets.py">
       <SubType>Code</SubType>
     </Compile>
