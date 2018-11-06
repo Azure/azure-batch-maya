@@ -128,7 +128,7 @@ class ContainerImageUI(object):
 
     def selected_image_node_sku_id(self):
         selectedImageId, selectedImage = self.fetch_selected_image()
-        return selectedImage["node_sku_id"]
+        return selectedImage["ImageReference"]["node_sku_id"]
 
     def selected_image_container_images(self):
         selectedImageId, selectedImage = self.fetch_selected_image()

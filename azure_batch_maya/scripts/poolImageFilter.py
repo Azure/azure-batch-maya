@@ -12,6 +12,7 @@ import logging
 import sys
 import traceback
 import adal
+import copy
 
 class PoolImageFilter(object):
 
@@ -24,7 +25,7 @@ class PoolImageFilter(object):
         self.containerImages = poolImageProvider.getContainerImages()
 
     def getSelectedImage(self, selectedOS, selectedMaya, selectedVRay = None, selectedArnold = None):
-        results = self.containerImages
+        results = copy.deepcopy(self.containerImages)
 
         results = filterImagesByOS(results, selectedOS)
 
