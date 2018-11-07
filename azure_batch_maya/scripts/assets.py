@@ -233,7 +233,7 @@ class AzureBatchAssets(object):
                     uploaded()
                 else:
                     total_uploaded = total_uploaded + uploaded
-                    self.ui.upload_status("Uploaded {0} of {1}".format(self._format_size(total_uploaded), self._format_size(total_to_upload)))
+                    self.ui.upload_status("Synced {0} of {1}".format(self._format_size(total_uploaded), self._format_size(total_to_upload)))
                 progress_queue.task_done()
 
     def _format_size(self, nbytes):
@@ -370,7 +370,7 @@ class AzureBatchAssets(object):
             self.ui.disable(False)
             self.ui.upload_button.start()
             payload = self._total_data(asset_refs)
-            self.ui.upload_status("Uploading {0}...".format(self._format_size(payload)))
+            self.ui.upload_status("Syncing {0}...".format(self._format_size(payload)))
             maya.refresh()
             asset_data['project'] = self.ui.get_project()
             self._upload_all(asset_refs, progress_bar, payload, asset_data['project'])
@@ -739,7 +739,7 @@ class Asset(object):
                 queue.put(lambda: self.make_visible(index))
             queue.put(lambda: maya.text(
                 self.display_text, edit=True,
-                label="    Uploading 0% {0}".format(name)))
+                label="    Synced 0% {0}".format(name)))
             queue.put(maya.refresh)
 
         def update(update):
@@ -758,7 +758,7 @@ class Asset(object):
             if self.display_text:
                 queue.put(lambda: maya.text(
                     self.display_text, edit=True,
-                    label="    Uploading 100% {0}".format(name)))
+                    label="    Synced 100% {0}".format(name)))
                 queue.put(maya.refresh)
         finally:
             self.log.debug("Finished asset upload: {}".format(self.path))
