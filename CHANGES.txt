@@ -1,4 +1,4 @@
-2018.10.24 v0.23.0
+2018.11.07 v0.23.0
 ------------------
 - Change authentication mode to AAD, including support for private cloud
 - Support for Batch Container Images + initial set of images for Maya2017 and 2018
