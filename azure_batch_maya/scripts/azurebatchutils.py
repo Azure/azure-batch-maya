@@ -7,12 +7,27 @@ from enum import Enum
 import os
 import logging
 import platform
+import subprocess
 
 from azurebatchmayaapi import MayaAPI as maya
 from exception import CancellationException, FileUploadException
 
 
 MAX_LOCAL_PATH_LENGTH = 150
+
+def copy_to_clipboard(txt):
+    platform = get_os()
+    if platform == OperatingSystem.windows.value:
+        cmd='echo '+ txt.strip() +'|clip'
+        return subprocess.check_call(cmd, shell=True)
+    if platform == OperatingSystem.darwin.value:
+        process = subprocess.Popen(
+        'pbcopy', env={'LANG': 'en_US.UTF-8'}, stdin=subprocess.PIPE)
+        process.communicate(txt.encode('utf-8')) 
+
+
+def get_current_scene_renderer():
+    return maya.get_attr("defaultRenderGlobals.currentRenderer")
 
 
 def shorten_path(path, filename):
@@ -117,6 +132,18 @@ def get_root_dir():
     """
     return maya.workspace(query=True, rootDirectory=True)
 
+def build_template_filename(render_engine, maya_version, operating_system, container_image=None):
+    """Build the filename for the template to use for job submission
+    """
+    directory = os.environ['AZUREBATCH_TEMPLATES']
+    if container_image:
+        directory = os.path.join(directory, 'containers')
+
+    template_file = os.path.join(
+                directory,
+                "{}-{}-{}.json".format(render_engine, maya_version, operating_system))
+
+    return template_file
 
 class OperatingSystem(Enum):
     windows = 'Windows'
@@ -202,6 +229,8 @@ class FrameLayout(Layout):
             settings["label"] = kwargs["label"]
         if kwargs.get("collapsable"):
             settings["collapsable"] = kwargs["collapsable"]
+        if kwargs.get("collapse"):
+            settings["collapse"] = kwargs["collapse"]
         super(FrameLayout, self).__init__(
             maya.frame_layout, layout=settings, **kwargs)
 
@@ -317,7 +346,29 @@ class Dropdown(object):
             maya.menu(self.menu, edit=True, select=int(value))
         except ValueError:
             maya.menu(self.menu, edit=True, value=value)
+    
+    def clear(self):
+        menuItems = maya.menu(self.menu, query=True, itemListLong=True)
+        if menuItems:
+            maya.delete_ui(menuItems)
+    
+    def enable(self, enabled):
+        """Enable or disable the dropdown.
+        :param bool enabled: Whether to enable the dropdown.
+        """
+        maya.menu(self.menu, edit=True, enable=enabled)
+        maya.refresh()
 
+    def annotation(self, annotation):
+        """Enable or disable the dropdown.
+        :param bool enabled: Whether to enable the dropdown.
+        """
+        maya.menu(self.menu, edit=True, annotation=annotation)
+        maya.refresh()
+
+    def length(self):
+        length = maya.menu(self.menu, query=True, numberOfItems=True)
+        return length
 
 class ProgressBar(object):
     """Wrapper class for :class:`maya.cmds.mainProgressBar`."""

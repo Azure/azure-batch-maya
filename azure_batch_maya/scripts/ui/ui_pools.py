@@ -54,6 +54,14 @@ class PoolsUI(object):
         """Called when the plug-in is logged out. Disables UI and resets
         whether that tab has been loaded for the first time.
         """
+        maya.delete_ui(self.empty_pools)
+        self.base.pool_selected(None)
+        for i in self.pools_displayed:
+            i.remove()
+
+        self.pools_displayed = []
+        self.empty_pools = maya.text(label="No pools to display",parent=self.pools_layout)
+
         maya.form_layout(self.page, edit=True, enable=False)
         self.ready = False
 
@@ -129,7 +137,7 @@ class AzureBatchPoolInfo(object):
             expandCommand=self.on_expand)
         self.listbox = maya.col_layout(
             numberOfColumns=2,
-            columnWidth=((1, 100), (2, 200)),
+            columnWidth=((1, 120), (2, 200)),
             rowSpacing=((1, 5),),
             rowOffset=((1, "top", 5),(1, "bottom", 5),),
             parent=self.layout)
@@ -144,6 +152,12 @@ class AzureBatchPoolInfo(object):
     def set_type(self, value):
         """Set the type of the pool - auto or provisioned.
         :param str value: The pool type.
+        """
+        maya.text(self._type, edit=True, label=" {0}".format(value))
+
+    def set_image_type(self, value):
+        """Set the type of the pool - vm image or container.
+        :param str value: The pool image type.
         """
         maya.text(self._type, edit=True, label=" {0}".format(value))
 
@@ -215,6 +229,19 @@ class AzureBatchPoolInfo(object):
         """
         maya.text(self._image, edit=True, label=" {0}".format(value))
 
+    def set_container_images_table(self, container_images):
+        """Set the container image table up for the pool.
+        Sets the class field for the image to add and calls insertRow, which triggers 
+        :param str value: The VM image.
+        """
+        self._container_images = container_images
+        if container_images:
+            table_height = max(60, min(150, 25 + 15 * len(container_images)))
+            maya.table(self._container_images_table, edit=True, clearTable=True, visible=True, height= table_height)
+        for image in container_images:
+            self.container_image_to_add = image
+            maya.table(self._container_images_table, edit=True, insertRow=1)
+
     def on_expand(self):
         """Command for the expanding of the pool reference frame layout.
         Loads latest details for the specified pool and populates UI.
@@ -225,11 +252,16 @@ class AzureBatchPoolInfo(object):
         self._low_pri_size = self.display_info("Low Priority VMs:   ")
         self._created = self.display_info("Created:   ")
         self._state = self.display_info("State:   ")
-        self._image = self.display_info("Image:   ")
         self._allocation = self.display_info("Allocation State:   ")
         self._licenses = self.display_info("Licenses:   ")
         self._vm_sku = self.display_info("VM type:   ")
+        self._image = self.display_info("Image:   ")
+
+        self._container_images = None
+        self._container_images_table = self.display_table("Container Images:   ", lambda row, column: self.container_image_to_add)
+        maya.table(self._container_images_table, edit=True, visible=False)
         self.base.pool_selected(self)
+
         auto = self.base.is_auto_pool()
         if not auto:
             self.content.append(maya.col_layout(
@@ -312,6 +344,27 @@ class AzureBatchPoolInfo(object):
         input = maya.text_field(text="", parent=self.listbox, editable=False)
         self.content.append(input)
         return input
+
+    def display_table(self, label, populate_contents_func):
+        layout_width = 355
+        layout = maya.col_layout(
+            columnWidth=(1, layout_width),
+            adjustableColumn=True,
+            columnAttach=(1, 'both', 10),
+            numberOfColumns=1,
+            parent=self.layout)
+
+        table = maya.table(height=60,
+            rows=0, columns=2, columnWidth=[(1, layout_width - 6), (2, 1)], rowHeight=15,
+            label=[(1, label), (2, "")],
+            selectionBehavior=0,
+            editable=False,
+            getCellCmd=populate_contents_func,
+            parent=layout)
+
+        self.content.append(layout)
+        self.content.append(table)
+        return table
 
     def delete_pool(self, *args):
         """Delete the specified pool."""

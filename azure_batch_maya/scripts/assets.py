@@ -63,9 +63,6 @@ class AzureBatchAssets(object):
         self.ui = AssetsUI(self, frame)
         self.frame = frame
 
-        #callback.after_new(self._callback_refresh)
-        #callback.after_read(self._callback_refresh)
-
     def _callback_refresh(self, *args):
         """Called by Maya when a new scene file is loaded, so we reset
         the asset and submission pages of the UI, as the file references
@@ -128,7 +125,7 @@ class AzureBatchAssets(object):
         Only called by the set_assets function, which is called on loading and
         refreshing the assets tab.
         """
-        current_renderer = maya.get_attr("defaultRenderGlobals.currentRenderer")
+        current_renderer = utils.get_current_scene_renderer()
         self._log.info("Current renderer: {0}".format(current_renderer))
 
         for module in self.modules:
@@ -213,11 +210,12 @@ class AzureBatchAssets(object):
             handle.write("}")
         return Asset(map_file, [], self.batch, self._log), ';'.join(cloud_paths)
 
-    def _upload_all(self, to_upload, progress, total, project):
+    def _upload_all(self, to_upload, progress, total_to_upload, project):
         """Upload all selected assets in configured number of threads."""
+        total_uploaded = 0.0
         uploads_running = []
         progress_queue = Queue()
-        threads = self._upload_threads()
+        threads = self._upload_threads
         self._log.debug("Uploading assets in {} threads.".format(threads))
         for i in range(0, len(to_upload), threads):
             for index, asset in enumerate(to_upload[i:i + threads]):
@@ -234,8 +232,8 @@ class AzureBatchAssets(object):
                 elif callable(uploaded):
                     uploaded()
                 else:
-                    total = total - (uploaded/BYTES/BYTES)
-                    self.ui.upload_status("Uploading {0}...".format(self._format_size(total)))
+                    total_uploaded = total_uploaded + uploaded
+                    self.ui.upload_status("Synced {0} of {1}".format(self._format_size(total_uploaded), self._format_size(total_to_upload)))
                 progress_queue.task_done()
 
     def _format_size(self, nbytes):
@@ -259,14 +257,16 @@ class AzureBatchAssets(object):
         data = float(0)
         for asset in files:
             data += asset.size
-        return data/BYTES/BYTES
+        return data
 
-    def configure(self, session):
+    def configure(self, session, submission, environment):
         """Populate the Batch client for the current sessions of the asset tab.
         Called on successful authentication.
         """
         self._session = session
-        self._upload_threads = session.get_threads
+        self._submission = submission
+        self._environment = environment
+        self._upload_threads = session.threads
         self.batch = self._session.batch
         self._set_searchpaths()
         self._assets = Assets(self.batch)
@@ -370,7 +370,7 @@ class AzureBatchAssets(object):
             self.ui.disable(False)
             self.ui.upload_button.start()
             payload = self._total_data(asset_refs)
-            self.ui.upload_status("Uploading {0}...".format(self._format_size(payload)))
+            self.ui.upload_status("Syncing {0}...".format(self._format_size(payload)))
             maya.refresh()
             asset_data['project'] = self.ui.get_project()
             self._upload_all(asset_refs, progress_bar, payload, asset_data['project'])
@@ -739,7 +739,7 @@ class Asset(object):
                 queue.put(lambda: self.make_visible(index))
             queue.put(lambda: maya.text(
                 self.display_text, edit=True,
-                label="    Uploading 0% {0}".format(name)))
+                label="    Synced 0% {0}".format(name)))
             queue.put(maya.refresh)
 
         def update(update):
@@ -758,7 +758,7 @@ class Asset(object):
             if self.display_text:
                 queue.put(lambda: maya.text(
                     self.display_text, edit=True,
-                    label="    Uploading 100% {0}".format(name)))
+                    label="    Synced 100% {0}".format(name)))
                 queue.put(maya.refresh)
         finally:
             self.log.debug("Finished asset upload: {}".format(self.path))

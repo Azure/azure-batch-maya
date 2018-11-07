@@ -9,36 +9,23 @@ import os
 import logging
 import json
 
+from azure.batch_extensions import models
+
 from azurebatchmayaapi import MayaAPI as maya
 from azurebatchmayaapi import MayaCallbacks as callback
 import azurebatchutils as utils
 from ui_environment import EnvironmentUI
+from ui_environment import PoolImageMode
+from poolImageProvider import MARKETPLACE_IMAGES
 
+from collections import OrderedDict
 
-MAYA_IMAGES = {
-    'Windows 2016':
-        {
-            'node_sku_id': 'batch.node.windows amd64',
-            'publisher': 'batch',
-            'offer': 'rendering-windows2016',
-            'sku': 'rendering',
-            'version': '1.2.1'
-        },
-    'Centos 73':
-        {
-            'node_sku_id': 'batch.node.centos 7',
-            'publisher': 'batch',
-            'offer': 'rendering-centos73',
-            'sku': 'rendering',
-            'version': '1.1.2'
-        },
-}
 LICENSES = [
     {'label': 'Maya', 'id': 'maya', 'plugin': None },
     {'label': 'Arnold', 'id': 'arnold', 'plugin': 'mtoa' },
     {'label': 'V-Ray', 'id': 'vray', 'plugin': 'vrayformaya' }
 ]
-#
+
 
 class AzureBatchEnvironment(object):
     """Handler for rendering environment configuration functionality."""
@@ -54,18 +41,18 @@ class AzureBatchEnvironment(object):
         self._log = logging.getLogger('AzureBatchMaya')
         self._call = call
         self._session = None
+        self._submission = None
         self._tab_index = index
+        self.node_agent_sku_id_list = None
 
-        self.licenses = {}
+        self.licenses = OrderedDict()
         self._get_plugin_licenses()
         self.skus = self._load_skus()
-        self.ui = EnvironmentUI(self, frame, MAYA_IMAGES.keys(), self.skus, self.licenses)
+        self.ui = EnvironmentUI(self, frame, MARKETPLACE_IMAGES.keys(), self.skus, self.licenses)
         self.refresh()
-        #callback.after_new(self.ui.refresh)
-        #callback.after_read(self.ui.refresh)
 
     def _load_skus(self):
-        """Populate the list of availablke hardware SKUs."""
+        """Populate the list of available hardware SKUs."""
         sku_path = os.path.join(os.environ['AZUREBATCH_TOOLS'], 'skus.json')
         with open(sku_path, 'r') as sku_list:
             return json.load(sku_list)
@@ -84,19 +71,22 @@ class AzureBatchEnvironment(object):
             else:
                 self.licenses[license['label']] = False
 
-    def configure(self, session):
+    def configure(self, session, submission, assets):
         """Populate the current session of the environment tab.
         Called on successful authentication.
         """
         self._session = session
-        self.ui.select_image(self._session.get_cached_image())
-        self.ui.select_sku(self._session.get_cached_vm_sku())
-
+        self._submission = submission
+        self._assets = assets
+        self.batch = self._session.batch
+        self.ui.select_image(self._session.batch_image)
+        self.ui.select_sku(self._session.vm_sku)
+        
     def refresh(self):
         self._get_plugin_licenses()
         if self._session:
-            self.ui.select_image(self._session.get_cached_image())
-            self.ui.select_sku(self._session.get_cached_vm_sku())
+            self.ui.select_image(self._session.batch_image)
+            self.ui.select_sku(self._session.vm_sku)
 
     def get_application_licenses(self):
         license_servers = []
@@ -105,46 +95,79 @@ class AzureBatchEnvironment(object):
                 license_servers.extend([v['id'] for v in LICENSES if v['label'] == name])
         return license_servers
 
-    def set_image(self, image):
-        self._session.store_image(image)
+    def get_image_type(self):
+        return self.ui.get_image_type()
 
-    def set_sku(self, sku):
-        self._session.store_vm_sku(sku)
+    def build_container_configuration(self):
+        if self.ui.get_image_type().value == PoolImageMode.CONTAINER_IMAGE.value:
+            container_configuration = models.ContainerConfiguration(container_image_names=self.ui.get_pool_container_images())
+            return container_configuration
+        return None
 
-    def get_image(self):
-        selected_image = self.ui.get_image()
-        return dict(MAYA_IMAGES[selected_image])
+    def get_pool_container_images(self):
+        return self.ui.get_pool_container_images()
+
+    def get_task_container_image(self):
+        return self.ui.get_task_container_image()
+
+    def build_virtualmachineconfiguration(self):
+        image_reference = self.get_image_reference()
+        vm_config = models.VirtualMachineConfiguration(
+            image_reference=image_reference,
+            node_agent_sku_id=self.get_node_sku_id(),
+            container_configuration = self.build_container_configuration())
+        
+        return vm_config
+
+    def set_node_sku_id(self, node_sku_id):
+        self._session.node_sku_id = node_sku_id
+
+    def retrieve_node_agent_skus(self):
+        node_agent_sku_list =  self._call(self.batch.account.list_node_agent_skus)
+        self.node_agent_sku_id_list = [nodeagentsku.id for nodeagentsku in node_agent_sku_list]
+
+    def node_agent_skus(self):
+        if not self.node_agent_sku_id_list:
+            self.retrieve_node_agent_skus()
+        return self.node_agent_sku_id_list 
+    
+    def get_image_reference(self):
+        if self.get_image_type().value == PoolImageMode.MARKETPLACE_IMAGE.value:
+            image = self.get_marketplace_image()
+            image.pop('node_sku_id')
+            image_reference = models.ImageReference(**image)
+            return image_reference
+        if self.get_image_type().value == PoolImageMode.CONTAINER_IMAGE.value:
+            image = self.ui.get_container_image_reference()
+            image.pop('node_sku_id')
+            image_reference = models.ImageReference(**image)
+            return image_reference
+
+    def get_node_sku_id(self):
+        return self.ui.get_node_sku_id()
+
+    def get_marketplace_image(self):
+        selected_image = self.ui.get_selected_marketplace_image()
+        return dict(MARKETPLACE_IMAGES[selected_image])
 
     def get_image_label(self, image_ref):
         """Retrieve the image label from the data in a pool image
         reference object.
         """
-        pool_image = [k for k,v in MAYA_IMAGES.items() if v['offer'] == image_ref.offer]
+        pool_image = [k for k,v in MARKETPLACE_IMAGES.items() if v['offer'] == image_ref.offer]
         if pool_image:
             return pool_image[0]
         else:
             self._log.debug("Pool using unknown image reference: {}".format(image_ref.offer))
             return image_ref.offer
 
-    def get_vm_sku(self):
-        return self.ui.get_sku()
-
     def os_flavor(self, pool_image=None):
-        if pool_image:
-            windows_offers = [value['offer'] for value in MAYA_IMAGES.values() if 'windows' in value['node_sku_id']]
-            linux_offers = [value['offer'] for value in MAYA_IMAGES.values() if value['offer'] not in windows_offers]
-            if pool_image.offer in windows_offers:
-                return utils.OperatingSystem.windows
-            elif pool_image.offer in linux_offers:
-                return utils.OperatingSystem.linux
-            else:
-                raise ValueError('Selected pool is not using a valid Maya image.')
-        image = self.ui.get_image()
-        if utils.OperatingSystem.windows.value in image:
-            self._log.debug("Detected windows: {}".format(image))
+        node_sku_id = self.get_node_sku_id()
+        if 'windows' in node_sku_id:
+            self._log.debug("Detected windows for skuId: {}".format(node_sku_id))
             return utils.OperatingSystem.windows
         else:
-            self._log.debug("Detected centos: {}".format(image))
+            self._log.debug("Detected Linux for skuId: {}".format(node_sku_id))
             return utils.OperatingSystem.linux
 
     def get_environment_settings(self):
@@ -152,3 +175,24 @@ class AzureBatchEnvironment(object):
         vars = [{'name': k, 'value': v} for k, v in env_vars.items()]
         self._log.debug("Adding custom env vars: {}".format(vars))
         return vars
+
+    @property
+    def batch_image(self):
+        return self._session.batch_image
+    @batch_image.setter
+    def batch_image(self, value):
+        self._session.batch_image = value
+
+    @property
+    def node_sku_id(self):
+        return  self._session.node_sku_id
+    @node_sku_id.setter
+    def node_sku_id(self, value):
+       self._session.node_sku_id = value
+
+    @property
+    def vm_sku(self):
+        return self._session.vm_sku
+    @vm_sku.setter
+    def vm_sku(self, value):
+       self._session.vm_sku = value

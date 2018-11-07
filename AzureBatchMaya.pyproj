@@ -10,8 +10,10 @@
     <OutputPath>.</OutputPath>
     <Name>Maya.Client</Name>
     <RootNamespace>Maya.Client</RootNamespace>
-    <InterpreterId>{a76b797f-9426-4cd7-a078-9af9c9e4b437}</InterpreterId>
-    <InterpreterVersion>2.7</InterpreterVersion>
+    <InterpreterId>
+    </InterpreterId>
+    <InterpreterVersion>
+    </InterpreterVersion>
     <SearchPath>azure_batch_maya\scripts\;azure_batch_maya\scripts\ui\;tests\data\;tests\data\modules\</SearchPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -34,7 +36,16 @@
     <Compile Include="azure_batch_maya\scripts\assets.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="azure_batch_maya\scripts\aadEnvironmentProvider.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="azure_batch_maya\scripts\poolImageProvider.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="azure_batch_maya\scripts\config.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="azure_batch_maya\scripts\poolImageFilter.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="azure_batch_maya\scripts\environment.py">
@@ -59,7 +70,13 @@
     </Compile>
     <Compile Include="azure_batch_maya\scripts\tools\getpip.py" />
     <Compile Include="azure_batch_maya\scripts\tools\job_watcher.py" />
+    <Compile Include="azure_batch_maya\scripts\tools\refreshsession.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="azure_batch_maya\scripts\ui\ui_assets.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="azure_batch_maya\scripts\ui\ui_containerImage.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="azure_batch_maya\scripts\ui\ui_config.py">
@@ -84,6 +101,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="package.py" />
+    <Compile Include="tests\data\modules\default.py" />
+    <Compile Include="tests\data\modules\render_module_a.py" />
+    <Compile Include="tests\data\modules\render_module_b.py" />
+    <Compile Include="tests\data\modules\render_module_c.py" />
     <Compile Include="tests\test_assets.py">
       <SubType>Code</SubType>
     </Compile>
@@ -94,6 +115,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tests\test_jobwatcher.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="tests\test_poolImages.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="tests\test_pools.py">
@@ -113,10 +137,16 @@
     <Folder Include="azure_batch_maya\scripts\tools\" />
     <Folder Include="azure_batch_maya\scripts\ui\" />
     <Folder Include="azure_batch_maya\templates\" />
+    <Folder Include="azure_batch_maya\templates\containers\" />
     <Folder Include="docs\" />
     <Folder Include="docs\images\" />
     <Folder Include="tests\" />
-    <Folder Include="tests\test_scene\" />
+    <Folder Include="tests\basic_test_scene\" />
+    <Folder Include="tests\data\modules\" />
+    <Folder Include="tests\json_data\" />
+    <Folder Include="tests\json_data\file_tests\" />
+    <Folder Include="tests\json_data\file_tests\sample_data\" />
+    <Folder Include="tests\data\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="azure_batch_maya\icons\btn_background.png" />
@@ -143,6 +173,18 @@
     <Content Include="azure_batch_maya\templates\arnold-2017-windows.json" />
     <Content Include="azure_batch_maya\templates\arnold-2018-linux.json" />
     <Content Include="azure_batch_maya\templates\arnold-2018-windows.json" />
+    <Content Include="azure_batch_maya\templates\containers\arnold-2017-linux.json" />
+    <Content Include="azure_batch_maya\templates\containers\arnold-2017-windows.json" />
+    <Content Include="azure_batch_maya\templates\containers\arnold-2018-linux.json" />
+    <Content Include="azure_batch_maya\templates\containers\arnold-2018-windows.json" />
+    <Content Include="azure_batch_maya\templates\containers\mayaSoftware-2017-linux.json" />
+    <Content Include="azure_batch_maya\templates\containers\mayaSoftware-2017-windows.json" />
+    <Content Include="azure_batch_maya\templates\containers\mayaSoftware-2018-linux.json" />
+    <Content Include="azure_batch_maya\templates\containers\mayaSoftware-2018-windows.json" />
+    <Content Include="azure_batch_maya\templates\containers\vray-2017-linux.json" />
+    <Content Include="azure_batch_maya\templates\containers\vray-2017-windows.json" />
+    <Content Include="azure_batch_maya\templates\containers\vray-2018-linux.json" />
+    <Content Include="azure_batch_maya\templates\containers\vray-2018-windows.json" />
     <Content Include="azure_batch_maya\templates\mayaSoftware-2017-linux.json" />
     <Content Include="azure_batch_maya\templates\mayaSoftware-2017-windows.json" />
     <Content Include="azure_batch_maya\templates\mayaSoftware-2018-linux.json" />
@@ -162,19 +204,28 @@
     <Content Include="requirements.txt">
       <SubType>Code</SubType>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Interpreter Include="env\">
-      <Id>{a76b797f-9426-4cd7-a078-9af9c9e4b437}</Id>
-      <BaseInterpreter>{9a7a9026-48c1-4688-9d5d-e5699d47d074}</BaseInterpreter>
-      <Version>2.7</Version>
-      <Description>env (Python 64-bit 2.7)</Description>
-      <InterpreterPath>Scripts\python.exe</InterpreterPath>
-      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
-      <LibraryPath>Lib\</LibraryPath>
-      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
-      <Architecture>Amd64</Architecture>
-    </Interpreter>
+    <Content Include="tests\basic_test_scene\asset_map.mel" />
+    <Content Include="tests\basic_test_scene\test_scene.mb" />
+    <Content Include="tests\basic_test_scene\workspace.mel" />
+    <Content Include="tests\data\azure_batch_test.ini" />
+    <Content Include="tests\data\empty.mb" />
+    <Content Include="tests\data\star.png" />
+    <Content Include="tests\json_data\batch-applicationTemplate-parameters.json" />
+    <Content Include="tests\json_data\batch-applicationTemplate-prohibitedApplicationTemplateInfo.json" />
+    <Content Include="tests\json_data\batch-applicationTemplate-prohibitedId.json" />
+    <Content Include="tests\json_data\batch-applicationTemplate-prohibitedPoolInfo.json" />
+    <Content Include="tests\json_data\batch-applicationTemplate-prohibitedPriority.json" />
+    <Content Include="tests\json_data\batch-applicationTemplate-static.json" />
+    <Content Include="tests\json_data\batch-applicationTemplate-unsupportedProperty.json" />
+    <Content Include="tests\json_data\batch-applicationTemplate-untypedParameter.json" />
+    <Content Include="tests\json_data\batch.job.parameters.json" />
+    <Content Include="tests\json_data\batch.job.parametricsweep.json" />
+    <Content Include="tests\json_data\batch.job.simple.json" />
+    <Content Include="tests\json_data\batch.pool.parameters.json" />
+    <Content Include="tests\json_data\batch.pool.simple.json" />
+    <Content Include="tests\json_data\file_tests\bar.bmp" />
+    <Content Include="tests\json_data\file_tests\foo.txt" />
+    <Content Include="tests\json_data\file_tests\sample_data\test.txt" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

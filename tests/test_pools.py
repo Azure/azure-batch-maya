@@ -63,8 +63,8 @@ class AzureTestBatchPools(unittest.TestCase):
         self.mock_self._call = lambda x: [pool1, pool2]
 
         ids = AzureBatchPools.list_pools(self.mock_self)
-        self.assertEqual(ids, [])
-        self.assertEqual(len(self.mock_self.pools), 0)
+        self.assertEqual(ids, ["67890", "12345"])
+        self.assertEqual(len(self.mock_self.pools), 2)
 
         pool1.id = "Maya_Pool_A"
         pool1.virtual_machine_configuration.image_reference.publisher = "batch"
@@ -117,6 +117,7 @@ class AzureTestBatchPools(unittest.TestCase):
         pool.vm_size = "Standard_A1"
         pool.virtual_machine_configuration = mock.create_autospec(batch.models.VirtualMachineConfiguration)
         pool.virtual_machine_configuration.image_reference = "image"
+        pool.virtual_machine_configuration.container_configuration = None
         self.mock_self.environment.get_image_label.return_value = "Batch Windows Image"
         self.mock_self.pools = [pool]
         pool_ui = mock.create_autospec(AzureBatchPoolInfo)
@@ -212,8 +213,15 @@ class AzureTestBatchPools(unittest.TestCase):
 
         self.mock_self._call = call
         self.mock_self.environment.get_application_licenses.return_value = ['maya']
-        self.mock_self.environment.get_image.return_value = {
-            'publisher': 'foo', 'sku': 'bar', 'offer': 'baz', 'node_sku_id':'sku_id'}
+        
+        image_ref = mock.create_autospec(models.ImageReference)
+        image_ref.publisher = 'foo'
+        vm_config = mock.create_autospec(models.VirtualMachineConfiguration)
+        vm_config.image_reference = image_ref
+        vm_config.node_agent_sku_id = 'sku_id'
+
+        self.mock_self.environment.build_virtualmachineconfiguration.return_value = vm_config
+
         AzureBatchPools.create_pool(self.mock_self, (3, 5), "test job")
         self.mock_self.batch.pool.add.assert_called_with(mock.ANY)
 

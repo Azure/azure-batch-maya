@@ -119,6 +119,16 @@ class JobHistoryUI(object):
         """Called when the plug-in is logged out. Disables UI and resets
         whether that tab has been loaded for the first time.
         """
+        maya.delete_ui(self.empty_jobs)
+
+        self.base.job_selected(None)
+        for i in self.jobs_displayed:
+            i.remove()
+
+        self.jobs_displayed = []
+        self.empty_jobs = maya.text(
+            label="No jobs to display", parent=self.jobs_layout)
+
         maya.form_layout(self.page, edit=True, enable=False)
         self.ready = False
 

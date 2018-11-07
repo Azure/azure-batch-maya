@@ -9,14 +9,13 @@ import logging
 import json
 from Queue import Queue
 
-try:
+if sys.version_info >= (3, 3):
     import unittest2 as unittest
-except ImportError:
+    from unittest.mock import MagicMock
+else:
     import unittest
-try:
-    from unittest import mock
-except ImportError:
     import mock
+    from mock import MagicMock
 
 from azure import batch_extensions
 
@@ -24,7 +23,6 @@ from ui_assets import AssetsUI
 from assets import Asset, Assets, AzureBatchAssets
 from exception import FileUploadException
 from azurebatchutils import ProgressBar, ProcButton
-
 
 class TestAsset(unittest.TestCase):
     
@@ -39,8 +37,12 @@ class TestAsset(unittest.TestCase):
     def test_asset_create(self):
         test_asset = Asset(self.mock_file, "parent", "batch")
         self.assertEqual(test_asset.label, "    test_path")
-        self.assertEqual(test_asset.path, "\\my\\local\\test_path")
-        self.assertEqual(test_asset.note, "Can't find \\my\\local\\test_path")
+
+        expected_path = os.path.realpath(self.mock_file)
+        expected_directory = os.path.dirname(expected_path)
+
+        self.assertEqual(test_asset.path, expected_path)
+        self.assertEqual(test_asset.note, "Can't find " + expected_path)
         self.assertFalse(test_asset.exists)
 
         with mock.patch.object(os.path, 'exists') as exist:
@@ -49,9 +51,9 @@ class TestAsset(unittest.TestCase):
                     exist.return_value = True
                     mod.return_value = 1453766301
                     test_asset = Asset(self.mock_file, "parent", "batch")
-                    self.assertEqual(test_asset.note, "\\my\\local\\test_path")
+                    self.assertEqual(test_asset.note, expected_path)
                     self.assertTrue(test_asset.exists)
-                    self.assertEqual(test_asset.pathmap['\\my\\local']('Linux'), 'my/local')
+                    self.assertTrue(test_asset.pathmap[expected_directory]('Linux').endswith('my/local'))
 
     @mock.patch("assets.maya")
     def test_asset_display(self, mock_api):
@@ -209,15 +211,15 @@ class TestAsset(unittest.TestCase):
         Asset.upload(self.mock_self, 0, prog, queue, "container")
         self.mock_self.batch.file.upload.assert_called_with(
             "/my/test/path/file.txt", "container", "my/test/path/file.txt", progress_callback=mock.ANY)
-        self.assertEqual(queue.qsize(), 7)
+        self.assertEqual(queue.qsize(), 6)
 
         self.mock_self.batch.file.upload.side_effect = ValueError('boom')
         Asset.upload(self.mock_self, 0, prog, queue, "container")
-        self.assertEqual(queue.qsize(), 13)
+        self.assertEqual(queue.qsize(), 11)
 
         prog.done = True
         Asset.upload(self.mock_self, 0, prog, queue, "container")
-        self.assertEqual(queue.qsize(), 14)
+        self.assertEqual(queue.qsize(), 12)
 
 
 class TestAssets(unittest.TestCase):
@@ -451,7 +453,7 @@ class TestAzureBatchAssets(unittest.TestCase):
     @mock.patch("assets.Assets")
     def test_batchassets_configure(self, mock_assets):
         session = mock.Mock(batch="batch")
-        AzureBatchAssets.configure(self.mock_self, session)
+        AzureBatchAssets.configure(self.mock_self, session, None, None)
         mock_assets.assert_called_with("batch")
         self.assertEqual(self.mock_self._set_searchpaths.call_count, 1)
 
@@ -459,23 +461,22 @@ class TestAzureBatchAssets(unittest.TestCase):
         mods = AzureBatchAssets._collect_modules(self.mock_self)
         self.assertEqual(len(mods), 4)
 
-    @mock.patch("assets.AzureBatchRenderAssets")
+    @mock.patch("azurebatchutils.get_current_scene_renderer")
     @mock.patch("assets.maya")
-    def test_batchassets_configure_renderer(self, mock_maya, mock_default):
-        mock_default.return_value = mock.Mock(render_engine = "default")
-        mock_maya.get_attr.return_value = "test_renderer"
+    def test_batchassets_configure_renderer(self, mock_maya,  mock_renderer):
+        mock_renderer.return_value = "test_renderer"
 
         renderer = mock.Mock(render_engine = "my_renderer")
         self.mock_self.modules = [renderer, "test", None]
 
         AzureBatchAssets._configure_renderer(self.mock_self)
-        self.assertEqual(self.mock_self.renderer, mock_default.return_value)
+        self.assertEqual(self.mock_self.renderer.render_engine, "Renderer_Default")
 
         renderer = mock.Mock(render_engine = "test_renderer")
         self.mock_self.modules.append(renderer)
 
         AzureBatchAssets._configure_renderer(self.mock_self)
-        self.assertEqual(self.mock_self.renderer, renderer)
+        self.assertEqual(self.mock_self.renderer.render_engine, renderer.render_engine)
 
     def test_batchassets_set_assets(self):
         self.mock_self.renderer = mock.Mock()
@@ -491,11 +492,13 @@ class TestAzureBatchAssets(unittest.TestCase):
         assets = AzureBatchAssets.get_assets(self.mock_self)
         self.assertEqual(assets, ["file1", "file2"])
 
+    @mock.patch("azurebatchutils.get_root_dir")
     @mock.patch("assets.SYS_SEARCHPATHS")
     @mock.patch("assets.maya")
-    def test_batchassets_set_searchpaths(self, mock_maya, mock_syspaths):
+    def test_batchassets_set_searchpaths(self, mock_maya, mock_syspaths, mock_utils):
         mock_maya.file.return_value = "testscene.mb"
         mock_maya.workspace.return_value = "/test/directory"
+        mock_utils.return_value = "/test/directory"
         mock_syspaths = ["a", "b", "c"]
         paths = AzureBatchAssets._set_searchpaths(self.mock_self)
         self.assertEqual(sorted(paths), ["/test/directory", "/test/directory\\sourceimages", os.getcwd()])

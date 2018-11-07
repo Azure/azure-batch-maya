@@ -10,7 +10,7 @@ import logging
 import uuid
 import datetime
 
-from azure.batch import models
+from azure.batch_extensions import models
 
 import azurebatchutils
 from azurebatchmayaapi import MayaAPI as maya
@@ -34,9 +34,11 @@ class AzureBatchPools(object):
         self._tab_index = index
 
         self.batch = None
-        self.ui = PoolsUI(self, frame)
-        self.pools = []
+
         self.selected_pool = None
+        self.pools = []
+
+        self.ui = PoolsUI(self, frame)
 
     def configure(self, session, env):
         """Populate the Batch client for the current sessions of the pools tab.
@@ -50,7 +52,7 @@ class AzureBatchPools(object):
         self.batch = self._session.batch
         self.environment = env
 
-    def list_pools(self, lazy=False):
+    def list_pools(self, lazy=False, requiredAppLicenses=None):
         """Retrieves the currently running pools. Is called on loading and
         refreshing the pools tab, also when populating the job submission
         pool selection drop down menu.
@@ -61,6 +63,9 @@ class AzureBatchPools(object):
         self.pools = []
         for pool in all_pools:
             if pool.virtual_machine_configuration:
+                if requiredAppLicenses:
+                    if not set(requiredAppLicenses).issubset(pool.application_licenses):
+                        continue
                 self.pools.append(pool)
         self.pools.sort(key=lambda x: x.creation_time, reverse=True)
         self.count = len(self.pools)
@@ -110,6 +115,10 @@ class AzureBatchPools(object):
             self.selected_pool.set_licenses(pool.application_licenses)
             self.selected_pool.set_vm_sku(pool.vm_size)
             self.selected_pool.set_image(self.environment.get_image_label(pool.virtual_machine_configuration.image_reference))
+
+            if pool.virtual_machine_configuration and pool.virtual_machine_configuration.container_configuration:
+                self.selected_pool.set_container_images_table(pool.virtual_machine_configuration.container_configuration.container_image_names)
+
             maya.refresh()
         except Exception as exp:
             self._log.warning(str(exp))
@@ -157,24 +166,30 @@ class AzureBatchPools(object):
         except AttributeError:
             raise ValueError('Selected pool is not valid.')
 
+    def get_pool_container_images(self, pool_id):
+        """Get the container images of the specified pool ID."""
+        try:
+            pool = self._call(self.batch.pool.get, pool_id)
+            if not pool.virtual_machine_configuration or not pool.virtual_machine_configuration.container_configuration:
+                return []
+            return pool.virtual_machine_configuration.container_configuration.container_image_names
+        except AttributeError:
+            raise ValueError('Selected pool is not valid.')
+
     def create_pool(self, size, name):
         """Create and deploy a new pool.
         Called on job submission by submission.py.
         TODO: Support auto-scale formula.
         """
-        image = self.environment.get_image()
-        node_agent_sku_id = image.pop('node_sku_id')
-        pool_id = 'Maya_Pool_{}'.format(uuid.uuid4())
-        pool_config = models.VirtualMachineConfiguration(
-            image_reference=models.ImageReference(**image),
-            node_agent_sku_id=node_agent_sku_id)
+        pool_config = self.environment.build_virtualmachineconfiguration()
         self._log.info("Creating new pool '{}' with {} VMs.".format(name, size))
+        pool_id = 'Maya_Pool_{}'.format(uuid.uuid4())
         new_pool = models.PoolAddParameter(
             id=pool_id,
             display_name="Maya Pool for {}".format(name),
             resize_timeout=datetime.timedelta(minutes=30),
             application_licenses=self.environment.get_application_licenses(),
-            vm_size=self.environment.get_vm_sku(),
+            vm_size=self.environment.vm_sku,
             virtual_machine_configuration=pool_config,
             target_dedicated_nodes=int(size[0]),
             target_low_priority_nodes=int(size[1]),
@@ -187,13 +202,29 @@ class AzureBatchPools(object):
         """Create a JSON auto pool specification.
         Called on job submission by submission.py.
         """
-        image = self.environment.get_image()
-        node_agent_sku_id = image.pop('node_sku_id')
+        vm_config = self.environment.build_virtualmachineconfiguration()
+        image_reference = vm_config.image_reference
+        
+        image = {
+            'publisher': image_reference.publisher,
+            'offer': image_reference.offer,
+            'sku': image_reference.sku,
+            'version': image_reference.version,
+            'virtualMachineImageId': image_reference.virtual_machine_image_id}
         pool_config = {
             'imageReference': image,
-            'nodeAgentSKUId': node_agent_sku_id}
+            'nodeAgentSKUId': vm_config.node_agent_sku_id}
+
+        container_configuration = vm_config.container_configuration
+        if container_configuration:
+            container_config = {
+                'containerImageNames': container_configuration.container_image_names,
+                'containerRepositories': container_configuration.container_registries,
+                'type': container_configuration.type}
+            pool_config['containerConfiguration'] = container_config
+
         pool_spec = {
-            'vmSize': self.environment.get_vm_sku(),
+            'vmSize': self.environment.vm_sku,
             'displayName': "Auto Pool for {}".format(job_name),
             'virtualMachineConfiguration': pool_config,
             'maxTasksPerNode': 1,

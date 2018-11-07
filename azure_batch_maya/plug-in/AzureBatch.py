@@ -38,20 +38,23 @@ DEPENDENCY_INSTALL_LOG = os.path.join(INSTALL_DIR, "AzureBatchInstall.log")
 REQUIREMENTS = {
     "pathlib==1.0.1": "pathlib",
     "futures==3.1.1": "concurrent.futures",
+    "keyring==5.6": "keyring",
+    "msrestazure==0.4.16": "msrestazure",
+    "azure-common==1.1.8": "azure.common",
     "configparser==3.5.0": "backports.configparser",
-    "msrestazure==0.4.14": "msrestazure",
-    "azure-common==1.1.8": "azure.common"
+    "python-dateutil==2.6.1": "dateutil",
 }
 
 NAMESPACE_PACKAGES = {
     "azure-mgmt-batch==4.0.0": "azure.mgmt.batch",
     "azure-mgmt-storage==1.0.0": "azure.mgmt.storage",
+    "azure-mgmt-resource==1.2.2": "azure.mgmt.resource",
     "azure-batch==4.0.0": "azure.batch",
     "azure-storage==0.32.0": "azure.storage",
     "azure-batch-extensions==1.0.1": "azure.batch_extensions"
 }
 
-VERSION = "0.22.0"
+VERSION = "0.23.0"
 EULA_PREF = "AzureBatch_EULA"
 SHELF_FILE = "shelf_AzureBatch.mel"
 cmd_name = "AzureBatch"

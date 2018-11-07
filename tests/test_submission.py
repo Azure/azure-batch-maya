@@ -16,6 +16,7 @@ try:
 except ImportError:
     import mock
 
+import azurebatchutils
 from azurebatchutils import ProgressBar
 from ui_submission import SubmissionUI
 from ui_shared import AzureBatchUI
@@ -94,11 +95,13 @@ class TestBatchSubmission(unittest.TestCase):
         mods = AzureBatchSubmission._collect_modules(self.mock_self)
         self.assertEqual(len(mods), 4)
 
+    @mock.patch("submission.utils")
     @mock.patch("submission.AzureBatchRenderJob")
     @mock.patch("submission.maya")
-    def test_submission_configure_renderer(self, mock_maya, mock_default):
+    def test_submission_configure_renderer(self, mock_maya, mock_default, mock_utils):
         mock_default.return_value = mock.Mock(render_engine = "default")
         mock_maya.get_attr.return_value = "test_renderer"
+        mock_utils.get_current_scene_renderer.return_value = ""
 
         renderer = mock.Mock(render_engine = "my_renderer")
         self.mock_self.modules = [renderer, "test", None]
@@ -109,6 +112,7 @@ class TestBatchSubmission(unittest.TestCase):
         renderer = mock.Mock(render_engine = "test_renderer")
         self.mock_self.modules.append(renderer)
 
+        mock_utils.get_current_scene_renderer.return_value = "test_renderer"
         AzureBatchSubmission._configure_renderer(self.mock_self)
         self.assertEqual(self.mock_self.renderer.render_engine, "test_renderer")
 
@@ -138,6 +142,7 @@ class TestBatchSubmission(unittest.TestCase):
         mock_prog.is_cancelled.return_value = False
         mock_utils.ProgressBar.return_value = mock_prog
         mock_utils.format_scene_path.return_value = "test_file_path"
+        mock_utils.build_template_filename.side_effect = azurebatchutils.build_template_filename
         self.mock_self._configure_pool = lambda t: AzureBatchSubmission._configure_pool(self.mock_self, t)
         self.mock_self._submit_threads = lambda: 6
         self.mock_self._check_plugins.return_value = []
@@ -149,12 +154,14 @@ class TestBatchSubmission(unittest.TestCase):
         self.mock_self.renderer.get_jobdata.return_value = ("a", "b")
         self.mock_self.renderer.get_params.return_value = {"foo": "bar"}
         self.mock_self.renderer.get_title.return_value = "job name"
+        self.mock_self._get_task_container_image.return_value = "containerImage"
         self.mock_self._call = call
         mock_job = mock.create_autospec(models.ExtendedJobParameter)
         self.mock_self.batch.job.jobparameter_from_json.return_value = mock_job
-        self.mock_self.asset_manager.upload.return_value = ("files", "maps", "thumbs", "workspace", mock_prog)
+        self.mock_self.asset_manager.upload.return_value = ({"project":"files", "path_map":"maps", "thumb_script":"thumbs", "workspace":"workspace"}, mock_prog)
         self.mock_self.asset_manager.generate_sas_token.return_value = "0123456789ABCDEF"
         self.mock_self.batch.threads = 6
+        mock_maya.about.return_value = "2017"
 
         self.mock_self.ui.get_pool.return_value = {1: (4, 4)}
         AzureBatchSubmission.submit(self.mock_self)
@@ -168,9 +175,9 @@ class TestBatchSubmission(unittest.TestCase):
              'displayName': 'job name',
              'id': mock.ANY,
              'applicationTemplateInfo': {
-                 'parameters': {'sceneFile': 'test_file_path', 'outputs': mock.ANY, 'assetScript': 'maps', 'foo': 'bar',
+                 'parameters': {'taskContainerImageName' : 'containerImage', 'sceneFile': 'test_file_path', 'outputs': mock.ANY, 'assetScript': 'maps', 'foo': 'bar',
                                 'projectData': 'files', 'thumbScript': 'thumbs', 'storageURL': '0123456789ABCDEF', 'workspace': 'workspace'},
-                 'filePath': os.path.join(os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-windows.json')},
+                 'filePath': os.path.join(os.environ['AZUREBATCH_TEMPLATES'], 'containers', 'arnold-2017-windows.json')},
              'metadata': [{'name': 'JobType', 'value': 'Maya'}]})
 
 
@@ -185,9 +192,9 @@ class TestBatchSubmission(unittest.TestCase):
              'displayName': 'job name',
              'id': mock.ANY,
              'applicationTemplateInfo': {
-                 'parameters': {'sceneFile': 'test_file_path', 'outputs': mock.ANY, 'assetScript': 'maps', 'foo': 'bar',
+                 'parameters': {'taskContainerImageName' : 'containerImage','sceneFile': 'test_file_path', 'outputs': mock.ANY, 'assetScript': 'maps', 'foo': 'bar',
                                 'projectData': 'files', 'thumbScript': 'thumbs', 'storageURL': '0123456789ABCDEF', 'workspace': 'workspace'},
-                 'filePath': os.path.join(os.environ['AZUREBATCH_TEMPLATES'], 'arnold-basic-windows.json')},
+                 'filePath': os.path.join(os.environ['AZUREBATCH_TEMPLATES'], 'containers', 'arnold-2017-windows.json')},
              'metadata': [{'name': 'JobType', 'value': 'Maya'}]})
 
 

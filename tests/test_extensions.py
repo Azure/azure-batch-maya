@@ -5,8 +5,16 @@
 
 import json
 import os
-import unittest
-from mock import patch, Mock
+import sys
+
+
+if sys.version_info >= (3, 3):
+    import unittest2 as unittest
+    from unittest.mock import MagicMock
+else:
+    import unittest
+    import mock
+    from mock import MagicMock
 
 from msrest import Serializer, Deserializer
 from azure.storage import CloudStorageAccount
@@ -250,7 +258,7 @@ class TestBatchExtensions(unittest.TestCase):
         self.assertFalse('[parameters(' in json.dumps(resolved))
 
     def test_batch_extensions_replace_parametric_sweep_command(self):
-        test_input = Mock(value="cmd {{{0}}}.mp3 {1}.mp3")
+        test_input = MagicMock(value="cmd {{{0}}}.mp3 {1}.mp3")
         template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                      test_input, "value", [5, 10])
         self.assertEqual(test_input.value, 'cmd {5}.mp3 10.mp3')
@@ -299,7 +307,7 @@ class TestBatchExtensions(unittest.TestCase):
 
     def test_batch_extensions_replace_invalid_parametric_sweep(self):
 
-        test_input = Mock(value="cmd {0}.mp3 {2}.mp3")
+        test_input = MagicMock(value="cmd {0}.mp3 {2}.mp3")
         with self.assertRaises(ValueError):
             template_utils._replacement_transform(template_utils._transform_sweep_str,  # pylint:disable=protected-access
                                          test_input, "value", [5, 10])
@@ -327,7 +335,7 @@ class TestBatchExtensions(unittest.TestCase):
             "fileName": "blob.ext",
             "fileNameWithoutExtension": "blob"
         }
-        test_input = Mock(value="cmd {{{url}}}.mp3 {filePath}.mp3")
+        test_input = MagicMock(value="cmd {{{url}}}.mp3 {filePath}.mp3")
         template_utils._replacement_transform(template_utils._transform_file_str,  # pylint:disable=protected-access
                                      test_input, "value", file_info)
         self.assertEqual(test_input.value,
@@ -359,7 +367,7 @@ class TestBatchExtensions(unittest.TestCase):
             "fileName": "blob.ext",
             "fileNameWithoutExtension": "blob"
         }
-        test_input = Mock(value="cmd {url}.mp3 {fullNameWithSome}.mp3")
+        test_input = MagicMock(value="cmd {url}.mp3 {fullNameWithSome}.mp3")
         with self.assertRaises(ValueError):
             template_utils._replacement_transform(template_utils._transform_file_str,  # pylint:disable=protected-access
                                          test_input, "value", file_info)
@@ -406,27 +414,27 @@ class TestBatchExtensions(unittest.TestCase):
         with self.assertRaises(ValueError):
             template_utils._parse_parameter_sets([])  # pylint:disable=protected-access
         with self.assertRaises(ValueError):
-            template_utils._parse_parameter_sets([Mock(start=2, end=1, step=1)])  # pylint:disable=protected-access
+            template_utils._parse_parameter_sets([MagicMock(start=2, end=1, step=1)])  # pylint:disable=protected-access
         with self.assertRaises(ValueError):
             models.ParameterSet(start=2, end=1)
         with self.assertRaises(ValueError):
-            template_utils._parse_parameter_sets([Mock(start=1, end=3, step=-1)])  # pylint:disable=protected-access
+            template_utils._parse_parameter_sets([MagicMock(start=1, end=3, step=-1)])  # pylint:disable=protected-access
         with self.assertRaises(ValueError):
             models.ParameterSet(start=1, end=3, step=-1)
         with self.assertRaises(ValueError):
-            template_utils._parse_parameter_sets([Mock(start=1, end=3, step=0)])  # pylint:disable=protected-access
+            template_utils._parse_parameter_sets([MagicMock(start=1, end=3, step=0)])  # pylint:disable=protected-access
         with self.assertRaises(ValueError):
             models.ParameterSet(start=1, end=3, step=0)
         with self.assertRaises(ValueError):
-            template_utils._parse_parameter_sets([Mock(start=None, end=3, step=1)])  # pylint:disable=protected-access
+            template_utils._parse_parameter_sets([MagicMock(start=None, end=3, step=1)])  # pylint:disable=protected-access
         with self.assertRaises(ValueError):
             models.ParameterSet(start=None, end=3, step=1)
         with self.assertRaises(ValueError):
-            template_utils._parse_parameter_sets([Mock(start=3, end=None, step=1)])  # pylint:disable=protected-access
+            template_utils._parse_parameter_sets([MagicMock(start=3, end=None, step=1)])  # pylint:disable=protected-access
         with self.assertRaises(ValueError):
             models.ParameterSet(start=3, end=None, step=1)
         with self.assertRaises(ValueError):
-            template_utils._parse_parameter_sets([Mock(start=1, end=2, step=1), Mock(start=None, end=None, step=1)])  # pylint:disable=protected-access
+            template_utils._parse_parameter_sets([MagicMock(start=1, end=2, step=1), MagicMock(start=None, end=None, step=1)])  # pylint:disable=protected-access
         with self.assertRaises(ValueError):
             models.ParameterSet(start=None, end=None)
 
@@ -571,9 +579,9 @@ class TestBatchExtensions(unittest.TestCase):
     def test_batch_extensions_parse_invalid_parametricsweep(self):
 
         with self.assertRaises(ValueError):
-            template_utils._expand_parametric_sweep(Mock(parameter_sets=None, repeat_task=models.RepeatTask('cmd {0}.mp3')))  # pylint: disable=protected-access
+            template_utils._expand_parametric_sweep(MagicMock(parameter_sets=None, repeat_task=models.RepeatTask('cmd {0}.mp3')))  # pylint: disable=protected-access
         with self.assertRaises(ValueError):
-            template_utils._expand_parametric_sweep(Mock(parameter_sets=[models.ParameterSet(1, 3)], repeat_task=None))  # pylint: disable=protected-access
+            template_utils._expand_parametric_sweep(MagicMock(parameter_sets=[models.ParameterSet(1, 3)], repeat_task=None))  # pylint: disable=protected-access
         template = models.ParametricSweepTaskFactory(
             parameter_sets=[
                 models.ParameterSet(1, 3)
@@ -612,23 +620,23 @@ class TestBatchExtensions(unittest.TestCase):
 
     def test_batch_extensions_preserve_resourcefiles(self):
         fileutils = file_utils.FileUtils(None)
-        request = Mock(
+        request = MagicMock(
             resource_files=[
-                Mock(
+                MagicMock(
                     blob_source='abc',
                     file_path='xyz')
             ])
         transformed = template_utils.post_processing(request, fileutils, pool_utils.PoolOperatingSystemFlavor.LINUX)
         self.assertEqual(transformed, request)
-        request = Mock(
+        request = MagicMock(
             common_resource_files=[
-                Mock(
+                MagicMock(
                     blob_source='abc',
                     file_path='xyz')
             ],
-            job_manager_task=Mock(
+            job_manager_task=MagicMock(
                 resource_files=[
-                    Mock(
+                    MagicMock(
                         blob_source='foo',
                         file_path='bar')
                 ]
@@ -637,12 +645,12 @@ class TestBatchExtensions(unittest.TestCase):
         transformed = template_utils.post_processing(request, fileutils, pool_utils.PoolOperatingSystemFlavor.WINDOWS)
         self.assertEqual(transformed, request)
         request = [  # pylint: disable=redefined-variable-type
-            Mock(resource_files=[Mock(blob_source='abc', file_path='xyz')]),
-            Mock(resource_files=[Mock(blob_source='abc', file_path='xyz')])
+            MagicMock(resource_files=[MagicMock(blob_source='abc', file_path='xyz')]),
+            MagicMock(resource_files=[MagicMock(blob_source='abc', file_path='xyz')])
         ]
         transformed = template_utils.post_processing(request, fileutils, pool_utils.PoolOperatingSystemFlavor.WINDOWS)
         self.assertEqual(transformed, request)
-        request = Mock(resource_files=[Mock(blob_source='abc', file_path=None)])
+        request = MagicMock(resource_files=[MagicMock(blob_source='abc', file_path=None)])
         with self.assertRaises(ValueError):
             template_utils.post_processing(request, fileutils, pool_utils.PoolOperatingSystemFlavor.WINDOWS)
 
@@ -821,7 +829,7 @@ class TestBatchExtensions(unittest.TestCase):
         self.assertEqual(len(pool.start_task.resource_files), 1)
 
     def test_batch_extensions_packagemanager_taskfactory(self):
-        job = Mock(
+        job = MagicMock(
             job_preparation_task=None,
             task_factory=models.ParametricSweepTaskFactory(
                 parameter_sets=[models.ParameterSet(1, 2), models.ParameterSet(3, 5)],
@@ -850,7 +858,7 @@ class TestBatchExtensions(unittest.TestCase):
         self.assertEqual(job.job_preparation_task.wait_for_success, True)
 
     def test_batch_extensions_starttask_without_packagemanager(self):
-        job = Mock(
+        job = MagicMock(
             job_preparation_task=None,
             task_factory=models.ParametricSweepTaskFactory(
                 parameter_sets=[models.ParameterSet(1, 2), models.ParameterSet(3, 5)],
