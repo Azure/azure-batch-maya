@@ -210,8 +210,9 @@ class AzureBatchAssets(object):
             handle.write("}")
         return Asset(map_file, [], self.batch, self._log), ';'.join(cloud_paths)
 
-    def _upload_all(self, to_upload, progress, total, project):
+    def _upload_all(self, to_upload, progress, total_to_upload, project):
         """Upload all selected assets in configured number of threads."""
+        total_uploaded = 0.0
         uploads_running = []
         progress_queue = Queue()
         threads = self._upload_threads
@@ -231,8 +232,8 @@ class AzureBatchAssets(object):
                 elif callable(uploaded):
                     uploaded()
                 else:
-                    total = total - (uploaded/BYTES/BYTES)
-                    self.ui.upload_status("Uploading {0}...".format(self._format_size(total)))
+                    total_uploaded = total_uploaded + uploaded
+                    self.ui.upload_status("Uploaded {0} of {1}".format(self._format_size(total_uploaded), self._format_size(total_to_upload)))
                 progress_queue.task_done()
 
     def _format_size(self, nbytes):
@@ -256,7 +257,7 @@ class AzureBatchAssets(object):
         data = float(0)
         for asset in files:
             data += asset.size
-        return data/BYTES/BYTES
+        return data
 
     def configure(self, session, submission, environment):
         """Populate the Batch client for the current sessions of the asset tab.
