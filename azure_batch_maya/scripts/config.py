@@ -360,8 +360,8 @@ class AzureBatchConfig(object):
 
         except AdalError as exp:
             errors = exp.error_response['error_codes']
-            if 70002 in errors or 70008 in errors:
-                #70002 is: Error validating credentials. 70008 is: The refresh token has expired due to inactivity.
+            if 70002 in errors or 70008 or 700082 in errors:
+                #70002 is: Error validating credentials. 70008 or more recently 700082 is: The refresh token has expired due to inactivity.
                 return False
             raise exp
 
