@@ -7,11 +7,9 @@ import ConfigParser
 import os
 import json
 import datetime
-import dateutil.tz
 import logging
 import sys
 import traceback
-import adal
 import copy
 
 class PoolImageFilter(object):
