@@ -35,11 +35,11 @@ class PoolImageFilter(object):
         if selectedArnold:
             results = filterImagesByArnold(results, selectedArnold)
         
-        imageName, image = results.popitem()
-        return imageName, image
+        image = results[0]
+        return image
 
     def getOSDisplayList(self):
-        results = set(i.get("OS") for i in self.containerImages.viewvalues())
+        results = set(i.os for i in self.containerImages)
 
         results.discard(None)
         return sorted(results)
@@ -50,7 +50,7 @@ class PoolImageFilter(object):
         if selectedOS:
             results = filterImagesByOS(results, selectedOS)
 
-        results = set([i.get('Maya') for i in results.viewvalues()])
+        results = set([i.appVersion for i in results])
 
         results.discard(None)
         return sorted(results)
@@ -69,7 +69,7 @@ class PoolImageFilter(object):
         if selectedArnold:
             results = filterImagesByArnold(results, selectedArnold)
 
-        results = set([i.get("VRay") for i in results.viewvalues()])
+        results = set([i.rendererVersion for i in results if i.renderer == "vray"])
 
         results.discard(None)
         return sorted(results)
@@ -88,7 +88,7 @@ class PoolImageFilter(object):
         if selectedVRay:
             results = filterImagesByVRay(results, selectedVRay)
 
-        results = set([i.get("Arnold") for i in results.viewvalues()])
+        results = set([i.rendererVersion for i in results if i.renderer == "arnold"])
 
         results.discard(None)
         return sorted(results)
@@ -96,17 +96,17 @@ class PoolImageFilter(object):
 
 #private methods
 def filterImagesByOS(images, selection):
-    imagesFiltered = [i for i in images.viewitems() if i[1].get("OS") == selection]
-    return dict(imagesFiltered)
+    imagesFiltered = [i for i in images if i.os == selection]
+    return imagesFiltered
 
 def filterImagesByMaya(images, selection):
-    imagesFiltered = [i for i in images.viewitems() if i[1].get("Maya") == selection]
-    return dict(imagesFiltered)
+    imagesFiltered = [i for i in images if i.appVersion == selection]
+    return imagesFiltered
 
 def filterImagesByArnold(images, selection):
-    imagesFiltered = [i for i in images.viewitems() if i[1].get("Arnold") == selection]
-    return dict(imagesFiltered)
+    imagesFiltered = [i for i in images if i.renderer == "arnold" and i.rendererVersion == selection]
+    return imagesFiltered
 
 def filterImagesByVRay(images, selection):
-    imagesFiltered = [i for i in images.viewitems() if i[1].get("VRay") == selection]
-    return dict(imagesFiltered)
+    imagesFiltered = [i for i in images if i.renderer == "vray" and i.rendererVersion == selection]
+    return imagesFiltered

@@ -163,6 +163,7 @@
     <Content Include="azure_batch_maya\scripts\tools\ignored_plugins.json">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="azure_batch_maya\scripts\tools\rendering-container-images.json"/>
     <Content Include="azure_batch_maya\scripts\tools\skus.json">
       <SubType>Code</SubType>
     </Content>
@@ -226,6 +227,7 @@
     <Content Include="tests\json_data\file_tests\bar.bmp" />
     <Content Include="tests\json_data\file_tests\foo.txt" />
     <Content Include="tests\json_data\file_tests\sample_data\test.txt" />
+    <Content Include="tests\json_data\rendering-container-images.json"/>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

@@ -6,6 +6,7 @@
 import json
 import sys
 import traceback
+import os
 
 from collections import OrderedDict
 
@@ -28,185 +29,58 @@ MARKETPLACE_IMAGES = {
     },
 }
 
-CONTAINER_BASE_IMAGE_REFERENCES = {
-    'centos-75-container' :
-    {
-        'node_sku_id': 'batch.node.centos 7',
-        'publisher' : 'microsoft-azure-batch',
-        'offer' : 'centos-container',
-        'sku' : '7-5',
-        'version' : 'latest'
-    },
-    'ubuntu-1604lts-container' :
-    {
-        'node_sku_id': 'batch.node.ubuntu 16.04',
-        'publisher' : 'microsoft-azure-batch',
-        'offer' : 'ubuntu-server-container',
-        'sku' : '16-04-lts',
-        'version' : 'latest'
-    },
-    'windowsserver-2016-container' :
-    {
-        'node_sku_id': 'batch.node.windows amd64',
-        'publisher' : 'MicrosoftWindowsServer',
-        'offer' : 'WindowsServer',
-        'sku' : '2016-DataCenter-With-Containers',
-        'version' : 'latest'
-    },
-}
+class ImageReference(object):
 
-CONTAINER_IMAGES = {
-    'azurebatchrendering/centos_maya2017update5:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2017-Update5',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2017update5_arnold2011:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2017-Update5',
-        'Arnold': '2.0.1.1',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2017update5_arnold3101:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2017-Update5',
-        'Arnold': '3.1.0.1',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2017update5_vray36004:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2017-Update5',
-        'VRay': '3.60.04',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2018update2:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2018-Update2',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2018update2_arnold2023:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2018-Update2',
-        'Arnold': '2.0.2.3',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2018update2_arnold2103:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2018-Update2',
-        'Arnold': '2.1.0.3',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2018update2_arnold3101:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2018-Update2',
-        'Arnold': '3.1.0.1',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2018update2_vray36004:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2018-Update2',
-        'VRay': '3.60.04',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2018update3:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2018-Update3',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2018update3_arnold2023:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2018-Update3',
-        'Arnold': '2.0.2.3',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2018update3_arnold2103:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2018-Update3',
-        'Arnold': '2.1.0.3',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2018update3_arnold3101:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2018-Update3',
-        'Arnold': '3.1.0.1',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2018update3_vray36004:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2018-Update3',
-        'VRay': '3.60.04',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2018update4:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2018-Update4',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2018update4_arnold2023:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2018-Update4',
-        'Arnold': '2.0.2.3',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2018update4_arnold2103:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2018-Update4',
-        'Arnold': '2.1.0.3',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2018update4_arnold3101:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2018-Update4',
-        'Arnold': '3.1.0.1',
-        'ImageReference' : 'centos-75-container'
-    },
-    'azurebatchrendering/centos_maya2018update4_vray36004:latest':
-    {
-        'OS': 'CentOS 75',
-        'Maya': '2018-Update4',
-        'VRay': '3.60.04',
-        'ImageReference' : 'centos-75-container'
-    },
-}
+    def __init__(self, id, node_sku_id, publisher, offer, sku, version):
+        self.id = id
+        self.node_sku_id = node_sku_id
+        self.publisher = publisher
+        self.offer = offer
+        self.sku = sku
+        self.version = version
+
+class ContainerImage(object):
+
+    def __init__(self, containerImage, os, appVersion, renderer, rendererVersion, imageReference):
+        self.containerImage = containerImage
+        self.os = os
+        self.appVersion = appVersion
+        self.renderer = renderer
+        self.rendererVersion = rendererVersion
+        self.imageReference = imageReference
 
 class PoolImageProvider(object):
 
-    #TODO provide read only storage client and load entries from table storage
-    def __init__(self, base_images = CONTAINER_BASE_IMAGE_REFERENCES, container_images = CONTAINER_IMAGES):
-        self.base_images = base_images
-        self.container_images = container_images
+    def __init__(self, image_data_filepath = "tools/rendering-container-images.json"):
+        current_file_dir = os.path.dirname(__file__)
+        relative_filepath = os.path.join(current_file_dir, image_data_filepath)
+
+        with open(relative_filepath) as images_json_file:
+            containerImageJson = json.load(images_json_file)
+            self.base_images = []
+            self.container_images = []
+            for imageReference in containerImageJson["imageReferences"]:
+                self.base_images.append(ImageReference(
+                    imageReference["id"], 
+                    imageReference["node_sku_id"], 
+                    imageReference["publisher"],
+                    imageReference["offer"],
+                    imageReference["sku"],
+                    imageReference["version"]))
+
+            for containerImage in containerImageJson["containerImages"]:
+                image_reference = [baseImage for baseImage in self.base_images if baseImage.id == containerImage["imageReferenceId"]][0]
+                if containerImage["app"] == "maya":
+                    self.container_images.append(ContainerImage(
+                        containerImage["containerImage"], 
+                        containerImage["os"], 
+                        containerImage["appVersion"], 
+                        containerImage["renderer"], 
+                        containerImage["rendererVersion"], 
+                        image_reference))
 
     def getContainerImages(self):
-        merged_images = {}
-
-        for (image_id, image_properties) in self.container_images.items():
-            merged_image_properties = {}
-
-            for (property, value) in image_properties.items():
-                if property == 'ImageReference':
-                    value = self.base_images[value]
-                merged_image_properties[property] = value
-            merged_images[image_id] = merged_image_properties
-
-        return OrderedDict(sorted(merged_images.items(), key=lambda t: t[0]))
+        return sorted(self.container_images, key=lambda t: t.containerImage)
 
     def getContainerBaseImageReferences(self):
-        return OrderedDict(sorted(self.base_images.items(), key=lambda t: t[0]))
+        return sorted(self.base_images, key=lambda t: t.id)

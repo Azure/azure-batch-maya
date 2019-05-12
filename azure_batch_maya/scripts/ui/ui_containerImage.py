@@ -127,13 +127,9 @@ class ContainerImageUI(object):
         return self.poolImageFilter.getSelectedImage(self.selected_os, self.selected_maya, self.selected_vray, self.selected_arnold)
 
     def selected_image_node_sku_id(self):
-        selectedImageId, selectedImage = self.fetch_selected_image()
-        return selectedImage["ImageReference"]["node_sku_id"]
-
-    def selected_image_container_images(self):
-        selectedImageId, selectedImage = self.fetch_selected_image()
-        return selectedImage["ContainerImages"]
+        selectedImage = self.fetch_selected_image()
+        return selectedImage.imageReference.node_sku_id
 
     def selected_image_image_reference(self):
-        selectedImageId, selectedImage = self.fetch_selected_image()
-        return selectedImage["ImageReference"]
+        selectedImage = self.fetch_selected_image()
+        return selectedImage.imageReference

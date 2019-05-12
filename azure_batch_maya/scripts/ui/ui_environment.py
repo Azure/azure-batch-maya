@@ -213,14 +213,14 @@ class EnvironmentUI(object):
 
     def get_task_container_image(self):
         if self.select_rendernode_type == PoolImageMode.CONTAINER_IMAGE.value:
-            selectedImageId, selectedImage = self.containerImageUI.fetch_selected_image()
-            return selectedImageId
+            selectedImage = self.containerImageUI.fetch_selected_image()
+            return selectedImage.containerImage
         return None
 
     def get_pool_container_images(self):
         if self.select_rendernode_type == PoolImageMode.CONTAINER_IMAGE.value:
-            selectedImageId, selectedImage = self.containerImageUI.fetch_selected_image()
-            return [selectedImageId]
+            selectedImage = self.containerImageUI.fetch_selected_image()
+            return [selectedImage.containerImage]
         return []
         
     def get_container_image_reference(self):

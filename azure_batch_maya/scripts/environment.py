@@ -143,8 +143,11 @@ class AzureBatchEnvironment(object):
             return image_reference
         if self.get_image_type().value == PoolImageMode.CONTAINER_IMAGE.value:
             image = self.ui.get_container_image_reference()
-            image.pop('node_sku_id')
-            image_reference = models.ImageReference(**image)
+            image_reference = models.ImageReference(
+                publisher = image.publisher, 
+                offer = image.offer, 
+                sku = image.sku, 
+                version = image.version)
             return image_reference
 
     def get_node_sku_id(self):
