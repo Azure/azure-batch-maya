@@ -71,6 +71,10 @@ class AzureBatchEnvironment(object):
             else:
                 self.licenses[license['label']] = False
 
+        #mtoa plugin is erroneously returned for some scenes when vray renderer is being used
+        if 'vrayformaya' in used_plugins: 
+            self.licenses['Arnold'] = False
+
     def configure(self, session, submission, assets):
         """Populate the current session of the environment tab.
         Called on successful authentication.
