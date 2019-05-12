@@ -578,7 +578,7 @@ class AzureBatchConfig(object):
         return 20
 
     def default_vm_sku(self):
-        return "STANDARD_A1"
+        return "STANDARD_D3_V2"
 
     def convert_timezone_naive_expireson_to_utc(self, token):
         # we want to store token expiry times as UTC for consistency
