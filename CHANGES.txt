@@ -1,3 +1,14 @@
+2019.30.05 v0.24.0
+------------------
+- Numerous small bug fixes
+	Fix for Arnold license sometimes detected as required for vray scenes
+	Change default SKU to one which is actually available
+	Standard log file initialized as very first operation
+	Fix duplicate log lines
+- Consume same renderingContainerImages.json format as BatchExplorer
+- Upgrade .sln and .proj for VisualStudio2017 compatability
+
+
 2018.11.07 v0.23.0
 ------------------
 - Change authentication mode to AAD, including support for private cloud
