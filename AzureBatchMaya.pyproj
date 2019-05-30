@@ -163,7 +163,7 @@
     <Content Include="azure_batch_maya\scripts\tools\ignored_plugins.json">
       <SubType>Code</SubType>
     </Content>
-    <Content Include="azure_batch_maya\scripts\tools\rendering-container-images.json"/>
+    <Content Include="azure_batch_maya\scripts\tools\rendering-container-images.json" />
     <Content Include="azure_batch_maya\scripts\tools\skus.json">
       <SubType>Code</SubType>
     </Content>
