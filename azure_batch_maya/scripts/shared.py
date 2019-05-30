@@ -47,10 +47,12 @@ class AzureBatchSettings(object):
         """Initialize all the tabs and attempt to authenticate using cached
         credentials if available.
         """
-        self._log = logging.getLogger('AzureBatchMaya')
         try:
+            self.config = AzureBatchConfig() # this has to be first line as it creates log file 
+            self._log = logging.getLogger('AzureBatchMaya')
+        
             self.frame = AzureBatchUI(self)
-            self.config = AzureBatchConfig(self.tab_index['AUTH'], self, self.frame, self.start, self.call)
+            self.config.initialize_ui(self.tab_index['AUTH'], self, self.frame, self.start, self.call)
 
             if(self.config.can_init_from_config):
                 self.init_after_account_selected()

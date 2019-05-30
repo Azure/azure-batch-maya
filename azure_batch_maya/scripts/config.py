@@ -48,7 +48,11 @@ class AzureBatchConfig(object):
 
     aadClientId = "04b07795-8ddb-461a-bbee-02f9e1bf7b46" #Azure CLI
 
-    def __init__(self, index, settings, frame, start, call):
+    def __init__(self):
+        self._data_dir = os.path.join(maya.prefs_dir(), 'AzureBatchData')
+        self._log = self._configure_logging(LOG_LEVELS['debug'])    #config hasn't been loaded yet so use a default logging level
+
+    def initialize_ui(self, index, settings, frame, start, call):
         """Create new configuration Handler.
 
         :param index: The UI tab index.
@@ -58,15 +62,13 @@ class AzureBatchConfig(object):
         """
         self.session = start
         self._tab_index = index
-        self._data_dir = os.path.join(maya.prefs_dir(), 'AzureBatchData')
+       
         self._ini_file = "azure_batch.ini"
         self._user_agent = "batchmaya/{}".format(os.environ.get('AZUREBATCH_VERSION'))
         self._cfg = ConfigParser.ConfigParser()
         self._call = call
         self.aad_environment_provider = AADEnvironmentProvider()
         
-        self._log = self._configure_logging(LOG_LEVELS['debug'])    #config hasn't been loaded yet so use a default logging level
-
         self.ui = ConfigUI(self, settings, frame)
         self._configure_plugin(False)
         self.aad_environment = None
@@ -410,15 +412,16 @@ class AzureBatchConfig(object):
         """
         level = int(log_level)
         logger = logging.getLogger('AzureBatchMaya')
-        file_format = logging.Formatter(
-            "%(asctime)-15s [%(levelname)s] %(module)s: %(message)s")
-        logfile = os.path.join(self._data_dir, "azure_batch.log")
-        if not os.path.exists(logfile):
-            with open(logfile, 'w') as handle:
-                handle.write("Azure Batch Plugin Log")
-        file_logging = logging.FileHandler(logfile)
-        file_logging.setFormatter(file_format)
-        logger.addHandler(file_logging)
+        if len(logger.handlers) == 0:
+            file_format = logging.Formatter(
+                "%(asctime)-15s [%(levelname)s] %(module)s: %(message)s")
+            logfile = os.path.join(self._data_dir, "azure_batch.log")
+            if not os.path.exists(logfile):
+                with open(logfile, 'w') as handle:
+                    handle.write("Azure Batch Plugin Log\n")
+            file_logging = logging.FileHandler(logfile)
+            file_logging.setFormatter(file_format)
+            logger.addHandler(file_logging)
         logger.setLevel(level)
         return logger
 
