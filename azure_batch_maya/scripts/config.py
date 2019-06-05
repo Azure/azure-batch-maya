@@ -50,6 +50,13 @@ class AzureBatchConfig(object):
 
     def __init__(self):
         self._data_dir = os.path.join(maya.prefs_dir(), 'AzureBatchData')
+        if not os.path.isdir(self._data_dir):
+            try:
+                os.makedirs(self._data_dir)
+            except OSError as exc: # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
         self._log = self._configure_logging(LOG_LEVELS['debug'])    #config hasn't been loaded yet so use a default logging level
 
     def initialize_ui(self, index, settings, frame, start, call):
@@ -269,8 +276,6 @@ class AzureBatchConfig(object):
         """Set up the config file, authenticate the SDK clients
         and set up the log file.
         """
-        if not os.path.exists(self._data_dir):
-            os.makedirs(self._data_dir)
         config_file = os.path.join(self._data_dir, self._ini_file)
 
         try:
@@ -415,7 +420,7 @@ class AzureBatchConfig(object):
         if len(logger.handlers) == 0:
             file_format = logging.Formatter(
                 "%(asctime)-15s [%(levelname)s] %(module)s: %(message)s")
-            logfile = os.path.join(self._data_dir, "azure_batch.log")
+            logfile = os.path.normpath(os.path.join(self._data_dir, "azure_batch.log"))
             if not os.path.exists(logfile):
                 with open(logfile, 'w') as handle:
                     handle.write("Azure Batch Plugin Log\n")
