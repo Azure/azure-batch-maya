@@ -1,3 +1,8 @@
+2019.05.06 v0.25.0
+------------------
+- Bug fix for log directory not existing when it is created and path building on Maya 2019
+
+
 2019.30.05 v0.24.0
 ------------------
 - Numerous small bug fixes
