@@ -250,8 +250,8 @@ class AzureBatchSubmission(object):
             maya.refresh()
 
             mayaVersion = maya.about(version=True)
-            if mayaVersion != "2017" and mayaVersion != "2018":
-                raise Exception("Unrecognized mayaVersion \"{}\", 2017 and 2018 are supported".format(mayaVersion))
+            if mayaVersion != "2017" and mayaVersion != "2018" and mayaVersion != "2019":
+                raise Exception("Unrecognized mayaVersion \"{}\", 2017, 2018 and 2019 are supported".format(mayaVersion))
 
             batch_parameters = {'id': job_id}
             batch_parameters['displayName'] = self.renderer.get_title()
