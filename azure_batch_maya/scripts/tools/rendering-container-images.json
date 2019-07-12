@@ -196,6 +196,15 @@
 			"renderer": "vray",
 			"rendererVersion": "36004",
 			"imageReferenceId": "centos-75-container"
+		},
+		{
+			"containerImage": "azurebatchrendering/maya:0.0.1.centos-0.0.1.2017u5-0.0.30.arnold2011",
+			"os": "CentOS 75",
+			"app": "maya",
+			"appVersion": "2017-Update5",
+			"renderer": "arnold",
+			"rendererVersion": "2.0.1.1",
+			"imageReferenceId": "centos-75-container"
 		}
 	]
 }
