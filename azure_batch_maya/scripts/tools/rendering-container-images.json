@@ -27,7 +27,7 @@
   ],
   "containerImages": [
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2017u5",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2017u5",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2017-Update5",
@@ -36,7 +36,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2017u5-1.0.0.vray36004",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2017u5-1.0.0.vray36004",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2017-Update5",
@@ -45,7 +45,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2017u5-1.0.0.arnold2011",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2017u5-1.0.0.arnold2011",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2017-Update5",
@@ -54,7 +54,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2017u5-1.0.0.arnold3101",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2017u5-1.0.0.arnold3101",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2017-Update5",
@@ -63,7 +63,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u4",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u4",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2018-Update4",
@@ -72,7 +72,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u4-1.0.0.arnold2103",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u4-1.0.0.arnold2103",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2018-Update4",
@@ -81,7 +81,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u4-1.0.0.vray36004",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u4-1.0.0.vray36004",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2018-Update4",
@@ -90,7 +90,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u4-1.0.0.arnold2023",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u4-1.0.0.arnold2023",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2018-Update4",
@@ -99,7 +99,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u4-1.0.0.arnold3101",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u4-1.0.0.arnold3101",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2018-Update4",
@@ -108,7 +108,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u2",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u2",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2018-Update2",
@@ -117,7 +117,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u2-1.0.0.arnold2103",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u2-1.0.0.arnold2103",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2018-Update2",
@@ -126,7 +126,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u2-1.0.0.vray36004",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u2-1.0.0.vray36004",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2018-Update2",
@@ -135,7 +135,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u2-1.0.0.arnold2023",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u2-1.0.0.arnold2023",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2018-Update2",
@@ -144,7 +144,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u2-1.0.0.arnold3101",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u2-1.0.0.arnold3101",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2018-Update2",
@@ -153,7 +153,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u3",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u3",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2018-Update3",
@@ -162,7 +162,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u3-1.0.0.arnold2103",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u3-1.0.0.arnold2103",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2018-Update3",
@@ -171,7 +171,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u3-1.0.0.vray36004",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u3-1.0.0.vray36004",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2018-Update3",
@@ -180,7 +180,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u3-1.0.0.arnold2023",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u3-1.0.0.arnold2023",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2018-Update3",
@@ -189,7 +189,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/public/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u3-1.0.0.arnold3101",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2018u3-1.0.0.arnold3101",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2018-Update3",
