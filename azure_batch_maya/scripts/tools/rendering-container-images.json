@@ -196,6 +196,24 @@
 			"renderer": "vray",
 			"rendererVersion": "36004",
 			"imageReferenceId": "centos-75-container"
+		},
+		{
+			"containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:0.0.3.centos7-0.0.3.2017u5",
+			"os": "CentOS 75",
+			"app": "maya",
+			"appVersion": "2017-Update5",
+			"renderer": "mayasw",
+			"rendererVersion": "2017-Update5",
+			"imageReferenceId": "centos-75-container"
+		},
+		{
+			"containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:0.0.3.centos7-0.0.3.2017u5-0.0.3.arnold2011",
+			"os": "CentOS 75",
+			"app": "maya",
+			"appVersion": "2017-Update5",
+			"renderer": "arnold",
+			"rendererVersion": "2.0.1.1",
+			"imageReferenceId": "centos-75-container"
 		}
 	]
 }
