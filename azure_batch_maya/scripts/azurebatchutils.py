@@ -343,9 +343,10 @@ class Dropdown(object):
         :param int value: The index of the option to select.
         """
         try:
-            maya.menu(self.menu, edit=True, select=int(value))
-        except ValueError:
             maya.menu(self.menu, edit=True, value=value)
+        except ValueError:
+            maya.menu(self.menu, edit=True, select=int(value))
+          
     
     def clear(self):
         menuItems = maya.menu(self.menu, query=True, itemListLong=True)

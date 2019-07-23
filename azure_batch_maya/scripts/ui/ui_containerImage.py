@@ -10,7 +10,7 @@ from azurebatchmayaapi import MayaAPI as maya
 
 class ContainerImageUI(object):
 
-    def __init__(self, poolImageFilter, parent, image_config, renderer):
+    def __init__(self, poolImageFilter, parent, image_config, renderer, local_maya_version):
 
         self.poolImageFilter = poolImageFilter
 
@@ -20,12 +20,15 @@ class ContainerImageUI(object):
         self.selected_maya = None
         self.selected_vray = None
         self.selected_arnold = None
+
+        self.maya_dropdown = None
         
         with utils.FrameLayout(
             label="Container Image Settings", collapsable=True,
             width=325, collapse=False, parent = parent) as framelayout:
 
             image_config.append(framelayout)
+            initial_maya_version = "" 
 
             with utils.ColumnLayout(
                 2, col_width=((1,100),(2,200)), row_spacing=(1,5),
@@ -51,12 +54,13 @@ class ContainerImageUI(object):
                 with utils.Dropdown(self.maya_dropdown_set, parent=imageLayout) as maya_dropdown:
 
                     image_config.append(maya_dropdown)
-                    self.maya_dropdown = maya_dropdown 
+                    self.maya_dropdown = maya_dropdown  
 
                     for maya_version in self.poolImageFilter.getMayaDisplayList(self.selected_os):
                         self.maya_dropdown.add_item(maya_version)
-
-                    self.selected_maya = self.maya_dropdown.value()
+                        #store the last version returned which is for the same year as the locally running Maya, e.g. 2019
+                        if maya_version.startswith(local_maya_version):
+                            initial_maya_version = maya_version
 
                 if self.renderer == "vray":
 
@@ -81,6 +85,12 @@ class ContainerImageUI(object):
                             self.arnold_dropdown.add_item(arnold_version)
 
                         self.selected_arnold = self.arnold_dropdown.value()
+        
+        self.maya_dropdown.select(initial_maya_version)
+        self.maya_dropdown_set(initial_maya_version)
+        #self.selected_maya = self.maya_dropdown.value()
+        #maya.refresh()
+        
 
     def os_dropdown_set(self, selected_os):
         self.selected_os = selected_os

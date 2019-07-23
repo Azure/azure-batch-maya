@@ -1,6 +1,6 @@
 {
   "templateMetadata": {
-    "description": "Application template for working with Maya and VRay on CentOS."
+    "description": "Application template for working with Maya on CentOS."
   },
   "parameters": {
     "sceneFile": {
@@ -11,12 +11,12 @@
     },
     "renderer": {
       "type": "string",
-      "defaultValue": "vray",
+      "defaultValue": "sw",
       "metadata": {
         "description": "The Maya renderer to be used for the render"
       },
       "allowedValues": [
-        "vray"
+        "sw"
       ]
     },
     "projectData": {
@@ -72,12 +72,6 @@
       "metadata": {
         "description": "SAS URL for input file group with read and list permissions"
       }
-    },
-    "taskContainerImageName": {
-      "type": "string",
-      "metadata": {
-        "description": "The Container image name to execute each task within"
-      }
     }
   },
   "jobPreparationTask": {
@@ -128,10 +122,6 @@
         {
           "name": "FLEXLM_TIMEOUT",
           "value": "5000000"
-        },
-        {
-          "name": "VRAY_AUTH_CLIENT_FILE_PATH",
-          "value": "/etc/vray"
         }
       ],
       "outputFiles": [
@@ -182,11 +172,7 @@
             "uploadCondition": "taskCompletion"
           }
         }
-      ],
-      "containerSettings": {
-        "imageName": "[parameters('taskContainerImageName')]",
-        "containerRunOptions": "--privileged"
-      }
+      ]
     }
   },
   "onAllTasksComplete": "terminateJob"

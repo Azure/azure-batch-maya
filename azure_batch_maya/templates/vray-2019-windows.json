@@ -1,6 +1,6 @@
 {
   "templateMetadata": {
-    "description": "Application template for working with Maya and VRay on CentOS."
+    "description": "Application template for working with Maya and VRay on Windows."
   },
   "parameters": {
     "sceneFile": {
@@ -37,16 +37,16 @@
         "description": "The SAS URL to the thumbnail generation script"
       }
     },
-    "frameStart": {
-      "type": "int",
-      "metadata": {
-        "description": "Index of the first frame to render"
-      }
-    },
     "workspace": {
       "type": "string",
       "metadata": {
         "description": "The SAS URL to the project workspace"
+      }
+    },
+    "frameStart": {
+      "type": "int",
+      "metadata": {
+        "description": "Index of the first frame to render"
       }
     },
     "frameStep": {
@@ -72,12 +72,6 @@
       "metadata": {
         "description": "SAS URL for input file group with read and list permissions"
       }
-    },
-    "taskContainerImageName": {
-      "type": "string",
-      "metadata": {
-        "description": "The Container image name to execute each task within"
-      }
     }
   },
   "jobPreparationTask": {
@@ -89,7 +83,7 @@
     "resourceFiles": [
       {
         "blobSource": "[parameters('assetScript')]",
-        "filePath": "scripts/renderPrep.mel"
+        "filePath": "scripts\\renderPrep.mel"
       },
       {
         "blobSource": "[parameters('thumbScript')]",
@@ -100,7 +94,7 @@
         "filePath": "workspace.mel"
       }
     ],
-    "commandLine": "/bin/bash -c \"yum install -y libunwind libicu && curl -sSL -o dotnet.tar.gz https://download.microsoft.com/download/7/3/A/73A3E4DC-F019-47D1-9951-0453676E059B/dotnet-sdk-2.0.2-linux-x64.tar.gz && mkdir -p /opt/dotnet && tar zxf dotnet.tar.gz -C /opt/dotnet && ln -nsf /opt/dotnet/dotnet /usr/local/bin && wget -O azcopy.tar.gz https://aka.ms/downloadazcopyprlinux && tar -xf azcopy.tar.gz && ./install.sh && azcopy --source \\\"[parameters('storageURL')]\\\" --destination $AZ_BATCH_JOB_PREP_WORKING_DIR/assets --recursive\""
+       "commandLine": "azcopy /source:\"[parameters('storageURL')]\" /dest:\"%AZ_BATCH_JOB_PREP_WORKING_DIR%\\assets\" /S"
   },
   "taskFactory": {
     "type": "parametricSweep",
@@ -113,25 +107,15 @@
     ],
     "repeatTask": {
       "displayName": "Frame {0}",
-      "userIdentity": {
-        "autoUser": {
-          "scope": "task",
-          "elevationLevel": "admin"
-        }
-      },
-      "commandLine": "sudo mkdir -m a=rwx -p \"/X\";sudo mount --rbind $AZ_BATCH_JOB_PREP_WORKING_DIR/assets /X;maya2019.sh -renderer [parameters('renderer')] -proj \"$AZ_BATCH_JOB_PREP_WORKING_DIR\" -verb -preRender renderPrep -rd \"$AZ_BATCH_TASK_WORKING_DIR/images\" -s {0} -e {0} \"[parameters('sceneFile')]\";err=$?;python /mnt/resource/batch/tasks/workitems/[parameters('outputs')]/job-1/jobpreparation/wd/thumbnail.py $err;sudo umount \"/X\";exit $err",
+      "commandLine": "subst X: \"%AZ_BATCH_JOB_PREP_WORKING_DIR%\\assets\" & \"%MAYA_2019_EXEC%\" -renderer [parameters('renderer')] -proj \"%AZ_BATCH_JOB_PREP_WORKING_DIR%\" -verb -preRender renderPrep -rd \"%AZ_BATCH_TASK_WORKING_DIR%\\images\" -s {0} -e {0} \"[parameters('sceneFile')]\" & call \"%MAYA_2019%\\bin\\mayapy\" \"%AZ_BATCH_JOB_PREP_WORKING_DIR%\\thumbnail.py\" %^errorlevel%",
       "environmentSettings": [
         {
           "name": "MAYA_SCRIPT_PATH",
-          "value": "/mnt/resource/batch/tasks/workitems/[parameters('outputs')]/job-1/jobpreparation/wd/scripts"
+          "value": "%AZ_BATCH_JOB_PREP_WORKING_DIR%\\scripts"
         },
         {
           "name": "FLEXLM_TIMEOUT",
           "value": "5000000"
-        },
-        {
-          "name": "VRAY_AUTH_CLIENT_FILE_PATH",
-          "value": "/etc/vray"
         }
       ],
       "outputFiles": [
@@ -182,11 +166,7 @@
             "uploadCondition": "taskCompletion"
           }
         }
-      ],
-      "containerSettings": {
-        "imageName": "[parameters('taskContainerImageName')]",
-        "containerRunOptions": "--privileged"
-      }
+      ]
     }
   },
   "onAllTasksComplete": "terminateJob"

@@ -70,7 +70,7 @@ To uninstall the plug-in:
 6. Confirm to remove the dependencies if you wish a clean uninstall
 
 To remove config which is retained for a reinstall, delete the config file "azure_batch.ini". 
-On Windows this is located in: Users\<username>\Documents\maya\2017\prefs\AzureBatchData
+On Windows this is located in: Users\<username>\Documents\maya\<version>\prefs\AzureBatchData
 On Mac this is located at: /Users/<username>/Library/Preferences/Autodesk/maya/<version>/prefs/AzureBatchData
 
 ##  Upgrading or reinstalling
@@ -87,7 +87,7 @@ ProgramFiles\Maya\Maya2017\modules
 
 ##  Side-by-side compatibility
 
-Side-by-side installs are supported for Maya 2017 and 2018. The plugin installs and is managed independently in Maya 2017 and 2018, so you can have it installed for both 2017 and 2018 at one time. Each install can be configured for a different Batch account or they can share an account. If the plugin is installed side-by-side, it is recommended that both installs are of the same identical version / release of the plugin.
+Side-by-side installs are supported, for example in both Maya 2017 and 2018. The plugin installs and is managed independently in each version of Maya, so you can have it installed for both 2017 and 2018 at one time. Each install can be configured for a different Batch account or they can share an account. If the plugin is installed side-by-side, it is recommended that both installs are of the same identical version / release of the plugin.
 
 ## Supported Maya Versions
 Earlier versions of the code and releases were supported on Maya2017-Update3 only. 
@@ -95,6 +95,8 @@ Earlier versions of the code and releases were supported on Maya2017-Update3 onl
 Release v0.14.0 adds support for Maya2017-Update4 and Maya2018.
 
 Release v0.16.0 supports Maya2017-Update5
+
+
 
 ## License
 

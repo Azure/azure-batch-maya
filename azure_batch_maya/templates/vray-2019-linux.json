@@ -72,12 +72,6 @@
       "metadata": {
         "description": "SAS URL for input file group with read and list permissions"
       }
-    },
-    "taskContainerImageName": {
-      "type": "string",
-      "metadata": {
-        "description": "The Container image name to execute each task within"
-      }
     }
   },
   "jobPreparationTask": {
@@ -182,11 +176,7 @@
             "uploadCondition": "taskCompletion"
           }
         }
-      ],
-      "containerSettings": {
-        "imageName": "[parameters('taskContainerImageName')]",
-        "containerRunOptions": "--privileged"
-      }
+      ]
     }
   },
   "onAllTasksComplete": "terminateJob"
