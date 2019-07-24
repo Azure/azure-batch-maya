@@ -215,7 +215,7 @@
 			"rendererVersion": "3.2.1.1",
 			"imageReferenceId": "centos-75-container"
     },
-
+    {
 			"containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:0.0.1.centos-0.1.0.2019",
 			"os": "CentOS 75",
 			"app": "maya",
