@@ -16,9 +16,6 @@ class SubmissionUI(object):
     EXISTING_POOL = 2
     NEW_POOL = 3
 
-    MCR_REPO_PREFIX = "mcr.microsoft.com/azure-batch/rendering/maya:"
-    MCR_REPO_DISPLAY_PREFIX = "mcr/maya:"
-
     def __init__(self, base, frame):
         """Create 'Submit' tab and add to UI frame.
 
@@ -290,7 +287,7 @@ class SubmissionUI(object):
                     width=355, parent=self.pool_config[-1]) as container_dropdown:
                     self.pool_config.append(container_dropdown)
                     for container_image in available_images:
-                        container_dropdown.add_item(self.mcr_container_image_to_display_format(container_image))
+                        container_dropdown.add_item(utils.mcr_container_image_to_display_format(container_image))
                     self.set_task_container_image(container_dropdown.value())
 
         with utils.Row(1,1,300, "center", (1, "bottom", 20)) as render_node_config_row:
@@ -363,7 +360,7 @@ class SubmissionUI(object):
                     width=355, parent=self.pool_config[-1]) as container_dropdown:
                     self.pool_config.append(container_dropdown)
                     for container_image in available_images:
-                        container_dropdown.add_item(self.mcr_container_image_to_display_format(container_image))
+                        container_dropdown.add_item(utils.mcr_container_image_to_display_format(container_image))
                     self.set_task_container_image(container_dropdown.value())
 
         with utils.Row(1,1,300, "center", (1, "bottom", 20)) as render_node_config_row:
@@ -441,25 +438,15 @@ class SubmissionUI(object):
                         width=355) as container_dropdown:
                         #self.container_config.append(container_dropdown)
                         for container_image in available_images:
-                            container_dropdown.add_item(self.mcr_container_image_to_display_format(container_image))
+                            container_dropdown.add_item(utils.mcr_container_image_to_display_format(container_image))
                         self.set_task_container_image(container_dropdown.value())
     
     def set_task_container_image(self, selected_container_image):
-            self.selected_container_image = self.display_format_to_mcr_container_image(selected_container_image)
+            self.selected_container_image = utils.display_format_to_mcr_container_image(selected_container_image)
 
     def get_task_container_image(self):
         if self.select_pool_type == self.EXISTING_POOL:
             return self.selected_container_image
         if self.select_pool_type == self.AUTO_POOL or self.select_pool_type == self.NEW_POOL:
             return self.base.env_manager.get_task_container_image()
-
-    def display_format_to_mcr_container_image(self, display_image):
-        if display_image.startswith(self.MCR_REPO_DISPLAY_PREFIX):
-            return self.MCR_REPO_PREFIX + display_image[len(self.MCR_REPO_DISPLAY_PREFIX):]
-        return display_image
-  
-    def mcr_container_image_to_display_format(self, image):
-        if image.startswith(self.MCR_REPO_PREFIX):
-            return self.MCR_REPO_DISPLAY_PREFIX + image[len(self.MCR_REPO_PREFIX):]
-        return image
         
