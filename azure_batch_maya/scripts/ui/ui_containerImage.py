@@ -87,10 +87,6 @@ class ContainerImageUI(object):
                         self.selected_arnold = self.arnold_dropdown.value()
         
         self.maya_dropdown.select(initial_maya_version)
-        self.maya_dropdown_set(initial_maya_version)
-        #self.selected_maya = self.maya_dropdown.value()
-        #maya.refresh()
-        
 
     def os_dropdown_set(self, selected_os):
         self.selected_os = selected_os
