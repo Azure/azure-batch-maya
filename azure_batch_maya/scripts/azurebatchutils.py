@@ -12,6 +12,9 @@ import subprocess
 from azurebatchmayaapi import MayaAPI as maya
 from exception import CancellationException, FileUploadException
 
+#MCR container image path is long - display a shortened version 
+MCR_REPO_PREFIX = "mcr.microsoft.com/azure-batch/rendering/maya:"
+MCR_REPO_DISPLAY_PREFIX = "mcr/maya:"
 
 MAX_LOCAL_PATH_LENGTH = 150
 
@@ -144,6 +147,20 @@ def build_template_filename(render_engine, maya_version, operating_system, conta
                 "{}-{}-{}.json".format(render_engine, maya_version, operating_system))
 
     return template_file
+
+def display_format_to_mcr_container_image(display_image):
+    """Convert imageName in shortened mcr format to original
+    """
+    if display_image.startswith(MCR_REPO_DISPLAY_PREFIX):
+        return MCR_REPO_PREFIX + display_image[len(MCR_REPO_DISPLAY_PREFIX):]
+    return display_image
+  
+def mcr_container_image_to_display_format(image):
+    """Convert imageName to shortened mcr format 
+    """
+    if image.startswith(MCR_REPO_PREFIX):
+        return MCR_REPO_DISPLAY_PREFIX + image[len(MCR_REPO_PREFIX):]
+    return image
 
 class OperatingSystem(Enum):
     windows = 'Windows'
@@ -343,9 +360,10 @@ class Dropdown(object):
         :param int value: The index of the option to select.
         """
         try:
-            maya.menu(self.menu, edit=True, select=int(value))
-        except ValueError:
             maya.menu(self.menu, edit=True, value=value)
+        except ValueError:
+            maya.menu(self.menu, edit=True, select=int(value))
+          
     
     def clear(self):
         menuItems = maya.menu(self.menu, query=True, itemListLong=True)

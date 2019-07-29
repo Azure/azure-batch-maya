@@ -62,7 +62,7 @@ container image to be run (currently CentOS only). The container image options d
 Container Images offer a wider variety of OS and Application versions, but currently take longer to provision to a new node in a pool (~7-12 minutes vs. ~3-5 minutes for Batch Provided Images).
 If you change scenes with the plugin window open, you will need to click 'Refresh' to trigger this list to update. You can see a list
 of VM types and their descriptions in [this article](https://azure.microsoft.com/pricing/details/virtual-machines/series/). 
-Only VM's which include 8GB of Memory or greater are available for selection through the plugin, to match the minimum requirements of Maya 2017 / 2018.'
+Only VM's which include 8GB of Memory or greater are available for selection through the plugin, to match the minimum requirements of Maya.'
 You can also select whether you wish to have the pool licensed for Maya, VRay Arnold. Maya licensing will be enabled by default, whereas VRay or Arnold licensing will be enabled if either
 is detected as the active render engine (you may need to click `Refresh` to get the latest scene settings).
 If you wish to render using your own license server, you can deselet the license options and configure your license end point by adding the applicable environment variables in the table.

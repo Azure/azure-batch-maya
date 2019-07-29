@@ -239,7 +239,7 @@ class AzureBatchPoolInfo(object):
             table_height = max(60, min(150, 25 + 15 * len(container_images)))
             maya.table(self._container_images_table, edit=True, clearTable=True, visible=True, height= table_height)
         for image in container_images:
-            self.container_image_to_add = image
+            self.container_image_to_add = utils.mcr_container_image_to_display_format(image)
             maya.table(self._container_images_table, edit=True, insertRow=1)
 
     def on_expand(self):

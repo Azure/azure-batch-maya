@@ -190,14 +190,6 @@ class EnvironmentUI(object):
         if sku:
             self._sku.select(sku)
 
-    def select_node_sku_id(self, node_sku_id):
-        if node_sku_id:
-            #if the dropdown hasn't been created yet (because "Custom Image" hasn't been selected) store value in a temporary value
-            if not self._node_sku_id_dropdown:
-                self.node_sku_id = node_sku_id
-            else:
-                self._node_sku_id_dropdown.select(node_sku_id)
-
     def set_node_sku_id(self, node_sku_id):
         self.base.set_node_sku_id(node_sku_id)
 
@@ -333,4 +325,5 @@ class EnvironmentUI(object):
         self.image_config = []
 
         current_renderer = str(utils.get_current_scene_renderer())
-        self.containerImageUI = ContainerImageUI(self.poolImageFilter, self.rendernode_config, self.image_config, current_renderer)
+        mayaVersion = maya.about(version=True)
+        self.containerImageUI = ContainerImageUI(self.poolImageFilter, self.rendernode_config, self.image_config, current_renderer, mayaVersion)

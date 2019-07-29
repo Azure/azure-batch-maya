@@ -16,7 +16,6 @@ class SubmissionUI(object):
     EXISTING_POOL = 2
     NEW_POOL = 3
 
-
     def __init__(self, base, frame):
         """Create 'Submit' tab and add to UI frame.
 
@@ -288,7 +287,7 @@ class SubmissionUI(object):
                     width=355, parent=self.pool_config[-1]) as container_dropdown:
                     self.pool_config.append(container_dropdown)
                     for container_image in available_images:
-                        container_dropdown.add_item(container_image)
+                        container_dropdown.add_item(utils.mcr_container_image_to_display_format(container_image))
                     self.set_task_container_image(container_dropdown.value())
 
         with utils.Row(1,1,300, "center", (1, "bottom", 20)) as render_node_config_row:
@@ -361,7 +360,7 @@ class SubmissionUI(object):
                     width=355, parent=self.pool_config[-1]) as container_dropdown:
                     self.pool_config.append(container_dropdown)
                     for container_image in available_images:
-                        container_dropdown.add_item(container_image)
+                        container_dropdown.add_item(utils.mcr_container_image_to_display_format(container_image))
                     self.set_task_container_image(container_dropdown.value())
 
         with utils.Row(1,1,300, "center", (1, "bottom", 20)) as render_node_config_row:
@@ -439,14 +438,15 @@ class SubmissionUI(object):
                         width=355) as container_dropdown:
                         #self.container_config.append(container_dropdown)
                         for container_image in available_images:
-                            container_dropdown.add_item(container_image)
+                            container_dropdown.add_item(utils.mcr_container_image_to_display_format(container_image))
                         self.set_task_container_image(container_dropdown.value())
     
     def set_task_container_image(self, selected_container_image):
-        self.selected_container_image = selected_container_image
+            self.selected_container_image = utils.display_format_to_mcr_container_image(selected_container_image)
 
     def get_task_container_image(self):
         if self.select_pool_type == self.EXISTING_POOL:
             return self.selected_container_image
         if self.select_pool_type == self.AUTO_POOL or self.select_pool_type == self.NEW_POOL:
             return self.base.env_manager.get_task_container_image()
+        

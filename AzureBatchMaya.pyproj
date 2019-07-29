@@ -10,8 +10,7 @@
     <OutputPath>.</OutputPath>
     <Name>Maya.Client</Name>
     <RootNamespace>Maya.Client</RootNamespace>
-    <InterpreterId>
-    </InterpreterId>
+    <InterpreterId>Global|VisualStudio|azure-batch-maya</InterpreterId>
     <InterpreterVersion>
     </InterpreterVersion>
     <SearchPath>azure_batch_maya\scripts\;azure_batch_maya\scripts\ui\;tests\data\;tests\data\modules\</SearchPath>
@@ -174,26 +173,38 @@
     <Content Include="azure_batch_maya\templates\arnold-2017-windows.json" />
     <Content Include="azure_batch_maya\templates\arnold-2018-linux.json" />
     <Content Include="azure_batch_maya\templates\arnold-2018-windows.json" />
+    <Content Include="azure_batch_maya\templates\arnold-2019-linux.json" />
+    <Content Include="azure_batch_maya\templates\arnold-2019-windows.json" />
     <Content Include="azure_batch_maya\templates\containers\arnold-2017-linux.json" />
     <Content Include="azure_batch_maya\templates\containers\arnold-2017-windows.json" />
     <Content Include="azure_batch_maya\templates\containers\arnold-2018-linux.json" />
     <Content Include="azure_batch_maya\templates\containers\arnold-2018-windows.json" />
+    <Content Include="azure_batch_maya\templates\containers\arnold-2019-linux.json" />
+    <Content Include="azure_batch_maya\templates\containers\arnold-2019-windows.json" />
     <Content Include="azure_batch_maya\templates\containers\mayaSoftware-2017-linux.json" />
     <Content Include="azure_batch_maya\templates\containers\mayaSoftware-2017-windows.json" />
     <Content Include="azure_batch_maya\templates\containers\mayaSoftware-2018-linux.json" />
     <Content Include="azure_batch_maya\templates\containers\mayaSoftware-2018-windows.json" />
+    <Content Include="azure_batch_maya\templates\containers\mayaSoftware-2019-linux.json" />
+    <Content Include="azure_batch_maya\templates\containers\mayaSoftware-2019-windows.json" />
     <Content Include="azure_batch_maya\templates\containers\vray-2017-linux.json" />
     <Content Include="azure_batch_maya\templates\containers\vray-2017-windows.json" />
     <Content Include="azure_batch_maya\templates\containers\vray-2018-linux.json" />
     <Content Include="azure_batch_maya\templates\containers\vray-2018-windows.json" />
+    <Content Include="azure_batch_maya\templates\containers\vray-2019-linux.json" />
+    <Content Include="azure_batch_maya\templates\containers\vray-2019-windows.json" />
     <Content Include="azure_batch_maya\templates\mayaSoftware-2017-linux.json" />
     <Content Include="azure_batch_maya\templates\mayaSoftware-2017-windows.json" />
     <Content Include="azure_batch_maya\templates\mayaSoftware-2018-linux.json" />
     <Content Include="azure_batch_maya\templates\mayaSoftware-2018-windows.json" />
+    <Content Include="azure_batch_maya\templates\mayaSoftware-2019-linux.json" />
+    <Content Include="azure_batch_maya\templates\mayaSoftware-2019-windows.json" />
     <Content Include="azure_batch_maya\templates\vray-2017-linux.json" />
     <Content Include="azure_batch_maya\templates\vray-2017-windows.json" />
     <Content Include="azure_batch_maya\templates\vray-2018-linux.json" />
     <Content Include="azure_batch_maya\templates\vray-2018-windows.json" />
+    <Content Include="azure_batch_maya\templates\vray-2019-linux.json" />
+    <Content Include="azure_batch_maya\templates\vray-2019-windows.json" />
     <Content Include="CHANGES.txt" />
     <Content Include="CONTRIBUTING.md">
       <SubType>Code</SubType>
@@ -228,6 +239,9 @@
     <Content Include="tests\json_data\file_tests\foo.txt" />
     <Content Include="tests\json_data\file_tests\sample_data\test.txt" />
     <Content Include="tests\json_data\rendering-container-images.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|VisualStudio|azure-batch-maya" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
