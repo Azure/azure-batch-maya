@@ -188,7 +188,7 @@ def call(command, *args, **kwargs):
     Some errors we anticipate and raise without a dialog (e.g. PoolNotFound).
     Others we raise and display to the user.
     """
-    global mgmt_auth_token, batch_auth_token
+    global mgmt_auth_token, batch_auth_token, aad_environment_id
     try:
         result = command(*args, **kwargs)
         return ensure_iter_called(result)
@@ -241,7 +241,7 @@ def update_batch_and_storage_client_creds(batch_auth_token, mgmt_auth_token, env
     batch_client._client.creds = batchCredentials
 
 def _authenticate(cfg_path, environment_provider):
-    global batch_client, storage_client, mgmt_auth_token, batch_auth_token, aadTenant
+    global batch_client, storage_client, mgmt_auth_token, batch_auth_token, aadTenant, aad_environment_id
     cfg = ConfigParser.ConfigParser()
     try:
         cfg.read(cfg_path)
