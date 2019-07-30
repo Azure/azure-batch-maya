@@ -10,7 +10,7 @@
     <OutputPath>.</OutputPath>
     <Name>Maya.Client</Name>
     <RootNamespace>Maya.Client</RootNamespace>
-    <InterpreterId>Global|VisualStudio|azure-batch-maya</InterpreterId>
+    <InterpreterId>Global|VisualStudio|azure-batch-maya (Python 2.7 (64-bit))</InterpreterId>
     <InterpreterVersion>
     </InterpreterVersion>
     <SearchPath>azure_batch_maya\scripts\;azure_batch_maya\scripts\ui\;tests\data\;tests\data\modules\</SearchPath>
@@ -239,6 +239,9 @@
     <Content Include="tests\json_data\file_tests\foo.txt" />
     <Content Include="tests\json_data\file_tests\sample_data\test.txt" />
     <Content Include="tests\json_data\rendering-container-images.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|VisualStudio|azure-batch-maya (Python 2.7 (64-bit))" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
