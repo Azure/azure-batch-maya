@@ -30,25 +30,31 @@ class PoolImageFilter(object):
         results = filterImagesByMaya(results, selectedMaya)
         
         if selectedVRay:
-            results = filterImagesByVRay(results, selectedVRay)
+            results = filterImagesByVRayVersion(results, selectedVRay)
         
         if selectedArnold:
-            results = filterImagesByArnold(results, selectedArnold)
+            results = filterImagesByArnoldVersion(results, selectedArnold)
         
         image = results[0]
         return image
 
-    def getOSDisplayList(self):
+    def getOSDisplayList(self, currentRenderer = None):
         results = set(i.os for i in self.containerImages)
+
+        if currentRenderer:
+             results = filterImagesByRenderer(results, currentRenderer)
 
         results.discard(None)
         return sorted(results)
 
-    def getMayaDisplayList(self, selectedOS = None):
+    def getMayaDisplayList(self, selectedOS = None, currentRenderer = None):
         results = self.containerImages
 
         if selectedOS:
             results = filterImagesByOS(results, selectedOS)
+
+        if currentRenderer:
+            results = filterImagesByRenderer(results, currentRenderer)
 
         results = set([i.appVersion for i in results])
 
@@ -56,7 +62,7 @@ class PoolImageFilter(object):
         return sorted(results)
 
 
-    def getVrayDisplayList(self, selectedOS = None, selectedMaya = None, selectedArnold = None):
+    def getVrayDisplayList(self, selectedOS = None, selectedMaya = None):
 
         results = self.containerImages
 
@@ -65,9 +71,6 @@ class PoolImageFilter(object):
 
         if selectedMaya:
             results = filterImagesByMaya(results, selectedMaya)
-
-        if selectedArnold:
-            results = filterImagesByArnold(results, selectedArnold)
 
         results = set([i.rendererVersion for i in results if i.renderer == "vray"])
 
@@ -75,7 +78,7 @@ class PoolImageFilter(object):
         return sorted(results)
 
 
-    def getArnoldDisplayList(self, selectedOS = None, selectedMaya = None, selectedVRay = None):
+    def getArnoldDisplayList(self, selectedOS = None, selectedMaya = None):
 
         results = self.containerImages
 
@@ -84,9 +87,6 @@ class PoolImageFilter(object):
 
         if selectedMaya:
             results = filterImagesByMaya(results, selectedMaya)
-
-        if selectedVRay:
-            results = filterImagesByVRay(results, selectedVRay)
 
         results = set([i.rendererVersion for i in results if i.renderer == "arnold"])
 
@@ -103,10 +103,14 @@ def filterImagesByMaya(images, selection):
     imagesFiltered = [i for i in images if i.appVersion == selection]
     return imagesFiltered
 
-def filterImagesByArnold(images, selection):
+def filterImagesByArnoldVersion(images, selection):
     imagesFiltered = [i for i in images if i.renderer == "arnold" and i.rendererVersion == selection]
     return imagesFiltered
 
-def filterImagesByVRay(images, selection):
+def filterImagesByVRayVersion(images, selection):
     imagesFiltered = [i for i in images if i.renderer == "vray" and i.rendererVersion == selection]
+    return imagesFiltered
+
+def filterImagesByRenderer(images, selection):
+    imagesFiltered = [i for i in images if i.renderer == selection]
     return imagesFiltered

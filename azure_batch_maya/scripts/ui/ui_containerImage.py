@@ -56,7 +56,7 @@ class ContainerImageUI(object):
                     image_config.append(maya_dropdown)
                     self.maya_dropdown = maya_dropdown  
 
-                    for maya_version in self.poolImageFilter.getMayaDisplayList(self.selected_os):
+                    for maya_version in self.poolImageFilter.getMayaDisplayList(self.selected_os, self.renderer):
                         self.maya_dropdown.add_item(maya_version)
                         #store the last version returned which is for the same year as the locally running Maya, e.g. 2019
                         if maya_version.startswith(local_maya_version):

@@ -41,6 +41,12 @@ class TestPoolImages(unittest.TestCase):
         self.assertEqual(len(mayaDisplayList), 2)
         self.assertListEqual(mayaDisplayList, ['2017-Update5', '2018-Update4'])
 
+    def testGetMayaDisplayList_FilteredByOS_AndRenderer_ReturnsFilteredSet(self):
+        mayaDisplayList = self.poolImages.getMayaDisplayList(selectedOS = 'WindowsServer2016', currentRenderer='vray')
+
+        self.assertEqual(len(mayaDisplayList), 1)
+        self.assertListEqual(mayaDisplayList, ['2017-Update5'])
+
 #getVRayDisplayList
     def testGetVRayDisplayList_Unfiltered_ReturnsCompleteSet(self):
         vrayDisplayList = self.poolImages.getVrayDisplayList()
@@ -60,13 +66,6 @@ class TestPoolImages(unittest.TestCase):
         self.assertEqual(len(vrayDisplayList), 1)
         self.assertListEqual(vrayDisplayList, ['3.52.03'])
 
-
-    def testGetVrayDisplayList_FilteredByOS_AndMaya_AndArnold_ReturnsFilteredSet(self):
-        vrayDisplayList = self.poolImages.getVrayDisplayList(selectedOS = 'CentOS 73', selectedMaya ='2017-Update5', selectedArnold = '1.0.0.1')
-
-        self.assertEqual(len(vrayDisplayList), 3)
-        self.assertListEqual(vrayDisplayList, ['1.0.0.1', '1.0.0.2', '1.0.0.4'])
-
 #getArnoldDisplayList
     def testGetArnoldDisplayList_Unfiltered_ReturnsCompleteSet(self):
         arnoldDisplayList = self.poolImages.getArnoldDisplayList()
@@ -85,12 +84,6 @@ class TestPoolImages(unittest.TestCase):
 
         self.assertEqual(len(arnoldDisplayList), 1)
         self.assertListEqual(arnoldDisplayList, ['2.0.1.1'])
-
-    def testGetArnoldDisplayList_FilteredByOS_AndMaya_AndArnold_ReturnsFilteredSet(self):
-        arnoldDisplayList = self.poolImages.getArnoldDisplayList(selectedOS = 'CentOS 73', selectedMaya ='2017-Update5')
-
-        self.assertEqual(len(arnoldDisplayList), 4)
-        self.assertListEqual(arnoldDisplayList, ['1.0.0.1', '1.0.0.2', '1.0.0.3', '2.0.1.1'])
 
 #getSelectedImage
     def testGetSelectedImage_OSMayaOnly_ReturnsFirstValidEntry(self):
