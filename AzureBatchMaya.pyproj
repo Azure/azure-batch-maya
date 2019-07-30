@@ -240,9 +240,6 @@
     <Content Include="tests\json_data\file_tests\sample_data\test.txt" />
     <Content Include="tests\json_data\rendering-container-images.json" />
   </ItemGroup>
-  <ItemGroup>
-    <InterpreterReference Include="Global|VisualStudio|azure-batch-maya" />
-  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
   </PropertyGroup>
