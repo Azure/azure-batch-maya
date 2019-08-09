@@ -10,11 +10,11 @@ from azurebatchmayaapi import MayaAPI as maya
 
 class ContainerImageUI(object):
 
-    def __init__(self, poolImageFilter, parent, image_config, renderer, local_maya_version):
+    def __init__(self, poolImageFilter, parent, image_config, local_maya_version, renderer):
+
+        self.renderer = "mayasw" if renderer == "mayaSoftware" or renderer == "" else renderer
 
         self.poolImageFilter = poolImageFilter
-
-        self.renderer = renderer
 
         self.selected_os = None
         self.selected_maya = None

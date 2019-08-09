@@ -326,4 +326,4 @@ class EnvironmentUI(object):
 
         current_renderer = str(utils.get_current_scene_renderer())
         mayaVersion = maya.about(version=True)
-        self.containerImageUI = ContainerImageUI(self.poolImageFilter, self.rendernode_config, self.image_config, current_renderer, mayaVersion)
+        self.containerImageUI = ContainerImageUI(self.poolImageFilter, self.rendernode_config, self.image_config, mayaVersion, current_renderer)
