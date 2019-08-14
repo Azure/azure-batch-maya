@@ -296,7 +296,7 @@ class AzureBatchConfig(object):
         if(not self.batch_auth_token or not self.mgmt_auth_token):
             self.ui.prompt_for_aad_tenant()
             if self.aad_tenant_name and self.aad_tenant_name != None and self.aad_tenant_name != 'None':
-                maya.text_field(self.ui._aad_tenant_field, edit=True, text=self.aad_tenant_name)
+                maya.text_field(self.ui.aad_tenant_field, edit=True, text=self.aad_tenant_name)
                 self.ui.aad_tenant_name_changed(self.aad_tenant_name)
                 maya.refresh()
         else:
