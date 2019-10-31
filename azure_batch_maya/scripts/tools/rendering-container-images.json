@@ -196,6 +196,42 @@
       "renderer": "arnold",
       "rendererVersion": "3.1.0.1",
       "imageReferenceId": "centos-75-container"
+    },
+    {
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-9.9.9.2019",
+      "os": "CentOS 75",
+      "app": "maya",
+      "appVersion": "2019",
+      "renderer": "mayasw",
+      "rendererVersion": "2019",
+      "imageReferenceId": "centos-75-container"
+    },
+    {
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-9.9.9.2019-9.9.9.arnold3211",
+      "os": "CentOS 75",
+      "app": "maya",
+      "appVersion": "2019",
+      "renderer": "arnold",
+      "rendererVersion": "3.2.1.1",
+      "imageReferenceId": "centos-75-container"
+    },
+    {
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-9.9.9.2019u1",
+      "os": "CentOS 75",
+      "app": "maya",
+      "appVersion": "2019-Update1",
+      "renderer": "mayasw",
+      "rendererVersion": "2019-Update1",
+      "imageReferenceId": "centos-75-container"
+    },
+    {
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-9.9.9.2019u1-9.9.9.arnold3211",
+      "os": "CentOS 75",
+      "app": "maya",
+      "appVersion": "2019-Update1",
+      "renderer": "arnold",
+      "rendererVersion": "3.2.1.1",
+      "imageReferenceId": "centos-75-container"
     }
   ]
 }
