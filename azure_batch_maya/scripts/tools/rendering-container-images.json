@@ -45,7 +45,7 @@
       "imageReferenceId": "centos-75-container"
     },
     {
-      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2017u5-1.0.0.arnold2011",
+      "containerImage": "mcr.microsoft.com/azure-batch/rendering/maya:1.0.0.centos7-1.0.0.2017u5-0.0.2.arnold2011",
       "os": "CentOS 75",
       "app": "maya",
       "appVersion": "2017-Update5",
