@@ -8,6 +8,7 @@ import os
 import logging
 import platform
 import subprocess
+import tempfile
 
 from azurebatchmayaapi import MayaAPI as maya
 from exception import CancellationException, FileUploadException
@@ -144,6 +145,13 @@ def build_template_filename(render_engine, maya_version, operating_system, conta
                 "{}-{}-{}.json".format(render_engine, maya_version, operating_system))
 
     return template_file
+
+
+def create_temp_dir():
+    """Create a temporary private local directory.
+    Should be deleted manually.
+    """
+    return tempfile.mkdtemp()
 
 class OperatingSystem(Enum):
     windows = 'Windows'

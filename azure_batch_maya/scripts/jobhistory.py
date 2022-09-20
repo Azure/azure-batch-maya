@@ -19,6 +19,7 @@ from azurebatchmayaapi import MayaAPI as maya
 from ui_jobhistory import JobHistoryUI
 
 import azure.batch as batch
+import azurebatchutils as utils
 
 
 class AzureBatchJobHistory(object):
@@ -86,9 +87,9 @@ class AzureBatchJobHistory(object):
             maya.refresh()
             return
         try:
-            temp_dir = os.path.join(tempfile.gettempdir(), job.id)
-            if not os.path.isdir(temp_dir):
-                os.mkdir(temp_dir)
+            temp_dir = os.path.join(utils.create_temp_dir(), job.id)
+            # if not os.path.isdir(temp_dir):
+            #     os.mkdir(temp_dir)
         except Exception as exp:
             self._log.warning(exp)
             self.selected_job.set_thumbnail(thumb, self._get_image_height(thumb))

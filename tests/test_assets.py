@@ -9,6 +9,17 @@ import logging
 import json
 from Queue import Queue
 
+# win32-specific imports
+try:
+    import pywintypes
+    import win32con
+    import win32net
+    import win32netcon
+    import win32security
+    import winerror
+except ImportError:
+    pass
+
 if sys.version_info >= (3, 3):
     import unittest2 as unittest
     from unittest.mock import MagicMock
@@ -529,6 +540,43 @@ class TestAzureBatchAssets(unittest.TestCase):
         self.mock_self._assets = mock.create_autospec(Assets)
         AzureBatchAssets.upload(self.mock_self)
 
+    @mock.patch.object(AzureBatchAssets, "_collect_modules")
+    @mock.patch("assets.callback")
+    @mock.patch("assets.AssetsUI")
+    def test_temp_dir_access(self, mock_ui, mock_call, mock_collect):
+        if sys.platform != "win32":
+            return
+        aba = AzureBatchAssets(0, "frame", "call")
+        # create temporary user
+        username = "tempuser"
+        password = "Password123"
+        user_info = {
+            "name": username,
+            "password": password,
+            "priv": win32netcon.USER_PRIV_USER,
+            "flags": 0
+        }
+        try:
+            win32net.NetUserAdd(None, 1, user_info)
+        except pywintypes.error as e:
+            if e.winerror == winerror.ERROR_ACCESS_DENIED:
+                raise Exception("test must be run as admin to create temp user")
+            else:
+                raise e
+        # make temp user admin
+        sid, domain, at = win32security.LookupAccountName(None, username)
+        win32net.NetLocalGroupAddMembers(None, "Administrators", 0, [{"sid": sid}])
+        # impersonate temporary user
+        handle = win32security.LogonUser(username, None, password, win32con.LOGON32_LOGON_INTERACTIVE, win32con.LOGON32_PROVIDER_DEFAULT)
+        win32security.ImpersonateLoggedOnUser(handle)
+        # try to access the temp directory
+        accessed = os.access(aba._temp_dir, os.W_OK)
+        # revert impersonation and delete temp user
+        win32security.RevertToSelf()
+        handle.close()
+        win32net.NetUserDel(None, username)
+        
+        self.assertFalse(accessed, "_temp_dir should be inaccessible for other users")
 
 if __name__ == '__main__':
     unittest.main()
