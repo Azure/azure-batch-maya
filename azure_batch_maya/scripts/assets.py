@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 
 import logging
 from datetime import datetime
+import shutil
 import threading
 import os
 import sys
@@ -14,7 +15,6 @@ import glob
 import pkgutil
 import inspect
 import importlib
-import tempfile
 import re
 from Queue import Queue
 
@@ -57,11 +57,15 @@ class AzureBatchAssets(object):
         self._assets = None
         self._tab_index = index
         self._upload_threads = None
+        self._temp_dir = utils.create_temp_dir()
 
         self.batch = None
         self.modules = self._collect_modules()
         self.ui = AssetsUI(self, frame)
         self.frame = frame
+    
+    def __del__(self):
+        shutil.rmtree(self._temp_dir)
 
     def _callback_refresh(self, *args):
         """Called by Maya when a new scene file is loaded, so we reset
@@ -160,7 +164,7 @@ class AzureBatchAssets(object):
         :param str os_flavor: The chosen operating system of the render nodes, used
          to determine the formatting of the path remapping.
         """
-        proj_file = os.path.join(tempfile.gettempdir(), "workspace.mel")
+        proj_file = os.path.join(self._temp_dir, "workspace.mel")
         with open(proj_file, 'w') as handle:
             for rule in maya.workspace(fileRuleList=True):
                 project_dir = maya.workspace(fileRuleEntry=rule)
@@ -185,7 +189,7 @@ class AzureBatchAssets(object):
         :param str os_flavor: The chosen operating system of the render nodes, used
          to determine the formatting of the path remapping.
         """
-        map_file = os.path.join(tempfile.gettempdir(), "asset_map.mel")
+        map_file = os.path.join(self._temp_dir, "asset_map.mel")
         pathmap = dict(self._assets.pathmaps)
         for asset in self._assets.refs:
             pathmap.update(asset.pathmap)
