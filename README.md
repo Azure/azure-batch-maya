@@ -1,3 +1,11 @@
+# ⛔️ DEPRECATED
+
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
+
+This project is no longer maintained and has been archived.
+
+Rendering workloads should now be migrated directly to the [Azure Batch](https://learn.microsoft.com/en-us/azure/batch/) SDK or CLI.
+
 # Azure Batch for Maya
 
 This project demonstrates cloud rendering using the Azure Batch service with integrated licensing for Maya, VRay and Arnold. It is supported for Windows and Mac.
